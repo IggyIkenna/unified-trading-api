@@ -20,7 +20,12 @@ async def get_candles(
 ) -> dict[str, object]:
     """Get OHLCV candles for an instrument."""
     if getattr(request.app.state, "mock_mode", True):
-        return {"venue": venue, "instrument": instrument, "timeframe": timeframe, "candles": mock_store.list("candles")[:limit]}
+        return {
+            "venue": venue,
+            "instrument": instrument,
+            "timeframe": timeframe,
+            "candles": mock_store.list("candles")[:limit],
+        }
     return {"error": "real mode not yet wired"}
 
 
@@ -46,7 +51,11 @@ async def get_trades(
 ) -> dict[str, object]:
     """Get recent trades."""
     if getattr(request.app.state, "mock_mode", True):
-        return {"venue": venue, "instrument": instrument, "trades": mock_store.list("trades")[:limit]}
+        return {
+            "venue": venue,
+            "instrument": instrument,
+            "trades": mock_store.list("trades")[:limit],
+        }
     return {"error": "real mode not yet wired"}
 
 

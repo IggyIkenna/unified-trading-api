@@ -1,19 +1,19 @@
 """Unified Trading API — consolidated gateway.
 
 Absorbs 9 domain data API repos into a single FastAPI application
-with entitlement middleware, WebSocket multiplexing, and unified
-OpenAPI spec.
+with auth middleware, WebSocket multiplexing, and unified OpenAPI spec.
 """
 
 from __future__ import annotations
 
 import logging
 import time
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from unified_config_interface import UnifiedCloudConfig
 
 from unified_trading_api.routes import (
     alerts,
@@ -42,23 +42,20 @@ _VERSION = "0.1.0"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    """App lifespan — setup and teardown."""
+    """App lifespan -- setup and teardown."""
     app.state.start_time = time.time()
-
-    # Determine data mode
-    from unified_cloud_interface import UnifiedCloudConfig
 
     cloud_config = UnifiedCloudConfig()
     app.state.mock_mode = cloud_config.is_mock_mode()
-    app.state.disable_auth = cloud_config.get("DISABLE_AUTH", "false").lower() == "true"
+    app.state.disable_auth = cloud_config.disable_auth
 
     if app.state.mock_mode:
-        logger.info("Starting in MOCK mode — seeding mock data")
+        logger.info("Starting in MOCK mode -- seeding mock data")
         from unified_trading_api.mock_data.seed import seed_all_domains
 
         seed_all_domains()
     else:
-        logger.info("Starting in REAL mode — connecting to backend services")
+        logger.info("Starting in REAL mode -- connecting to backend services")
 
     yield
 
@@ -70,7 +67,7 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title="Unified Trading API",
         version=_VERSION,
-        description="Consolidated API gateway — 61 endpoints across 16 domains",
+        description="Consolidated API gateway for the Unified Trading System",
         lifespan=lifespan,
     )
 
@@ -86,7 +83,7 @@ def create_app() -> FastAPI:
     # Health (unauthenticated)
     app.include_router(health.router, tags=["health"])
 
-    # Domain routers (authenticated)
+    # Domain routers
     app.include_router(market_data.router, prefix="/market-data", tags=["market-data"])
     app.include_router(execution.router, prefix="/execution", tags=["execution"])
     app.include_router(positions.router, prefix="/positions", tags=["positions"])
@@ -100,7 +97,11 @@ def create_app() -> FastAPI:
     app.include_router(instruments.router, prefix="/instruments", tags=["instruments"])
     app.include_router(documents.router, prefix="/documents", tags=["documents"])
     app.include_router(deployment.router, prefix="/deployment", tags=["deployment"])
-    app.include_router(service_status.router, prefix="/service-status", tags=["service-status"])
+    app.include_router(
+        service_status.router,
+        prefix="/service-status",
+        tags=["service-status"],
+    )
     app.include_router(users.router, prefix="/users", tags=["users"])
 
     # WebSocket (unauthenticated connect, auth on subscribe)
@@ -113,7 +114,12 @@ def main() -> None:
     """CLI entrypoint."""
     import uvicorn
 
-    uvicorn.run("unified_trading_api.main:create_app", factory=True, host="0.0.0.0", port=8030)
+    uvicorn.run(
+        "unified_trading_api.main:create_app",
+        factory=True,
+        host="0.0.0.0",
+        port=8030,
+    )
 
 
 if __name__ == "__main__":

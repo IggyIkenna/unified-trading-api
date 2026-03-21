@@ -1,4 +1,4 @@
-"""ML domain — model families, experiments, training runs, versions, deployments, features, datasets."""
+"""ML domain — model families, experiments, training, versions, deployments."""
 
 from __future__ import annotations
 

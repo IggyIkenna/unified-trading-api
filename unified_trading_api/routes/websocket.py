@@ -80,58 +80,68 @@ async def _mock_data_generator(websocket: WebSocket, channels: set[str]) -> None
         ts = time.time()
 
         if "market-data" in channels:
-            await websocket.send_json({
-                "channel": "market-data",
-                "data": {
-                    "venue": "binance",
-                    "instrument": "BTC-USDT",
-                    "price": 65000.0 + (tick_count % 100),
-                    "volume": 1.5,
-                    "timestamp": ts,
-                },
-            })
+            await websocket.send_json(
+                {
+                    "channel": "market-data",
+                    "data": {
+                        "venue": "binance",
+                        "instrument": "BTC-USDT",
+                        "price": 65000.0 + (tick_count % 100),
+                        "volume": 1.5,
+                        "timestamp": ts,
+                    },
+                }
+            )
 
         if "positions" in channels and tick_count % 5 == 0:
-            await websocket.send_json({
-                "channel": "positions",
-                "data": {
-                    "instrument": "BTC-USDT",
-                    "side": "long",
-                    "size": 0.5,
-                    "unrealized_pnl": 150.0 + tick_count,
-                    "timestamp": ts,
-                },
-            })
+            await websocket.send_json(
+                {
+                    "channel": "positions",
+                    "data": {
+                        "instrument": "BTC-USDT",
+                        "side": "long",
+                        "size": 0.5,
+                        "unrealized_pnl": 150.0 + tick_count,
+                        "timestamp": ts,
+                    },
+                }
+            )
 
         if "alerts" in channels and tick_count % 10 == 0:
-            await websocket.send_json({
-                "channel": "alerts",
-                "data": {
-                    "alert_id": f"alert-{tick_count}",
-                    "severity": "warning",
-                    "message": "Position approaching limit",
-                    "timestamp": ts,
-                },
-            })
+            await websocket.send_json(
+                {
+                    "channel": "alerts",
+                    "data": {
+                        "alert_id": f"alert-{tick_count}",
+                        "severity": "warning",
+                        "message": "Position approaching limit",
+                        "timestamp": ts,
+                    },
+                }
+            )
 
         if "health" in channels and tick_count % 15 == 0:
-            await websocket.send_json({
-                "channel": "health",
-                "data": {
-                    "services_healthy": 21,
-                    "services_degraded": 0,
-                    "timestamp": ts,
-                },
-            })
+            await websocket.send_json(
+                {
+                    "channel": "health",
+                    "data": {
+                        "services_healthy": 21,
+                        "services_degraded": 0,
+                        "timestamp": ts,
+                    },
+                }
+            )
 
         if "execution" in channels and tick_count % 3 == 0:
-            await websocket.send_json({
-                "channel": "execution",
-                "data": {
-                    "order_id": f"ord-{tick_count}",
-                    "status": "filled",
-                    "instrument": "ETH-USDT",
-                    "price": 3500.0,
-                    "timestamp": ts,
-                },
-            })
+            await websocket.send_json(
+                {
+                    "channel": "execution",
+                    "data": {
+                        "order_id": f"ord-{tick_count}",
+                        "status": "filled",
+                        "instrument": "ETH-USDT",
+                        "price": 3500.0,
+                        "timestamp": ts,
+                    },
+                }
+            )

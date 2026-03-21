@@ -1,4 +1,4 @@
-"""Trading analytics domain — PnL, timeseries, performance, organizations, settlements, instruments."""
+"""Trading analytics — PnL, timeseries, performance, organizations, settlements."""
 
 from __future__ import annotations
 
