@@ -6,11 +6,16 @@ from fastapi import APIRouter, Depends, Query, Request
 
 from unified_trading_api.middleware.auth import verify_api_key
 from unified_trading_api.mock_data.state_store import mock_store
+from unified_trading_api.models.standard import (
+    ErrorDetail,
+    StandardErrorResponse,
+    paginate,
+)
 
 router = APIRouter(dependencies=[Depends(verify_api_key)])
 
 
-# ── GET endpoints ──────────────────────────────────────────────
+# -- GET endpoints ----------------------------------------------------------
 
 
 @router.get("/pnl")
@@ -18,14 +23,19 @@ async def get_pnl(
     request: Request,
     venue: str = Query(None),
     period: str = Query("1d"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=200),
 ) -> dict[str, object]:
     """Get PnL breakdown."""
     if getattr(request.app.state, "mock_mode", True):
         records = mock_store.list("pnl")
         if venue:
             records = [r for r in records if r.get("venue") == venue]
-        return {"period": period, "pnl": records}
-    return {"error": "real mode not yet wired"}
+        data, pagination = paginate(records, page, page_size)
+        return {"period": period, "data": data, "pagination": pagination.model_dump()}
+    return StandardErrorResponse(
+        error=ErrorDetail(code="NOT_IMPLEMENTED", message="Real mode not yet wired")
+    ).model_dump()
 
 
 @router.get("/timeseries")
@@ -34,16 +44,23 @@ async def get_timeseries(
     metric: str = Query("equity"),
     period: str = Query("1d"),
     granularity: str = Query("1h"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=200),
 ) -> dict[str, object]:
     """Get analytics timeseries data."""
     if getattr(request.app.state, "mock_mode", True):
+        records = mock_store.list("analytics_timeseries")
+        data, pagination = paginate(records, page, page_size)
         return {
             "metric": metric,
             "period": period,
             "granularity": granularity,
-            "series": mock_store.list("analytics_timeseries"),
+            "data": data,
+            "pagination": pagination.model_dump(),
         }
-    return {"error": "real mode not yet wired"}
+    return StandardErrorResponse(
+        error=ErrorDetail(code="NOT_IMPLEMENTED", message="Real mode not yet wired")
+    ).model_dump()
 
 
 @router.get("/performance")
@@ -54,7 +71,9 @@ async def get_performance(
     """Get performance metrics."""
     if getattr(request.app.state, "mock_mode", True):
         return {"period": period, "performance": mock_store.list("performance")}
-    return {"error": "real mode not yet wired"}
+    return StandardErrorResponse(
+        error=ErrorDetail(code="NOT_IMPLEMENTED", message="Real mode not yet wired")
+    ).model_dump()
 
 
 @router.get("/organizations")
@@ -64,22 +83,28 @@ async def get_organizations(
     """Get analytics organizations."""
     if getattr(request.app.state, "mock_mode", True):
         return {"organizations": mock_store.list("analytics_organizations")}
-    return {"error": "real mode not yet wired"}
+    return StandardErrorResponse(
+        error=ErrorDetail(code="NOT_IMPLEMENTED", message="Real mode not yet wired")
+    ).model_dump()
 
 
 @router.get("/settlements")
 async def get_settlements(
     request: Request,
     status: str = Query(None),
-    limit: int = Query(50),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=200),
 ) -> dict[str, object]:
     """Get settlement records."""
     if getattr(request.app.state, "mock_mode", True):
         records = mock_store.list("settlements")
         if status:
             records = [r for r in records if r.get("status") == status]
-        return {"settlements": records[:limit]}
-    return {"error": "real mode not yet wired"}
+        data, pagination = paginate(records, page, page_size)
+        return {"data": data, "pagination": pagination.model_dump()}
+    return StandardErrorResponse(
+        error=ErrorDetail(code="NOT_IMPLEMENTED", message="Real mode not yet wired")
+    ).model_dump()
 
 
 @router.get("/instruments")
@@ -93,10 +118,12 @@ async def get_instruments(
         if asset_class:
             records = [r for r in records if r.get("asset_class") == asset_class]
         return {"instruments": records}
-    return {"error": "real mode not yet wired"}
+    return StandardErrorResponse(
+        error=ErrorDetail(code="NOT_IMPLEMENTED", message="Real mode not yet wired")
+    ).model_dump()
 
 
-# ── POST endpoints ─────────────────────────────────────────────
+# -- POST endpoints ---------------------------------------------------------
 
 
 @router.post("/pnl")
@@ -108,7 +135,9 @@ async def create_pnl_snapshot(
         body = await request.json()
         mock_store.add("pnl", body)
         return {"status": "created", "record": body}
-    return {"error": "real mode not yet wired"}
+    return StandardErrorResponse(
+        error=ErrorDetail(code="NOT_IMPLEMENTED", message="Real mode not yet wired")
+    ).model_dump()
 
 
 @router.post("/timeseries")
@@ -120,7 +149,9 @@ async def create_timeseries_entry(
         body = await request.json()
         mock_store.add("analytics_timeseries", body)
         return {"status": "created", "record": body}
-    return {"error": "real mode not yet wired"}
+    return StandardErrorResponse(
+        error=ErrorDetail(code="NOT_IMPLEMENTED", message="Real mode not yet wired")
+    ).model_dump()
 
 
 @router.post("/performance")
@@ -132,7 +163,9 @@ async def create_performance_snapshot(
         body = await request.json()
         mock_store.add("performance", body)
         return {"status": "created", "record": body}
-    return {"error": "real mode not yet wired"}
+    return StandardErrorResponse(
+        error=ErrorDetail(code="NOT_IMPLEMENTED", message="Real mode not yet wired")
+    ).model_dump()
 
 
 @router.post("/settlements")
@@ -144,4 +177,6 @@ async def create_settlement(
         body = await request.json()
         mock_store.add("settlements", body)
         return {"status": "created", "record": body}
-    return {"error": "real mode not yet wired"}
+    return StandardErrorResponse(
+        error=ErrorDetail(code="NOT_IMPLEMENTED", message="Real mode not yet wired")
+    ).model_dump()

@@ -6,6 +6,10 @@ from fastapi import APIRouter, Depends, Request
 
 from unified_trading_api.middleware.auth import verify_api_key
 from unified_trading_api.mock_data.state_store import mock_store
+from unified_trading_api.models.standard import (
+    ErrorDetail,
+    StandardErrorResponse,
+)
 
 router = APIRouter(dependencies=[Depends(verify_api_key)])
 
@@ -18,7 +22,9 @@ async def get_system_config(
     if getattr(request.app.state, "mock_mode", True):
         records = mock_store.list("system_config")
         return {"config": records[0] if records else {}}
-    return {"error": "real mode not yet wired"}
+    return StandardErrorResponse(
+        error=ErrorDetail(code="NOT_IMPLEMENTED", message="Real mode not yet wired")
+    ).model_dump()
 
 
 @router.put("/system")
@@ -34,7 +40,9 @@ async def update_system_config(
             return {"status": "updated", "config": existing[0]}
         mock_store.add("system_config", body)
         return {"status": "created", "config": body}
-    return {"error": "real mode not yet wired"}
+    return StandardErrorResponse(
+        error=ErrorDetail(code="NOT_IMPLEMENTED", message="Real mode not yet wired")
+    ).model_dump()
 
 
 @router.get("/venues")
@@ -44,7 +52,9 @@ async def get_venue_config(
     """Get venue configuration."""
     if getattr(request.app.state, "mock_mode", True):
         return {"venues": mock_store.list("config_venues")}
-    return {"error": "real mode not yet wired"}
+    return StandardErrorResponse(
+        error=ErrorDetail(code="NOT_IMPLEMENTED", message="Real mode not yet wired")
+    ).model_dump()
 
 
 @router.get("/feature-flags")
@@ -54,4 +64,6 @@ async def get_feature_flags(
     """Get feature flags."""
     if getattr(request.app.state, "mock_mode", True):
         return {"feature_flags": mock_store.list("feature_flags")}
-    return {"error": "real mode not yet wired"}
+    return StandardErrorResponse(
+        error=ErrorDetail(code="NOT_IMPLEMENTED", message="Real mode not yet wired")
+    ).model_dump()

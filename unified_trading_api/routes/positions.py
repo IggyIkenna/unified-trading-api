@@ -3,33 +3,16 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Query, Request
-from pydantic import BaseModel
 
 from unified_trading_api.middleware.auth import verify_api_key
 from unified_trading_api.mock_data.state_store import mock_store
+from unified_trading_api.models.standard import (
+    ErrorDetail,
+    StandardErrorResponse,
+    paginate,
+)
 
 router = APIRouter(dependencies=[Depends(verify_api_key)])
-
-
-# ---------------------------------------------------------------------------
-# Response models
-# ---------------------------------------------------------------------------
-
-
-class PositionsResponse(BaseModel):
-    positions: list[dict[str, float | str | int | bool]]
-
-
-class PositionSummaryResponse(BaseModel):
-    summary: list[dict[str, float | str | int]]
-
-
-class BalancesResponse(BaseModel):
-    balances: list[dict[str, float | str | int]]
-
-
-class ErrorResponse(BaseModel):
-    error: str
 
 
 # ---------------------------------------------------------------------------
@@ -37,39 +20,51 @@ class ErrorResponse(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-@router.get("/active", response_model=PositionsResponse | ErrorResponse)
+@router.get("/active")
 async def get_active_positions(
     request: Request,
     venue: str = Query(None),
-) -> PositionsResponse | ErrorResponse:
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=200),
+) -> dict[str, object]:
     """Get currently active positions."""
     if getattr(request.app.state, "mock_mode", True):
         records = mock_store.list("positions")
         if venue:
             records = [r for r in records if r.get("venue") == venue]
-        return PositionsResponse(positions=records)
-    return ErrorResponse(error="real mode not yet wired")
+        data, pagination = paginate(records, page, page_size)
+        return {"data": data, "pagination": pagination.model_dump()}
+    return StandardErrorResponse(
+        error=ErrorDetail(code="NOT_IMPLEMENTED", message="Real mode not yet wired")
+    ).model_dump()
 
 
-@router.get("/summary", response_model=PositionSummaryResponse | ErrorResponse)
+@router.get("/summary")
 async def get_position_summary(
     request: Request,
-) -> PositionSummaryResponse | ErrorResponse:
+) -> dict[str, object]:
     """Get aggregated position summary across venues."""
     if getattr(request.app.state, "mock_mode", True):
-        return PositionSummaryResponse(summary=mock_store.list("position_summary"))
-    return ErrorResponse(error="real mode not yet wired")
+        return {"summary": mock_store.list("position_summary")}
+    return StandardErrorResponse(
+        error=ErrorDetail(code="NOT_IMPLEMENTED", message="Real mode not yet wired")
+    ).model_dump()
 
 
-@router.get("/balances", response_model=BalancesResponse | ErrorResponse)
+@router.get("/balances")
 async def get_balances(
     request: Request,
     venue: str = Query(None),
-) -> BalancesResponse | ErrorResponse:
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=200),
+) -> dict[str, object]:
     """Get account balances across venues."""
     if getattr(request.app.state, "mock_mode", True):
         records = mock_store.list("balances")
         if venue:
             records = [r for r in records if r.get("venue") == venue]
-        return BalancesResponse(balances=records)
-    return ErrorResponse(error="real mode not yet wired")
+        data, pagination = paginate(records, page, page_size)
+        return {"data": data, "pagination": pagination.model_dump()}
+    return StandardErrorResponse(
+        error=ErrorDetail(code="NOT_IMPLEMENTED", message="Real mode not yet wired")
+    ).model_dump()

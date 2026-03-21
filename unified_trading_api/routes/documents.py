@@ -6,6 +6,11 @@ from fastapi import APIRouter, Depends, Query, Request
 
 from unified_trading_api.middleware.auth import verify_api_key
 from unified_trading_api.mock_data.state_store import mock_store
+from unified_trading_api.models.standard import (
+    ErrorDetail,
+    StandardErrorResponse,
+    paginate,
+)
 
 router = APIRouter(dependencies=[Depends(verify_api_key)])
 
@@ -24,7 +29,9 @@ async def get_upload_url(
             "content_type": content_type,
             "expires_in": 3600,
         }
-    return {"error": "real mode not yet wired"}
+    return StandardErrorResponse(
+        error=ErrorDetail(code="NOT_IMPLEMENTED", message="Real mode not yet wired")
+    ).model_dump()
 
 
 @router.get("/download-url")
@@ -41,23 +48,35 @@ async def get_download_url(
                 "document": doc,
                 "expires_in": 3600,
             }
-        return {"error": "document not found", "document_id": document_id}
-    return {"error": "real mode not yet wired"}
+        return StandardErrorResponse(
+            error=ErrorDetail(
+                code="NOT_FOUND",
+                message="Document not found",
+                details={"document_id": document_id},
+            )
+        ).model_dump()
+    return StandardErrorResponse(
+        error=ErrorDetail(code="NOT_IMPLEMENTED", message="Real mode not yet wired")
+    ).model_dump()
 
 
 @router.get("/list")
 async def list_documents(
     request: Request,
     category: str = Query(None),
-    limit: int = Query(50),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=200),
 ) -> dict[str, object]:
     """List uploaded documents."""
     if getattr(request.app.state, "mock_mode", True):
         records = mock_store.list("documents")
         if category:
             records = [r for r in records if r.get("category") == category]
-        return {"documents": records[:limit]}
-    return {"error": "real mode not yet wired"}
+        data, pagination = paginate(records, page, page_size)
+        return {"data": data, "pagination": pagination.model_dump()}
+    return StandardErrorResponse(
+        error=ErrorDetail(code="NOT_IMPLEMENTED", message="Real mode not yet wired")
+    ).model_dump()
 
 
 @router.delete("/{document_id}")
@@ -70,5 +89,13 @@ async def delete_document(
         deleted = mock_store.delete("documents", "document_id", document_id)
         if deleted:
             return {"status": "deleted", "document_id": document_id}
-        return {"status": "not_found", "document_id": document_id}
-    return {"error": "real mode not yet wired"}
+        return StandardErrorResponse(
+            error=ErrorDetail(
+                code="NOT_FOUND",
+                message="Document not found",
+                details={"document_id": document_id},
+            )
+        ).model_dump()
+    return StandardErrorResponse(
+        error=ErrorDetail(code="NOT_IMPLEMENTED", message="Real mode not yet wired")
+    ).model_dump()
