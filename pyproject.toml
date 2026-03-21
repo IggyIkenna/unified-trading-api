@@ -1,0 +1,62 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "unified-trading-api"
+version = "0.1.0"
+description = "Consolidated API gateway for the Unified Trading System — 61 endpoints across 16 domains"
+requires-python = ">=3.13,<3.14"
+authors = [
+    { name = "Unified Trading System", email = "team@example.com" },
+]
+dependencies = [
+    "fastapi>=0.110.0,<1.0.0",
+    "uvicorn[standard]>=0.27.0,<1.0.0",
+    "sse-starlette>=1.6.1,<2.0.0",
+    "websockets>=14.0,<15.0",
+    "httpx>=0.27.0,<1.0.0",
+    "google-auth>=2.40.0,<3.0.0",
+    "unified-trading-library>=0.1.0,<1.0.0",
+    "unified-cloud-interface>=0.1.0,<1.0.0",
+    "unified-config-interface>=0.1.0,<1.0.0",
+    "unified-events-interface>=0.1.0,<1.0.0",
+    "unified-internal-contracts>=0.1.0,<1.0.0",
+    "unified-api-contracts>=0.1.0,<1.0.0",
+    "prometheus-client>=0.20.0,<1.0.0",
+    "pyjwt>=2.12.0,<3.0.0",
+    "pytest>=9.0.1,<10.0.0",
+    "pytest-asyncio>=0.25.0,<2.0.0",
+    "ruff==0.15.0",
+    "basedpyright==1.38.2",
+    "pytest-cov>=7.0.0,<8.0.0",
+    "pytest-socket>=0.7.0,<1.0.0",
+    "pytest-xdist>=3.6.0,<4.0.0",
+    "pytest-timeout>=2.4.0,<3.0.0",
+    "pip-audit>=2.7.0,<3.0.0",
+    "bandit>=1.7.0,<2.0.0",
+]
+
+[project.license]
+text = "Proprietary"
+
+[project.scripts]
+unified-trading-api = "unified_trading_api.main:main"
+
+[tool.basedpyright]
+pythonVersion = "3.13"
+typeCheckingMode = "standard"
+reportAny = "error"
+reportUnknownMemberType = "error"
+reportUnknownVariableType = "error"
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP", "B", "SIM", "TCH"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
