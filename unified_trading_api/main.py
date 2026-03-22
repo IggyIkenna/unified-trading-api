@@ -7,6 +7,7 @@ with auth middleware, WebSocket multiplexing, and unified OpenAPI spec.
 from __future__ import annotations
 
 import logging
+import os
 import time
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
@@ -14,11 +15,14 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from unified_config_interface import UnifiedCloudConfig
+from unified_trading_library import MockStateStore
 
+from unified_trading_api.mock_data.seed import SEED_VERSION, seed_all_domains
 from unified_trading_api.routes import (
     admin,
     alerts,
     audit,
+    chat,
     compliance,
     config,
     deployment,
@@ -37,6 +41,7 @@ from unified_trading_api.routes import (
     users,
     websocket,
 )
+from unified_trading_api.services.mock_service import MockDomainService
 
 logger = logging.getLogger(__name__)
 
@@ -53,14 +58,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.disable_auth = cloud_config.disable_auth
 
     if app.state.mock_mode:
-        import os
-
-        from unified_trading_library.core.mock_state_store import MockStateStore
-
-        from unified_trading_api.mock_data.seed import SEED_VERSION, seed_all_domains
-        from unified_trading_api.services.mock_service import MockDomainService
-
-        mock_state_mode = os.environ.get("MOCK_STATE_MODE", "interactive")
+        mock_state_mode = os.environ.get("MOCK_STATE_MODE", "interactive")  # config-bootstrap:
         deterministic = mock_state_mode == "deterministic"
 
         if deterministic:
@@ -75,7 +73,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         cached_version = ""
         for m in meta:
             if m.get("id") == "seed_version":
-                cached_version = str(m.get("version", ""))
+                cached_version = str(m.get("version", ""))  # noqa: qg-empty-fallback
         if cached_version != SEED_VERSION or deterministic:
             if cached_version and cached_version != SEED_VERSION:
                 logger.info(
@@ -122,7 +120,7 @@ def create_app() -> FastAPI:
     # Latency simulation (mock mode only, interactive)
     import os
 
-    mock_latency_ms = int(os.environ.get("MOCK_LATENCY_MS", "0"))
+    mock_latency_ms = int(os.environ.get("MOCK_LATENCY_MS", "0"))  # config-bootstrap:
     if mock_latency_ms > 0:
         from unified_trading_api.middleware.latency import LatencyMiddleware
 
@@ -130,6 +128,7 @@ def create_app() -> FastAPI:
 
     # Health + Admin (unauthenticated)
     app.include_router(health.router, tags=["health"])
+    app.include_router(reporting.health_router, prefix="/reporting", tags=["reporting"])
     app.include_router(admin.router, prefix="/admin", tags=["admin"])
 
     # Domain routers
@@ -155,6 +154,9 @@ def create_app() -> FastAPI:
     app.include_router(compliance.router, prefix="/compliance", tags=["compliance"])
     app.include_router(derivatives.router, prefix="/derivatives", tags=["derivatives"])
 
+    # Help chatbot (public endpoint, tier-gated by auth context)
+    app.include_router(chat.router, prefix="/chat", tags=["chat"])
+
     # WebSocket (unauthenticated connect, auth on subscribe)
     app.include_router(websocket.router, tags=["websocket"])
 
@@ -168,7 +170,7 @@ def main() -> None:
     uvicorn.run(
         "unified_trading_api.main:create_app",
         factory=True,
-        host="0.0.0.0",
+        host="0.0.0.0",  # nosec B104 — Cloud Run requires binding all interfaces
         port=8030,
     )
 

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 from fastapi import APIRouter, Depends, Query, Request
 
 from unified_trading_api.middleware.auth import verify_api_key
@@ -135,7 +137,6 @@ async def promote_model(
 ) -> dict[str, object]:
     """Promote a model version to production."""
     service = get_service(request)
-    from datetime import UTC, datetime
 
     updated = service.update(
         "model_versions",

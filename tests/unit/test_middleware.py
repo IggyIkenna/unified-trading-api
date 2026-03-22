@@ -27,7 +27,7 @@ class TestVerifyApiKey:
 
         setup_events("unified-trading-api", "test")
 
-        from unified_trading_library.core.mock_state_store import MockStateStore
+        from unified_trading_library import MockStateStore
 
         from unified_trading_api.main import create_app
         from unified_trading_api.mock_data.seed import seed_all_domains
@@ -51,7 +51,7 @@ class TestVerifyApiKey:
 
         setup_events("unified-trading-api", "test")
 
-        from unified_trading_library.core.mock_state_store import MockStateStore
+        from unified_trading_library import MockStateStore
 
         from unified_trading_api.main import create_app
         from unified_trading_api.mock_data.seed import seed_all_domains

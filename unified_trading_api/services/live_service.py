@@ -14,22 +14,22 @@ class LiveDomainService:
     def list(
         self,
         collection: str,
-        filters: dict[str, str | int | float | bool | None] | None = None,
+        _filters: dict[str, str | int | float | bool | None] | None = None,
     ) -> list[dict[str, object]]:
         raise NotImplementedError(f"Live mode not wired for collection '{collection}'")
 
-    def get(self, collection: str, record_id: str) -> dict[str, object] | None:
+    def get(self, collection: str, _record_id: str) -> dict[str, object] | None:
         raise NotImplementedError(f"Live mode not wired for collection '{collection}'")
 
-    def create(self, collection: str, data: dict[str, object]) -> dict[str, object]:
+    def create(self, collection: str, _data: dict[str, object]) -> dict[str, object]:
         raise NotImplementedError(f"Live mode not wired for collection '{collection}'")
 
     def update(
-        self, collection: str, record_id: str, data: dict[str, object]
+        self, collection: str, _record_id: str, _data: dict[str, object]
     ) -> dict[str, object] | None:
         raise NotImplementedError(f"Live mode not wired for collection '{collection}'")
 
-    def delete(self, collection: str, record_id: str) -> bool:
+    def delete(self, collection: str, _record_id: str) -> bool:
         raise NotImplementedError(f"Live mode not wired for collection '{collection}'")
 
     def reset(self) -> None:

@@ -21,7 +21,7 @@ def client() -> TestClient:
     app.state.start_time = 0.0
 
     # Wire service layer
-    from unified_trading_library.core.mock_state_store import MockStateStore
+    from unified_trading_library import MockStateStore
 
     from unified_trading_api.mock_data.seed import seed_all_domains
     from unified_trading_api.services.mock_service import MockDomainService

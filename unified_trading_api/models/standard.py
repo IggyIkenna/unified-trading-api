@@ -8,18 +8,18 @@ from collections.abc import Sequence
 from pydantic import BaseModel, Field
 
 
-class ErrorDetail(BaseModel):
+class ErrorDetail(BaseModel):  # CORRECT-LOCAL: API response model
     code: str
     message: str
     details: dict[str, object] | None = None
 
 
-class StandardErrorResponse(BaseModel):
+class StandardErrorResponse(BaseModel):  # CORRECT-LOCAL: API response model
     error: ErrorDetail
     request_id: str = Field(default_factory=lambda: str(uuid.uuid4())[:8])
 
 
-class PaginationMeta(BaseModel):
+class PaginationMeta(BaseModel):  # CORRECT-LOCAL: API response model
     total: int
     page: int
     page_size: int

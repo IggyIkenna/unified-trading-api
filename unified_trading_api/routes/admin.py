@@ -5,8 +5,9 @@ from __future__ import annotations
 import logging
 
 from fastapi import APIRouter, Request
-from unified_trading_library.core.mock_state_store import MockStateStore
+from unified_trading_library import MockStateStore
 
+from unified_trading_api.mock_data.seed import seed_all_domains
 from unified_trading_api.services.app_state import (
     get_mock_mode,
     get_mock_store_raw,
@@ -34,8 +35,6 @@ async def reset_demo(request: Request) -> dict[str, str]:
     # Re-seed from scratch
     raw_store = get_mock_store_raw(request)
     if isinstance(raw_store, MockStateStore):
-        from unified_trading_api.mock_data.seed import seed_all_domains
-
         seed_all_domains(raw_store)
 
     logger.info("POST /admin/reset — mock state reset to seed")

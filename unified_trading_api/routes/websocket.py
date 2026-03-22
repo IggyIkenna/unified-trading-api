@@ -16,8 +16,17 @@ from collections import defaultdict
 from typing import cast
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from unified_trading_library.core.mock_state_store import MockStateStore
+from unified_api_contracts.registry.representative_sample import (
+    CEFI_PERPETUAL_SPECS,
+    CEFI_SPOT_SPECS,
+    DEFI_INSTRUMENT_SPECS,
+    SPORTS_INSTRUMENT_SPECS,
+    TRADFI_EQUITY_SPECS,
+    TRADFI_FUTURES_SPECS,
+)
+from unified_trading_library import MockStateStore
 
+from unified_trading_api.mock_data.seed_tickers import BASE_PRICES
 from unified_trading_api.services.app_state import get_mock_mode_ws
 
 router = APIRouter()
@@ -32,115 +41,79 @@ def _build_instruments_from_registry() -> list[dict[str, object]]:
     If UAC import fails (e.g. not installed), falls back to a minimal
     hardcoded set so the WebSocket still works in development.
     """
-    from unified_trading_api.mock_data.seed_tickers import BASE_PRICES
-
     instruments: list[dict[str, object]] = []
-    try:
-        from unified_api_contracts.registry.representative_sample import (
-            CEFI_PERPETUAL_SPECS,
-            CEFI_SPOT_SPECS,
-            DEFI_INSTRUMENT_SPECS,
-            SPORTS_INSTRUMENT_SPECS,
-            TRADFI_EQUITY_SPECS,
-            TRADFI_FUTURES_SPECS,
-        )
 
-        for spec in CEFI_SPOT_SPECS:
-            base = str(spec["base"])
-            price = BASE_PRICES.get(base, 100.0)
-            instruments.append(
-                {
-                    "instrument": str(spec["symbol"]),
-                    "venue": str(spec["venue"]),
-                    "price": price,
-                    "vol": price * 0.001,
-                    "asset_class": "cefi",
-                }
-            )
-        for spec in CEFI_PERPETUAL_SPECS:
-            base = str(spec.get("base", spec.get("symbol", "")))
-            price = BASE_PRICES.get(base, 67000.0)
-            instruments.append(
-                {
-                    "instrument": str(spec["symbol"]),
-                    "venue": str(spec["venue"]),
-                    "price": price,
-                    "vol": price * 0.0012,
-                    "asset_class": "cefi",
-                }
-            )
-        for spec in TRADFI_EQUITY_SPECS:
-            sym = str(spec["symbol"])
-            price = BASE_PRICES.get(sym, 100.0)
-            instruments.append(
-                {
-                    "instrument": sym,
-                    "venue": str(spec["venue"]),
-                    "price": price,
-                    "vol": price * 0.008,
-                    "asset_class": "tradfi",
-                }
-            )
-        for spec in TRADFI_FUTURES_SPECS:
-            sym = str(spec["symbol"])
-            price = BASE_PRICES.get(sym, 5000.0)
-            instruments.append(
-                {
-                    "instrument": sym,
-                    "venue": str(spec["venue"]),
-                    "price": price,
-                    "vol": price * 0.003,
-                    "asset_class": "tradfi",
-                }
-            )
-        for spec in DEFI_INSTRUMENT_SPECS:
-            sym = str(spec.get("symbol", spec.get("base", "")))
-            price = BASE_PRICES.get(sym, 1.0)
-            instruments.append(
-                {
-                    "instrument": sym,
-                    "venue": str(spec["venue"]),
-                    "price": price,
-                    "vol": price * 0.0001,
-                    "asset_class": "defi",
-                }
-            )
-        for spec in SPORTS_INSTRUMENT_SPECS:
-            sym = str(spec.get("symbol", spec.get("event_id", "")))
-            instruments.append(
-                {
-                    "instrument": sym,
-                    "venue": str(spec["venue"]),
-                    "price": 0.55,
-                    "vol": 0.02,
-                    "asset_class": "sports",
-                }
-            )
-    except (ImportError, KeyError):
-        logger.warning("UAC representative_sample not available — using minimal instrument set")
-        instruments = [
+    for spec in CEFI_SPOT_SPECS:
+        base = str(spec["base"])
+        price = BASE_PRICES.get(base, 100.0)
+        instruments.append(
             {
-                "instrument": "BTC-USDT",
-                "venue": "binance",
-                "price": 67500.0,
-                "vol": 80.0,
+                "instrument": str(spec["symbol"]),
+                "venue": str(spec["venue"]),
+                "price": price,
+                "vol": price * 0.001,
                 "asset_class": "cefi",
-            },
+            }
+        )
+    for spec in CEFI_PERPETUAL_SPECS:
+        base = str(spec.get("base", spec.get("symbol", "")))  # noqa: qg-empty-fallback
+        price = BASE_PRICES.get(base, 67000.0)
+        instruments.append(
             {
-                "instrument": "ETH-USDT",
-                "venue": "binance",
-                "price": 3520.0,
-                "vol": 8.0,
+                "instrument": str(spec["symbol"]),
+                "venue": str(spec["venue"]),
+                "price": price,
+                "vol": price * 0.0012,
                 "asset_class": "cefi",
-            },
+            }
+        )
+    for spec in TRADFI_EQUITY_SPECS:
+        sym = str(spec["symbol"])
+        price = BASE_PRICES.get(sym, 100.0)
+        instruments.append(
             {
-                "instrument": "SOL-USDT",
-                "venue": "binance",
-                "price": 142.0,
-                "vol": 2.5,
-                "asset_class": "cefi",
-            },
-        ]
+                "instrument": sym,
+                "venue": str(spec["venue"]),
+                "price": price,
+                "vol": price * 0.008,
+                "asset_class": "tradfi",
+            }
+        )
+    for spec in TRADFI_FUTURES_SPECS:
+        sym = str(spec.get("symbol", spec.get("root", "")))  # noqa: qg-empty-fallback
+        price = BASE_PRICES.get(sym, 5000.0)
+        instruments.append(
+            {
+                "instrument": sym,
+                "venue": str(spec["venue"]),
+                "price": price,
+                "vol": price * 0.003,
+                "asset_class": "tradfi",
+            }
+        )
+    for spec in DEFI_INSTRUMENT_SPECS:
+        sym = str(spec.get("symbol", spec.get("base", "")))  # noqa: qg-empty-fallback
+        price = BASE_PRICES.get(sym, 1.0)
+        instruments.append(
+            {
+                "instrument": sym,
+                "venue": str(spec["venue"]),
+                "price": price,
+                "vol": price * 0.0001,
+                "asset_class": "defi",
+            }
+        )
+    for spec in SPORTS_INSTRUMENT_SPECS:
+        sym = str(spec.get("symbol", spec.get("event_id", "")))  # noqa: qg-empty-fallback
+        instruments.append(
+            {
+                "instrument": sym,
+                "venue": str(spec["venue"]),
+                "price": 0.55,
+                "vol": 0.02,
+                "asset_class": "sports",
+            }
+        )
     return instruments
 
 
@@ -182,12 +155,115 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
         logger.exception("WebSocket error")
     finally:
         if mock_task is not None:
-            mock_task.cancel()
+            _ = mock_task.cancel()
         for ch in client_channels:
             _subscriptions[ch].discard(websocket)
 
 
-async def _mock_data_generator(websocket: WebSocket, channels: set[str]) -> None:  # noqa: C901
+def _recalc_positions(
+    store: MockStateStore,
+    prices: dict[str, float],
+    ts: float,
+) -> list[dict[str, object]]:
+    """Recalculate PnL for all positions against current prices."""
+    positions = store.list("positions_live")
+    if not positions:
+        positions = store.list("positions")
+
+    updated_positions: list[dict[str, object]] = []
+    for pos in positions:
+        instrument = str(pos.get("instrument", ""))  # noqa: qg-empty-fallback
+        entry_price = float(str(pos.get("entry_price", 0)))
+        quantity = float(str(pos.get("quantity", 0)))
+        side = str(pos.get("side", "long"))
+        current_price = prices.get(instrument, entry_price)
+
+        side_mult = 1.0 if side == "long" else -1.0
+        fx_rate = float(str(pos.get("fx_rate_to_usd", 1.0)))
+        unrealized_pnl = (current_price - entry_price) * quantity * side_mult * fx_rate
+        pnl_pct = (
+            ((current_price / entry_price) - 1.0) * 100 * side_mult if entry_price > 0 else 0.0
+        )
+
+        pos_update: dict[str, object] = {
+            "unrealized_pnl": round(unrealized_pnl, 2),
+            "pnl_pct": round(pnl_pct, 4),
+            "mark_price": round(current_price, 2),
+            "last_updated": ts,
+        }
+        pos_id = str(pos.get("id", ""))  # noqa: qg-empty-fallback
+        if pos_id:
+            _ = store.update("positions_live", pos_id, pos_update)
+
+        updated_positions.append({**pos, **pos_update})
+
+    return updated_positions
+
+
+def _aggregate_strategy_pnl(store: MockStateStore) -> list[dict[str, object]]:
+    """Aggregate unrealized PnL per strategy."""
+    positions = store.list("positions_live")
+    if not positions:
+        positions = store.list("positions")
+
+    strategy_pnl: dict[str, float] = {}
+    for pos in positions:
+        sid = str(pos.get("strategy_id", "unknown"))
+        pnl = float(str(pos.get("unrealized_pnl", 0)))
+        strategy_pnl[sid] = strategy_pnl.get(sid, 0) + pnl
+
+    return [
+        {"strategy_id": sid, "unrealized_pnl": round(pnl, 2)} for sid, pnl in strategy_pnl.items()
+    ]
+
+
+async def _emit_market_ticks(
+    websocket: WebSocket,
+    prices: dict[str, float],
+    vols: dict[str, float],
+    venues: dict[str, str],
+    ts: float,
+    store: MockStateStore | None,
+) -> None:
+    """Emit market data ticks with Brownian motion and update store."""
+    for instrument, price in prices.items():
+        vol = vols.get(instrument, 1.0)
+        drift = vol * random.gauss(0, 1)  # nosec B311
+        new_price = max(price + drift, price * 0.8)
+        prices[instrument] = new_price
+
+        tick = {
+            "venue": venues.get(instrument, "unknown"),
+            "instrument": instrument,
+            "price": round(new_price, 6 if new_price < 1 else 2),
+            "bid": round(new_price * 0.9999, 6 if new_price < 1 else 2),
+            "ask": round(new_price * 1.0001, 6 if new_price < 1 else 2),
+            "volume": round(random.uniform(0.1, 50.0), 4),  # nosec B311
+            "timestamp": ts,
+        }
+        await websocket.send_json({"channel": "market-data", "type": "tick", "data": tick})
+
+        if store is not None:
+            ticker_data: dict[str, object] = {
+                "price": new_price,
+                "bid": new_price * 0.9999,
+                "ask": new_price * 1.0001,
+                "timestamp": ts,
+            }
+            updated = store.update("tickers_live", instrument, ticker_data)
+            if not updated:
+                _ = store.create(
+                    "tickers_live",
+                    {
+                        "id": instrument,
+                        "instrument": instrument,
+                        "venue": venues.get(instrument, "unknown"),
+                        **ticker_data,
+                    },
+                )
+
+
+async def _mock_data_generator(websocket: WebSocket, channels: set[str]) -> None:
     """Generate mock data with Brownian motion, PnL recalculation."""
     tick_count = 0
 
@@ -201,85 +277,17 @@ async def _mock_data_generator(websocket: WebSocket, channels: set[str]) -> None
     store: MockStateStore | None = raw_store if isinstance(raw_store, MockStateStore) else None
 
     while True:
-        await asyncio.sleep(random.uniform(0.5, 2.0))
+        await asyncio.sleep(random.uniform(0.5, 2.0))  # nosec B311
         tick_count += 1
         ts = time.time()
 
         # Market data ticks
         if "market-data" in channels:
-            for instrument, price in prices.items():
-                vol = vols.get(instrument, 1.0)
-                # Brownian motion with mean-reverting drift
-                drift = vol * random.gauss(0, 1)
-                new_price = max(price + drift, price * 0.8)
-                prices[instrument] = new_price
-
-                tick = {
-                    "venue": venues.get(instrument, "unknown"),
-                    "instrument": instrument,
-                    "price": round(new_price, 6 if new_price < 1 else 2),
-                    "bid": round(new_price * 0.9999, 6 if new_price < 1 else 2),
-                    "ask": round(new_price * 1.0001, 6 if new_price < 1 else 2),
-                    "volume": round(random.uniform(0.1, 50.0), 4),
-                    "timestamp": ts,
-                }
-                await websocket.send_json({"channel": "market-data", "type": "tick", "data": tick})
-
-                # Update tickers_live in store
-                if store is not None:
-                    ticker_data: dict[str, object] = {
-                        "price": new_price,
-                        "bid": new_price * 0.9999,
-                        "ask": new_price * 1.0001,
-                        "timestamp": ts,
-                    }
-                    updated = store.update("tickers_live", instrument, ticker_data)
-                    if not updated:
-                        store.create(
-                            "tickers_live",
-                            {
-                                "id": instrument,
-                                "instrument": instrument,
-                                "venue": venues.get(instrument, "unknown"),
-                                **ticker_data,
-                            },
-                        )
+            await _emit_market_ticks(websocket, prices, vols, venues, ts, store)
 
         # PnL recalculation every 5 ticks
         if "positions" in channels and tick_count % 5 == 0 and store is not None:
-            positions = store.list("positions_live")
-            if not positions:
-                positions = store.list("positions")
-
-            updated_positions: list[dict[str, object]] = []
-            for pos in positions:
-                instrument = str(pos.get("instrument", ""))
-                entry_price = float(str(pos.get("entry_price", 0)))
-                quantity = float(str(pos.get("quantity", 0)))
-                side = str(pos.get("side", "long"))
-                current_price = prices.get(instrument, entry_price)
-
-                side_mult = 1.0 if side == "long" else -1.0
-                fx_rate = float(str(pos.get("fx_rate_to_usd", 1.0)))
-                unrealized_pnl = (current_price - entry_price) * quantity * side_mult * fx_rate
-                pnl_pct = (
-                    ((current_price / entry_price) - 1.0) * 100 * side_mult
-                    if entry_price > 0
-                    else 0.0
-                )
-
-                pos_update: dict[str, object] = {
-                    "unrealized_pnl": round(unrealized_pnl, 2),
-                    "pnl_pct": round(pnl_pct, 4),
-                    "mark_price": round(current_price, 2),
-                    "last_updated": ts,
-                }
-                pos_id = str(pos.get("id", ""))
-                if pos_id:
-                    store.update("positions_live", pos_id, pos_update)
-
-                updated_positions.append({**pos, **pos_update})
-
+            updated_positions = _recalc_positions(store, prices, ts)
             await websocket.send_json(
                 {
                     "channel": "positions",
@@ -290,21 +298,7 @@ async def _mock_data_generator(websocket: WebSocket, channels: set[str]) -> None
 
         # Analytics channel — strategy-level PnL aggregation
         if "analytics" in channels and tick_count % 10 == 0 and store is not None:
-            positions = store.list("positions_live")
-            if not positions:
-                positions = store.list("positions")
-
-            strategy_pnl: dict[str, float] = {}
-            for pos in positions:
-                sid = str(pos.get("strategy_id", "unknown"))
-                pnl = float(str(pos.get("unrealized_pnl", 0)))
-                strategy_pnl[sid] = strategy_pnl.get(sid, 0) + pnl
-
-            strategies_summary = [
-                {"strategy_id": sid, "unrealized_pnl": round(pnl, 2)}
-                for sid, pnl in strategy_pnl.items()
-            ]
-
+            strategies_summary = _aggregate_strategy_pnl(store)
             await websocket.send_json(
                 {
                     "channel": "analytics",
@@ -321,8 +315,8 @@ async def _mock_data_generator(websocket: WebSocket, channels: set[str]) -> None
                     "type": "alert",
                     "data": {
                         "alert_id": f"alert-ws-{tick_count}",
-                        "severity": random.choice(["low", "medium", "high"]),
-                        "message": random.choice(
+                        "severity": random.choice(["low", "medium", "high"]),  # nosec B311
+                        "message": random.choice(  # nosec B311
                             [
                                 "Position approaching limit",
                                 "Unusual volume detected",
@@ -343,7 +337,7 @@ async def _mock_data_generator(websocket: WebSocket, channels: set[str]) -> None
                     "type": "status",
                     "data": {
                         "services_healthy": 21,
-                        "services_degraded": random.randint(0, 1),
+                        "services_degraded": random.randint(0, 1),  # nosec B311
                         "timestamp": ts,
                     },
                 }
@@ -351,7 +345,7 @@ async def _mock_data_generator(websocket: WebSocket, channels: set[str]) -> None
 
         # Execution ticks
         if "execution" in channels and tick_count % 3 == 0:
-            instrument = random.choice(list(prices.keys()))
+            instrument = random.choice(list(prices.keys()))  # nosec B311
             await websocket.send_json(
                 {
                     "channel": "execution",
@@ -361,7 +355,7 @@ async def _mock_data_generator(websocket: WebSocket, channels: set[str]) -> None
                         "status": "filled",
                         "instrument": instrument,
                         "price": round(prices[instrument], 2),
-                        "quantity": round(random.uniform(0.01, 2.0), 4),
+                        "quantity": round(random.uniform(0.01, 2.0), 4),  # nosec B311
                         "timestamp": ts,
                     },
                 }

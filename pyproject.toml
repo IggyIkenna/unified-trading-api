@@ -22,13 +22,14 @@ dependencies = [
     "prometheus-client>=0.20.0,<1.0.0",
     # HTTP client (proxy to deployment-api)
     "httpx>=0.28.1,<1.0.0",
+    # LLM — tiered help chatbot
+    "anthropic>=0.49.0,<1.0.0",
     # WebSocket
     "websockets>=14.0,<15.0",
     # Internal libraries
     "unified-trading-library>=0.1.0,<1.0.0",
     "unified-events-interface>=0.1.0,<1.0.0",
     "unified-config-interface>=0.1.0,<1.0.0",
-    "unified-cloud-interface>=0.1.0,<1.0.0",
     "unified-internal-contracts>=0.1.0,<1.0.0",
     "unified-api-contracts>=0.1.0,<1.0.0",
     # Test / QG
@@ -54,7 +55,6 @@ unified-trading-api = "unified_trading_api.main:main"
 unified-trading-library = { path = "../unified-trading-library", editable = true}
 unified-events-interface = { path = "../unified-events-interface", editable = true}
 unified-config-interface = { path = "../unified-config-interface", editable = true}
-unified-cloud-interface = { path = "../unified-cloud-interface", editable = true}
 unified-internal-contracts = { path = "../unified-internal-contracts", editable = true}
 unified-api-contracts = { path = "../unified-api-contracts", editable = true}
 
@@ -89,6 +89,7 @@ reportUnknownArgumentType = "error"
 reportUnknownParameterType = "error"
 reportUnusedFunction = "none"
 reportUnusedImport = "none"
+reportCallInDefaultInitializer = "none"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

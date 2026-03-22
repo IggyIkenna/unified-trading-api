@@ -5,8 +5,11 @@ Uses raw PDF construction (no external libraries required).
 
 from __future__ import annotations
 
+import logging
 import os
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 
 def _build_pdf(pages: list[list[str]]) -> bytes:
@@ -63,20 +66,20 @@ def _build_pdf(pages: list[list[str]]) -> bytes:
         next_id += 1
         objects.append(
             f"{content_obj_id} 0 obj\n"
-            f"<</Length {stream_len}>>\n"
-            f"stream\n{stream_content}\nendstream\n"
-            "endobj"
+            + f"<</Length {stream_len}>>\n"
+            + f"stream\n{stream_content}\nendstream\n"
+            + "endobj"
         )
 
         page_obj_id = next_id
         next_id += 1
         objects.append(
             f"{page_obj_id} 0 obj\n"
-            "<</Type/Page/Parent 2 0 R"
-            "/MediaBox[0 0 612 792]"
-            f"/Contents {content_obj_id} 0 R"
-            f"/Resources<</Font<</F1 {font_obj_id} 0 R/F2 {font_bold_obj_id} 0 R>>>>>>\n"
-            "endobj"
+            + "<</Type/Page/Parent 2 0 R"
+            + "/MediaBox[0 0 612 792]"
+            + f"/Contents {content_obj_id} 0 R"
+            + f"/Resources<</Font<</F1 {font_obj_id} 0 R/F2 {font_bold_obj_id} 0 R>>>>>>\n"
+            + "endobj"
         )
         page_obj_ids.append(page_obj_id)
 
@@ -247,12 +250,12 @@ def main() -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     executive_path = output_dir / "executive_report.pdf"
-    executive_path.write_bytes(generate_executive_report())
-    print(f"Generated: {executive_path} ({os.path.getsize(executive_path)} bytes)")
+    _ = executive_path.write_bytes(generate_executive_report())
+    logger.info("Generated: %s (%d bytes)", executive_path, os.path.getsize(executive_path))
 
     pnl_path = output_dir / "pnl_attribution.pdf"
-    pnl_path.write_bytes(generate_pnl_attribution())
-    print(f"Generated: {pnl_path} ({os.path.getsize(pnl_path)} bytes)")
+    _ = pnl_path.write_bytes(generate_pnl_attribution())
+    logger.info("Generated: %s (%d bytes)", pnl_path, os.path.getsize(pnl_path))
 
 
 if __name__ == "__main__":

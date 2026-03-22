@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from fastapi import Request
 
+from unified_trading_api.mock_data.personas import PERSONAS
 from unified_trading_api.services.app_state import get_service_from_state
 from unified_trading_api.services.base import DomainService
 
@@ -24,8 +25,6 @@ def get_service(request: Request) -> DomainService:
     # Apply org scoping from persona header (mock mode only)
     persona_id = request.headers.get("x-demo-persona")
     if persona_id and hasattr(service, "persona_org_id"):
-        from unified_trading_api.mock_data.personas import PERSONAS
-
         persona = next((p for p in PERSONAS if p["id"] == persona_id), None)
         if persona:
             setattr(service, "persona_org_id", str(persona["org_id"]))  # noqa: B010

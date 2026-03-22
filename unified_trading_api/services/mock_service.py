@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import logging
 
-from unified_trading_library.core.mock_state_store import MockStateStore
+from unified_trading_library import MockStateStore
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ class MockDomainService:
     """
 
     def __init__(self, store: MockStateStore) -> None:
-        self._store = store
+        self._store: MockStateStore = store
         self.persona_org_id: str | None = None
         self.persona_role: str | None = None
 

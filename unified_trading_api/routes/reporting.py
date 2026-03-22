@@ -7,8 +7,12 @@ In real mode: proxies to client-reporting-api (port 8014).
 from __future__ import annotations
 
 import logging
+from datetime import UTC, datetime
+from pathlib import Path
 
+import httpx
 from fastapi import APIRouter, Depends, Query, Request
+from fastapi.responses import FileResponse, JSONResponse
 
 from unified_trading_api.middleware.auth import verify_api_key
 from unified_trading_api.models.standard import paginate
@@ -16,9 +20,56 @@ from unified_trading_api.services.factory import get_service
 
 router = APIRouter(dependencies=[Depends(verify_api_key)])
 
+# Unauthenticated health sub-router — mounted by main.py at /reporting prefix
+health_router = APIRouter()
+
 logger = logging.getLogger(__name__)
 
 _CLIENT_REPORTING_URL = "http://localhost:8014"
+
+
+@health_router.get("/health")
+async def reporting_health(request: Request) -> JSONResponse:
+    """Health probe for client-reporting-api domain.
+
+    Mock mode: returns synthetic OK (no downstream service needed).
+    Real mode: proxies to client-reporting-api at port 8014.
+    Returns HTTP 503 when downstream is unreachable so the UI correctly detects "down".
+    """
+    mock_mode: bool = getattr(request.app.state, "mock_mode", True)  # pyright: ignore[reportAny]
+    if mock_mode:
+        return JSONResponse(
+            {
+                "status": "ok",
+                "service": "client-reporting-api",
+                "mode": "mock",
+                "detail": "served by unified-trading-api gateway (mock mode)",
+            }
+        )
+    try:
+        async with httpx.AsyncClient(base_url=_CLIENT_REPORTING_URL, timeout=5.0) as client:
+            resp = await client.get("/health")
+            if resp.status_code == 200:
+                result: dict[str, object] = resp.json()  # pyright: ignore[reportAny]
+                return JSONResponse(result)
+            return JSONResponse(
+                {
+                    "status": "down",
+                    "service": "client-reporting-api",
+                    "detail": f"HTTP {resp.status_code}",
+                },
+                status_code=503,
+            )
+    except Exception as exc:
+        logger.warning("client-reporting-api health check failed: %s", exc)
+        return JSONResponse(
+            {
+                "status": "down",
+                "service": "client-reporting-api",
+                "detail": str(exc),
+            },
+            status_code=503,
+        )
 
 
 async def _proxy_or_mock(
@@ -31,10 +82,9 @@ async def _proxy_or_mock(
     if mock_mode:
         return None
     try:
-        import httpx
-
         async with httpx.AsyncClient(base_url=_CLIENT_REPORTING_URL, timeout=10.0) as client:
-            cleaned = {k: v for k, v in (params or {}).items() if v is not None}
+            effective_params: dict[str, str | int | None] = params if params is not None else {}
+            cleaned = {k: v for k, v in effective_params.items() if v is not None}
             resp = await client.get(f"/api{path}", params=cleaned)
             result: dict[str, object] = resp.json()  # pyright: ignore[reportAny]
             return result
@@ -109,8 +159,6 @@ async def generate_report(
     """Generate a report (mock: creates record, real: proxies to client-reporting-api)."""
     service = get_service(request)
     body: dict[str, object] = await request.json()  # pyright: ignore[reportAny]
-    from datetime import UTC, datetime
-
     report = service.create(
         "generated_reports",
         {
@@ -128,10 +176,6 @@ async def download_report(
     report_id: str,
 ) -> object:
     """Download a generated report. In mock mode serves a sample PDF."""
-    from pathlib import Path
-
-    from fastapi.responses import FileResponse
-
     service = get_service(request)
     report = service.get("generated_reports", report_id)
     if not report:

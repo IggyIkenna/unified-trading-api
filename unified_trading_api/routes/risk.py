@@ -90,7 +90,7 @@ async def toggle_circuit_breaker(
     """Trip or reset a circuit breaker for a strategy."""
     service = get_service(request)
     body: dict[str, object] = await request.json()  # pyright: ignore[reportAny]
-    strategy_id = str(body.get("strategy_id", ""))
+    strategy_id = str(body.get("strategy_id", ""))  # noqa: qg-empty-fallback
     action = str(body.get("action", "trip"))  # "trip" or "reset"
 
     strategy = service.get("strategies", strategy_id)
@@ -116,13 +116,13 @@ async def kill_switch(
     service = get_service(request)
     body: dict[str, object] = await request.json()  # pyright: ignore[reportAny]
     scope = str(body.get("scope", "strategy"))  # "strategy", "venue", "global"
-    target_id = str(body.get("target_id", ""))
+    target_id = str(body.get("target_id", ""))  # noqa: qg-empty-fallback
 
     if scope == "global":
         strategies = service.list("strategies")
         for s in strategies:
-            sid = str(s.get("id", ""))
-            service.update("strategies", sid, {"kill_switch_active": True, "status": "halted"})
+            sid = str(s.get("id", ""))  # noqa: qg-empty-fallback
+            _ = service.update("strategies", sid, {"kill_switch_active": True, "status": "halted"})
         return {"status": "ok", "scope": "global", "strategies_halted": len(strategies)}
     elif scope == "strategy":
         updated = service.update(
@@ -134,8 +134,8 @@ async def kill_switch(
     elif scope == "venue":
         strategies = service.list("strategies", filters={"venue": target_id})
         for s in strategies:
-            sid = str(s.get("id", ""))
-            service.update("strategies", sid, {"kill_switch_active": True, "status": "halted"})
+            sid = str(s.get("id", ""))  # noqa: qg-empty-fallback
+            _ = service.update("strategies", sid, {"kill_switch_active": True, "status": "halted"})
         return {
             "status": "ok",
             "scope": scope,

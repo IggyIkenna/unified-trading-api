@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import random
+from typing import override
 
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
@@ -20,8 +21,9 @@ class LatencyMiddleware(BaseHTTPMiddleware):
 
     def __init__(self, app: ASGIApp, base_ms: int = 0) -> None:
         super().__init__(app)
-        self.base_ms = base_ms
+        self.base_ms: int = base_ms
 
+    @override
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         if self.base_ms <= 0:
             return await call_next(request)
@@ -34,9 +36,9 @@ class LatencyMiddleware(BaseHTTPMiddleware):
 
         # Lower latency for POST (snappy actions)
         if request.method == "POST":
-            delay_ms = self.base_ms // 3 + random.randint(0, self.base_ms // 6)
+            delay_ms = self.base_ms // 3 + random.randint(0, self.base_ms // 6)  # nosec B311
         else:
-            delay_ms = self.base_ms + random.randint(0, self.base_ms // 2)
+            delay_ms = self.base_ms + random.randint(0, self.base_ms // 2)  # nosec B311
 
         await asyncio.sleep(delay_ms / 1000.0)
         return await call_next(request)

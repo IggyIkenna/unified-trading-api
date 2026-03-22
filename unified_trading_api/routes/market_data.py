@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import random as _rng
+
 from fastapi import APIRouter, Depends, Query, Request
 
 from unified_trading_api.middleware.auth import verify_api_key
@@ -22,7 +24,7 @@ async def get_candles(
     instrument: str = Query(...),
     interval: str = Query("1h"),
     limit: int = Query(200, ge=1, le=500),
-    venue: str = Query(None),
+    _venue: str = Query(None),
 ) -> dict[str, object]:
     """Get OHLCV candles for an instrument."""
     service = get_service(request)
@@ -42,10 +44,9 @@ async def get_orderbook(
     request: Request,
     instrument: str = Query(...),
     depth: int = Query(20, ge=1, le=50),
-    venue: str = Query(None),
+    _venue: str = Query(None),
 ) -> dict[str, object]:
     """Get order book snapshot — generates dynamic depth in mock mode."""
-    import random as _rng
 
     service = get_service(request)
 
@@ -67,7 +68,7 @@ async def get_orderbook(
         bid_price = mid_price - offset
         ask_price = mid_price + offset
         # Decreasing quantity away from mid
-        base_qty = _rng.uniform(0.5, 10.0) / (1 + i * 0.3)
+        base_qty = _rng.uniform(0.5, 10.0) / (1 + i * 0.3)  # nosec B311
         bids.append({"price": round(bid_price, 2), "quantity": round(base_qty, 4)})
         asks.append({"price": round(ask_price, 2), "quantity": round(base_qty, 4)})
 

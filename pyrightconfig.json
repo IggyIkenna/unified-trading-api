@@ -1,0 +1,14 @@
+{
+  "pythonVersion": "3.13",
+  "typeCheckingMode": "strict",
+  "include": ["unified_trading_api"],
+  "reportAny": "error",
+  "reportMissingTypeStubs": false,
+  "reportUnknownMemberType": "error",
+  "reportUnknownVariableType": "error",
+  "reportUnknownArgumentType": "error",
+  "reportUnknownParameterType": "error",
+  "reportUnusedFunction": "none",
+  "reportUnusedImport": "none",
+  "reportCallInDefaultInitializer": "none"
+}

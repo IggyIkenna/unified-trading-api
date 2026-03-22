@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 from fastapi import APIRouter, Depends, Query, Request
 
 from unified_trading_api.middleware.auth import verify_api_key
@@ -21,7 +23,7 @@ async def get_alerts(
     request: Request,
     severity: str = Query(None),
     status: str = Query(None),
-    acknowledged: bool = Query(None),
+    acknowledged: bool | None = Query(None),
     mode: str = Query("live", pattern="^(live|batch)$"),
     as_of: str = Query(None, description="T+1 reconciliation date for batch mode"),
     page: int = Query(1, ge=1),
@@ -54,8 +56,6 @@ async def acknowledge_alert(
 ) -> dict[str, object]:
     """Acknowledge an alert — sets acknowledged:true with timestamp."""
     service = get_service(request)
-    from datetime import UTC, datetime
-
     updated = service.update(
         "alerts_live",
         alert_id,
@@ -96,8 +96,6 @@ async def escalate_alert(
     current = str(alert.get("severity", "medium"))
     idx = severity_ladder.index(current) if current in severity_ladder else 1
     new_severity = severity_ladder[min(idx + 1, len(severity_ladder) - 1)]
-    from datetime import UTC, datetime
-
     updated = service.update(
         "alerts_live",
         alert_id,
@@ -114,7 +112,7 @@ async def get_active_alerts(
     request: Request,
     mode: str = Query("live", pattern="^(live|batch)$"),
     severity: str = Query(None),
-    acknowledged: bool = Query(None),
+    acknowledged: bool | None = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=200),
 ) -> dict[str, object]:
@@ -135,8 +133,6 @@ async def resolve_alert(
 ) -> dict[str, object]:
     """Resolve an alert."""
     service = get_service(request)
-    from datetime import UTC, datetime
-
     updated = service.update(
         "alerts_live",
         alert_id,

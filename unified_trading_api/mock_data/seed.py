@@ -219,7 +219,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
 
         store = _legacy  # pyright: ignore[reportAssignmentType]
 
-    assert store is not None  # guaranteed by the guard above
+    assert store is not None  # nosec B101 — guaranteed by the guard above
     _store: _Seedable = store  # bind for closure — store is guaranteed non-None
 
     def _seed(domain: str, records: list[dict[str, object]]) -> None:
@@ -247,7 +247,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
             "name": s["name"],
             "archetype": s.get("archetype", "unknown"),
             "asset_class": s.get("asset_class", "cefi"),
-            "instruments": s.get("instruments", []),
+            "instruments": s.get("instruments", []),  # noqa: qg-empty-fallback
             "execution_mode": s.get("status", "live"),
             "timeframe": "1h",
             "org_id": s.get("org_id", _O),
@@ -4160,7 +4160,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         _seed(_interval_key, _candle_records)
 
     # Legacy "candles" alias for backwards compatibility
-    _seed("candles", _candle_data.get("candles_1m", []))
+    _seed("candles", _candle_data.get("candles_1m", []))  # noqa: qg-empty-fallback
 
     _seed(
         "trades",

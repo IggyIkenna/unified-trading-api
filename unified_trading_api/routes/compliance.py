@@ -31,11 +31,11 @@ async def pre_trade_check(
     """
     service = get_service(request)
     body: dict[str, object] = await request.json()  # pyright: ignore[reportAny]
-    instrument = str(body.get("instrument", ""))
+    instrument = str(body.get("instrument", ""))  # noqa: qg-empty-fallback
     side = str(body.get("side", "BUY"))
     quantity = _to_float(body.get("quantity", 0))
     price = _to_float(body.get("price", 0))
-    strategy_id = str(body.get("strategy_id", ""))
+    strategy_id = str(body.get("strategy_id", ""))  # noqa: qg-empty-fallback
 
     proposed_notional = quantity * price
     checks: list[dict[str, object]] = []

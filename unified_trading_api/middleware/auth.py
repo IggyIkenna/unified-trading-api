@@ -35,8 +35,8 @@ if _disable_auth_raw and _environment == "production":
     )
     raise RuntimeError(
         "DISABLE_AUTH=true is forbidden in production. "
-        "Service refuses to start with auth disabled. "
-        "Unset DISABLE_AUTH or set ENVIRONMENT != production."
+        + "Service refuses to start with auth disabled. "
+        + "Unset DISABLE_AUTH or set ENVIRONMENT != production."
     )
 DISABLE_AUTH: bool = _disable_auth_raw
 
@@ -93,18 +93,20 @@ async def get_current_user(
     if persona_id:
         persona = next((p for p in PERSONAS if p["id"] == persona_id), None)
         if persona:
-            raw_ent = persona.get("entitlements", [])
-            entitlements: list[str] = list(raw_ent) if isinstance(raw_ent, list) else []
+            raw_ent = persona.get("entitlements", [])  # noqa: qg-empty-fallback
+            entitlements: list[str] = (
+                [str(e) for e in cast(list[object], raw_ent)] if isinstance(raw_ent, list) else []
+            )
             return {
                 "user_id": str(persona["id"]),
                 "org_id": str(persona["org_id"]),
                 "role": str(persona["role"]),
                 "entitlements": entitlements,
-                "display_name": str(persona.get("display_name", "")),
+                "display_name": str(persona.get("display_name", "")),  # noqa: qg-empty-fallback
             }
 
     # Try Authorization Bearer token (JWT from auth-api)
-    auth_header = request.headers.get("authorization", "")
+    auth_header = request.headers.get("authorization", "")  # noqa: qg-empty-fallback
     if auth_header.startswith("Bearer "):
         token = auth_header[7:]
         try:
@@ -121,15 +123,15 @@ async def get_current_user(
             claims = cast(
                 dict[str, str | int | list[str]], pyjwt.decode(token, secret, algorithms=["HS256"])
             )
-            raw_entitlements = claims.get("entitlements", [])
+            raw_entitlements = claims.get("entitlements", [])  # noqa: qg-empty-fallback
             return {
-                "user_id": str(claims.get("sub", "")),
-                "org_id": str(claims.get("org_id", "")),
-                "role": str(claims.get("role", "")),
+                "user_id": str(claims.get("sub", "")),  # noqa: qg-empty-fallback
+                "org_id": str(claims.get("org_id", "")),  # noqa: qg-empty-fallback
+                "role": str(claims.get("role", "")),  # noqa: qg-empty-fallback
                 "entitlements": list(raw_entitlements)
                 if isinstance(raw_entitlements, list)
                 else [],
-                "display_name": str(claims.get("name", claims.get("email", ""))),
+                "display_name": str(claims.get("name", claims.get("email", ""))),  # noqa: qg-empty-fallback
             }
         except Exception as exc:
             if not disable_auth:

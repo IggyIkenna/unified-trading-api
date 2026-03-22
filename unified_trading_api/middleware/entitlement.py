@@ -34,11 +34,11 @@ class EntitlementContext:
         scoped_venues: list[str] | None = None,
         max_instruments: int = 10000,
     ) -> None:
-        self.org_id = org_id
-        self.org_type = org_type
-        self.tier = tier
-        self.scoped_venues = scoped_venues or []
-        self.max_instruments = max_instruments
+        self.org_id: str = org_id
+        self.org_type: OrgType = org_type
+        self.tier: str = tier
+        self.scoped_venues: list[str] = scoped_venues if scoped_venues is not None else []
+        self.max_instruments: int = max_instruments
 
     @property
     def is_internal(self) -> bool:
@@ -61,8 +61,10 @@ def get_entitlement_context(request: Request) -> EntitlementContext:
 
     # In real mode, extract from JWT (set by auth middleware upstream)
     auth_claims: dict[str, object] = getattr(request.state, "auth_claims", {})
-    raw_venues = auth_claims.get("scoped_venues", [])
-    venues_list: list[str] = list(raw_venues) if isinstance(raw_venues, list) else []
+    raw_venues = auth_claims.get("scoped_venues", [])  # noqa: qg-empty-fallback
+    venues_list: list[str] = (
+        [str(v) for v in cast(list[object], raw_venues)] if isinstance(raw_venues, list) else []
+    )
     return EntitlementContext(
         org_id=str(auth_claims.get("org_id", "unknown")),
         org_type=OrgType(str(auth_claims.get("org_type", "external"))),

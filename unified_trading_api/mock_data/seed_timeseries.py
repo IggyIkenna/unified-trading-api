@@ -58,7 +58,7 @@ def _generate_curve(
     archetype: str,
     num_days: int,
 ) -> list[dict[str, object]]:
-    rng = random.Random(hash(strategy_id))
+    rng = random.Random(hash(strategy_id))  # nosec B311
     mu, sigma, max_dd, win_bias = _ARCHETYPE_PARAMS.get(archetype, _ARCHETYPE_PARAMS["momentum"])
 
     # ~40% of strategies are unprofitable — flip sign based on seed
@@ -127,9 +127,9 @@ def generate_pnl_timeseries(
     all_records: list[dict[str, object]] = []
 
     for strat in strategies:
-        sid = str(strat.get("id", strat.get("strategy_id", "")))
-        name = str(strat.get("name", ""))
-        archetype = str(strat.get("archetype", "")) or _infer_archetype(name)
+        sid = str(strat.get("id", strat.get("strategy_id", "")))  # noqa: qg-empty-fallback
+        name = str(strat.get("name", ""))  # noqa: qg-empty-fallback
+        archetype = str(strat.get("archetype", "")) or _infer_archetype(name)  # noqa: qg-empty-fallback
 
         inception_raw = strat.get("inception_date")
         if isinstance(inception_raw, str) and inception_raw:

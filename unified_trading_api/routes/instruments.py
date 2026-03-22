@@ -82,7 +82,7 @@ def _get_generator(request: Request) -> InstrumentGenerator:
     return gen
 
 
-class MockInstrumentCreate(BaseModel):
+class MockInstrumentCreate(BaseModel):  # CORRECT-LOCAL: API request body
     """Request body for creating a mock instrument."""
 
     venue: str

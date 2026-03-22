@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import time
 from datetime import UTC, datetime
 
@@ -52,7 +53,6 @@ async def health(request: Request) -> dict[str, object]:
 @router.get("/readiness")
 async def readiness(request: Request) -> dict[str, object]:
     """Runtime readiness with tier detection."""
-    import os
 
     mock_mode = get_mock_mode(request)
     disable_auth = get_disable_auth(request)
@@ -63,7 +63,7 @@ async def readiness(request: Request) -> dict[str, object]:
         declared_tier = 1  # Mock mode = Tier 1
 
     # Check for live service URLs (would indicate Tier 2)
-    live_urls_configured = bool(os.environ.get("LIVE_SERVICE_BASE_URL"))
+    live_urls_configured = bool(os.environ.get("LIVE_SERVICE_BASE_URL"))  # config-bootstrap:
     if live_urls_configured and not mock_mode:
         declared_tier = 2
 

@@ -181,7 +181,7 @@ def _generate_ohlcv(
 
     Returns newest-first (index 0 = most recent candle).
     """
-    rng = random.Random(seed)
+    rng = random.Random(seed)  # nosec B311 — deterministic mock data, not security
 
     # Scale daily vol to per-interval vol (sqrt-of-time)
     minutes_per_day = 1440.0
@@ -207,7 +207,7 @@ def _generate_ohlcv(
         if not _is_within_market_hours(ts, market_class, interval_minutes):
             # Advance price with a random walk even outside hours so that the
             # seed-deterministic price path stays consistent.
-            rng.gauss(0.0, interval_vol / 2.0)
+            _ = rng.gauss(0.0, interval_vol / 2.0)
             continue
 
         open_price = price
@@ -254,7 +254,7 @@ def _generate_ohlcv(
 
 def _vol_for_defi_type(defi_type: str) -> float:
     """Return daily vol for a DeFi instrument type."""
-    mapping: dict[str, str] = {
+    mapping: dict[str, str] = {  # nosec B105 — DeFi type labels, not passwords
         "A_TOKEN": "defi_atoken",
         "DEBT_TOKEN": "defi_debt",
         "POOL": "defi_pool",
