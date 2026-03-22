@@ -101,7 +101,7 @@ def _check_org_integrity(
     errors: list[str] = []
     valid_orgs = set(ORG_IDS)
     for domain in domains:
-        records: list[dict[str, object]] = list_fn(domain)  # pyright: ignore[reportAny]
+        records: list[dict[str, object]] = list_fn(domain)
         for rec in records:
             org = rec.get("org_id")
             if org is not None and str(org) not in valid_orgs:
@@ -129,7 +129,7 @@ def _check_temporal_consistency(
             if str(opened) < inception_date:
                 errors.append(
                     f"position {pos.get('id', '?')} opened_at {opened} is before "
-                    f"strategy {sid} inception_date {inception_date}"
+                    + f"strategy {sid} inception_date {inception_date}"
                 )
     return errors
 
@@ -224,7 +224,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
 
     def _seed(domain: str, records: list[dict[str, object]]) -> None:
         """Seed with auto-id: ensures every record has an 'id' field."""
-        _ensure_id(domain, records)
+        _ = _ensure_id(domain, records)
         _store.seed(domain, records)
 
     # Seed version marker for cache invalidation
@@ -1072,7 +1072,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
 
     # fills_live and fills_batch — copy fills data into live/batch collections
     _store_list = getattr(_store, "list", None)
-    _fills_for_copy: list[dict[str, object]] = _store_list("fills") if _store_list else []  # pyright: ignore[reportAny]
+    _fills_for_copy: list[dict[str, object]] = _store_list("fills") if _store_list else []
     _seed("fills_live", _fills_for_copy)
     _seed("fills_batch", [{**f, "reconciled": True} for f in _fills_for_copy])
 
@@ -5030,11 +5030,8 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
 
     _p8 = generate_phase8_data()
     for _p8_domain, _p8_records in _p8.items():
-        # Only seed if not already seeded above (avoid duplicates)
-        _list_method = getattr(_store, "list", None)
-        existing: list[dict[str, object]] = _list_method(_p8_domain) if _list_method else []  # pyright: ignore[reportAny]
-        if not existing:
-            _seed(_p8_domain, _p8_records)
+        # Phase 8 module generates richer data than inline seeds — always use it
+        _seed(_p8_domain, _p8_records)
 
     # Run consistency validation (log warnings, don't crash)
     import logging
