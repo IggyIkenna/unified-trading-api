@@ -215,12 +215,10 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
                Falls back to legacy singleton for backwards compatibility.
     """
     if store is None:
-        from unified_trading_api.mock_data.state_store import mock_store as _legacy
+        msg = "seed_all_domains() requires an explicit store argument (UTL MockStateStore)"
+        raise TypeError(msg)
 
-        store = _legacy  # pyright: ignore[reportAssignmentType]
-
-    assert store is not None  # nosec B101 — guaranteed by the guard above
-    _store: _Seedable = store  # bind for closure — store is guaranteed non-None
+    _store: _Seedable = store
 
     def _seed(domain: str, records: list[dict[str, object]]) -> None:
         """Seed with auto-id: ensures every record has an 'id' field."""

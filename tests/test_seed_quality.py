@@ -12,18 +12,19 @@ Verifies:
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import ClassVar
 
 import pytest
+from unified_trading_library import MockStateStore
 
 from unified_trading_api.mock_data.seed import seed_all_domains
-from unified_trading_api.mock_data.state_store import MockStateStore
 
 
 @pytest.fixture()
-def seeded_store() -> MockStateStore:
+def seeded_store(tmp_path: Path) -> MockStateStore:
     """Create a fresh MockStateStore and seed it."""
-    store = MockStateStore()
+    store = MockStateStore("test-seed-quality", cache_dir=tmp_path)
     seed_all_domains(store)
     return store
 
@@ -139,11 +140,11 @@ class TestResetBehavior:
         assert initial_count == 50
 
         # Simulate mutation
-        seeded_store.add("strategies", {"id": "strat-extra", "name": "EXTRA"})
+        seeded_store.create("strategies", {"id": "strat-extra", "name": "EXTRA"})
         assert len(seeded_store.list("strategies")) == 51
 
         # Reset and re-seed
-        seeded_store.clear()
+        seeded_store.reset()
         seed_all_domains(seeded_store)
         assert len(seeded_store.list("strategies")) == 50
 

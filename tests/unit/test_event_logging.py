@@ -146,27 +146,3 @@ class TestStandardLogging:
 
         assert hasattr(auth, "logger")
         assert auth.logger.name == "unified_trading_api.middleware.auth"
-
-    def test_state_store_has_logger(self) -> None:
-        """state_store.py should define a module-level logger."""
-        from unified_trading_api.mock_data import state_store
-
-        assert hasattr(state_store, "logger")
-        assert state_store.logger.name == "unified_trading_api.mock_data.state_store"
-
-    def test_state_store_seed_logs_info(self) -> None:
-        """MockStateStore.seed should log the domain and record count."""
-        from unified_trading_api.mock_data.state_store import MockStateStore
-
-        store = MockStateStore()
-        with patch.object(store, "_data") as _:
-            pass
-
-        # Verify seed logs at INFO level
-        import logging
-
-        with patch.object(
-            logging.getLogger("unified_trading_api.mock_data.state_store"), "info"
-        ) as mock_info:
-            store.seed("test_domain", [{"id": "1"}, {"id": "2"}])
-            mock_info.assert_called_once_with("Seeded %s with %d records", "test_domain", 2)

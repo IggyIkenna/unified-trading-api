@@ -30,3 +30,21 @@ def test_readiness_returns_200(client: TestClient) -> None:
     response = client.get("/readiness")
     assert response.status_code == 200
     assert response.json()["status"] == "ready"
+
+
+def test_readiness_mock_mode_returns_mock_state_store(client: TestClient) -> None:
+    """In mock mode (Tier 1), upstream_checks includes the mock-state-store entry."""
+    response = client.get("/readiness")
+    assert response.status_code == 200
+    data = response.json()
+
+    assert data["mock_mode"] is True
+    assert data["declared_runtime_tier"] == 1
+
+    checks = data["upstream_checks"]
+    assert len(checks) == 1
+    store_check = checks[0]
+    assert store_check["name"] == "mock-state-store"
+    assert store_check["required_for_tier"] == 1
+    assert store_check["ok"] is True
+    assert store_check["url"] == "in-process"
