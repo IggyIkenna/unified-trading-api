@@ -7,7 +7,9 @@ vertex 12%, beta 8%.
 
 from __future__ import annotations
 
-from typing import Protocol
+from typing import Final, Protocol
+
+SEED_VERSION: Final[str] = "1.0.0"
 
 
 class _Seedable(Protocol):
@@ -84,24 +86,23 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
                Falls back to legacy singleton for backwards compatibility.
     """
     if store is None:
-        from unified_trading_api.mock_data.state_store import mock_store
+        from unified_trading_api.mock_data.state_store import mock_store as _legacy
 
-        store = mock_store
+        store = _legacy
 
-    _original_seed = store.seed
-
-    def _patched_seed(domain: str, records: list[dict[str, object]]) -> None:
+    def _seed(domain: str, records: list[dict[str, object]]) -> None:
+        """Seed with auto-id: ensures every record has an 'id' field."""
         _ensure_id(domain, records)
-        _original_seed(domain, records)
+        store.seed(domain, records)  # type: ignore[union-attr]
 
-    mock_store = store
-    mock_store.seed = _patched_seed  # type: ignore[assignment]
+    # Seed version marker for cache invalidation
+    _seed("_meta", [{"id": "seed_version", "version": SEED_VERSION}])
 
     # ══════════════════════════════════════════════════════════════════
     #  STRATEGIES (18) — matches UI trading-data.ts
     # ══════════════════════════════════════════════════════════════════
 
-    mock_store.seed(
+    _seed(
         "strategies",
         [
             # ── 8 named strategies from spec ──
@@ -312,7 +313,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
     #                10% rejected
     # ══════════════════════════════════════════════════════════════════
 
-    mock_store.seed(
+    _seed(
         "orders",
         [
             # ── Filled (10) ──
@@ -679,7 +680,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
     #  Realistic slippage 0.01-0.05%, venue-specific fees
     # ══════════════════════════════════════════════════════════════════
 
-    mock_store.seed(
+    _seed(
         "fills",
         [
             # fills for ord-1001 (filled, BTC-USDT binance, 0.15)
@@ -1125,7 +1126,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
     #  EXECUTION VENUES (5)
     # ══════════════════════════════════════════════════════════════════
 
-    mock_store.seed(
+    _seed(
         "execution_venues",
         [
             {
@@ -1171,7 +1172,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "algos",
         [
             {
@@ -1205,7 +1206,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "backtests",
         [
             {
@@ -1263,7 +1264,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
     #  POSITIONS (20) — across 5 venues
     # ══════════════════════════════════════════════════════════════════
 
-    mock_store.seed(
+    _seed(
         "positions",
         [
             # ── Binance (5) ──
@@ -1536,7 +1537,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
 
     # ── Batch/live domain separation ──────────────────────────────
 
-    mock_store.seed(
+    _seed(
         "positions_batch",
         [
             {
@@ -1584,7 +1585,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "positions_live",
         [
             {
@@ -1632,7 +1633,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "position_summary",
         [
             {
@@ -1647,7 +1648,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "balances",
         [
             {
@@ -1729,7 +1730,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
     #  TRADING ANALYTICS
     # ══════════════════════════════════════════════════════════════════
 
-    mock_store.seed(
+    _seed(
         "pnl",
         [
             {
@@ -1799,7 +1800,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "pnl_batch",
         [
             {
@@ -1832,7 +1833,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "pnl_live",
         [
             {
@@ -1865,7 +1866,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "analytics_timeseries",
         [
             {
@@ -1919,7 +1920,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "performance",
         [
             {
@@ -1947,7 +1948,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "analytics_organizations",
         [
             {
@@ -1981,7 +1982,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
     #  SETTLEMENTS (8), INVOICES (5), FEE SCHEDULES (3)
     # ══════════════════════════════════════════════════════════════════
 
-    mock_store.seed(
+    _seed(
         "settlements",
         [
             {
@@ -2059,7 +2060,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "invoices",
         [
             {
@@ -2115,7 +2116,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "fee_schedules",
         [
             {
@@ -2145,7 +2146,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "analytics_instruments",
         [
             {
@@ -2190,7 +2191,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
     #  ML — 8 models, 12 experiments, 5 training jobs, 20 features
     # ══════════════════════════════════════════════════════════════════
 
-    mock_store.seed(
+    _seed(
         "model_families",
         [
             {
@@ -2252,7 +2253,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "experiments",
         [
             {
@@ -2378,7 +2379,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "training_runs",
         [
             {
@@ -2434,7 +2435,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "model_versions",
         [
             {
@@ -2512,7 +2513,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "model_deployments",
         [
             {
@@ -2554,7 +2555,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "ml_features",
         [
             {
@@ -2700,7 +2701,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "datasets",
         [
             {
@@ -2746,7 +2747,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
     #  REPORTING
     # ══════════════════════════════════════════════════════════════════
 
-    mock_store.seed(
+    _seed(
         "reports",
         [
             {
@@ -2779,7 +2780,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "reporting_settlements",
         [
             {
@@ -2803,7 +2804,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "reconciliation",
         [
             {
@@ -2853,7 +2854,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
     #  AUDIT
     # ══════════════════════════════════════════════════════════════════
 
-    mock_store.seed(
+    _seed(
         "audit_events",
         [
             {
@@ -2895,7 +2896,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "compliance",
         [
             {
@@ -2925,7 +2926,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "data_health",
         [
             {
@@ -2966,7 +2967,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "audit_logs",
         [
             {
@@ -3000,7 +3001,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
     #  CONFIG
     # ══════════════════════════════════════════════════════════════════
 
-    mock_store.seed(
+    _seed(
         "system_config",
         [
             {
@@ -3015,7 +3016,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "config_venues",
         [
             {
@@ -3061,7 +3062,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "feature_flags",
         [
             {
@@ -3101,7 +3102,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
     #  ALERTS (18) — 3 critical, 5 high, 6 medium, 4 low
     # ══════════════════════════════════════════════════════════════════
 
-    mock_store.seed(
+    _seed(
         "alerts",
         [
             # ── Critical (3) ──
@@ -3291,7 +3292,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "alert_summary",
         [
             {"severity": "critical", "count": 3},
@@ -3305,7 +3306,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
     #  RISK
     # ══════════════════════════════════════════════════════════════════
 
-    mock_store.seed(
+    _seed(
         "risk_limits",
         [
             {
@@ -3347,7 +3348,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "var",
         [
             {
@@ -3367,7 +3368,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "greeks",
         [
             {
@@ -3391,7 +3392,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "stress_tests",
         [
             {
@@ -3422,7 +3423,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
     #  INSTRUMENTS
     # ══════════════════════════════════════════════════════════════════
 
-    mock_store.seed(
+    _seed(
         "instruments",
         [
             {
@@ -3524,7 +3525,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "instrument_catalogue",
         [
             {
@@ -3545,7 +3546,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "instrument_registry",
         [
             {
@@ -3570,7 +3571,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
     #  DOCUMENTS
     # ══════════════════════════════════════════════════════════════════
 
-    mock_store.seed(
+    _seed(
         "documents",
         [
             {
@@ -3604,7 +3605,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
     #  DEPLOYMENT
     # ══════════════════════════════════════════════════════════════════
 
-    mock_store.seed(
+    _seed(
         "deployment_services",
         [
             {
@@ -3666,7 +3667,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "deployments",
         [
             {
@@ -3690,7 +3691,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "builds",
         [
             {
@@ -3718,7 +3719,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
     #  SERVICE HEALTH (21 services) — matches real services
     # ══════════════════════════════════════════════════════════════════
 
-    mock_store.seed(
+    _seed(
         "service_health",
         [
             {
@@ -3871,7 +3872,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "feature_freshness",
         [
             {
@@ -3912,7 +3913,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "activity",
         [
             {
@@ -3971,7 +3972,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
     #  USERS / ORGANIZATIONS
     # ══════════════════════════════════════════════════════════════════
 
-    mock_store.seed(
+    _seed(
         "user_organizations",
         [
             {"org_id": _O, "name": "Odum Internal", "plan": "enterprise", "member_count": 8},
@@ -3981,7 +3982,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "members",
         [
             {
@@ -4036,7 +4037,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "subscriptions",
         [
             {
@@ -4094,7 +4095,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
     #  MARKET DATA (for existing routes)
     # ══════════════════════════════════════════════════════════════════
 
-    mock_store.seed(
+    _seed(
         "candles",
         [
             {
@@ -4127,7 +4128,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "trades",
         [
             {
@@ -4157,7 +4158,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
-    mock_store.seed(
+    _seed(
         "tickers",
         [
             {

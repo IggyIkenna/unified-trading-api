@@ -72,26 +72,35 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
 
 
 async def _mock_data_generator(websocket: WebSocket, channels: set[str]) -> None:
-    """Generate mock data for subscribed channels."""
+    """Generate mock data for subscribed channels using Brownian motion."""
+    import random
+
     tick_count = 0
+    # Brownian motion state per instrument
+    prices = {"BTC-USDT": 67500.0, "ETH-USDT": 3520.0, "SOL-USDT": 142.0}
+    vols = {"BTC-USDT": 80.0, "ETH-USDT": 8.0, "SOL-USDT": 2.5}
+
     while True:
         await asyncio.sleep(1.0)
         tick_count += 1
         ts = time.time()
 
         if "market-data" in channels:
-            await websocket.send_json(
-                {
-                    "channel": "market-data",
-                    "data": {
-                        "venue": "binance",
-                        "instrument": "BTC-USDT",
-                        "price": 65000.0 + (tick_count % 100),
-                        "volume": 1.5,
-                        "timestamp": ts,
-                    },
-                }
-            )
+            for instrument, price in prices.items():
+                drift = vols[instrument] * random.gauss(0, 1)
+                prices[instrument] = max(price + drift, price * 0.9)
+                await websocket.send_json(
+                    {
+                        "channel": "market-data",
+                        "data": {
+                            "venue": "binance",
+                            "instrument": instrument,
+                            "price": round(prices[instrument], 2),
+                            "volume": round(random.uniform(0.1, 5.0), 4),
+                            "timestamp": ts,
+                        },
+                    }
+                )
 
         if "positions" in channels and tick_count % 5 == 0:
             await websocket.send_json(

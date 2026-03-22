@@ -1,20 +1,10 @@
 """Service factory — returns mock or live implementation based on app state.
 
-Usage in routes:
-    from unified_trading_api.services.factory import get_service
-
-    @router.get("/orders")
-    async def get_orders(
-        request: Request,
-        service: DomainService = Depends(get_service),
-    ):
-        records = service.list("orders", filters={"venue": venue})
-        ...
+In mock mode, extracts the persona from X-Demo-Persona header and sets
+org_id scoping on the MockDomainService so clients only see their data.
 """
 
 from __future__ import annotations
-
-from collections.abc import Callable
 
 from fastapi import Request
 
@@ -25,13 +15,25 @@ def get_service(request: Request) -> DomainService:
     """FastAPI dependency that returns the correct service implementation.
 
     In mock mode: returns MockDomainService backed by UTL MockStateStore.
+    Sets persona_org_id from X-Demo-Persona header for org-scoped queries.
     In real mode: returns LiveDomainService (stubs).
-
-    The service is stored on app.state by the lifespan handler.
     """
-    return request.app.state.service  # type: ignore[no-any-return]
+    service = request.app.state.service
 
+    # Apply org scoping from persona header (mock mode only)
+    persona_id = request.headers.get("x-demo-persona")
+    if persona_id and hasattr(service, "persona_org_id"):
+        from unified_trading_api.mock_data.personas import PERSONAS
 
-def get_service_dep() -> Callable[[Request], DomainService]:
-    """Return the get_service dependency for use with Depends()."""
-    return get_service
+        persona = next((p for p in PERSONAS if p["id"] == persona_id), None)
+        if persona:
+            service.persona_org_id = str(persona["org_id"])
+            service.persona_role = str(persona["role"])
+        else:
+            service.persona_org_id = None
+            service.persona_role = None
+    elif hasattr(service, "persona_org_id"):
+        service.persona_org_id = None
+        service.persona_role = None
+
+    return service  # type: ignore[no-any-return]

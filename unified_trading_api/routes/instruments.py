@@ -67,7 +67,7 @@ def _require_mock_mode(request: Request) -> None:
         )
 
 
-def _get_generator(request: Request) -> "InstrumentGenerator":
+def _get_generator(request: Request) -> object:
     """Get or create the shared InstrumentGenerator on app state."""
     from unified_internal_contracts.testing.instrument_generator import InstrumentGenerator
 

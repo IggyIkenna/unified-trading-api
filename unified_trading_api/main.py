@@ -51,16 +51,43 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.disable_auth = cloud_config.disable_auth
 
     if app.state.mock_mode:
-        logger.info("Starting in MOCK mode -- wiring MockDomainService + seeding")
+        import os
+
         from unified_trading_library.core.mock_state_store import MockStateStore
 
-        from unified_trading_api.mock_data.seed import seed_all_domains
+        from unified_trading_api.mock_data.seed import SEED_VERSION, seed_all_domains
         from unified_trading_api.services.mock_service import MockDomainService
 
+        mock_state_mode = os.environ.get("MOCK_STATE_MODE", "interactive")
+        deterministic = mock_state_mode == "deterministic"
+
+        if deterministic:
+            logger.info("MOCK mode (deterministic/CI) — in-memory only, no persistence")
+        else:
+            logger.info("MOCK mode (interactive) — JSONL persistence in .local-dev-cache/")
+
         store = MockStateStore("unified-trading-api")
-        seed_all_domains(store)
+
+        # Seed version check: if cached version differs, clear and re-seed
+        meta = store.list("_meta")
+        cached_version = ""
+        for m in meta:
+            if m.get("id") == "seed_version":
+                cached_version = str(m.get("version", ""))
+        if cached_version != SEED_VERSION or deterministic:
+            if cached_version and cached_version != SEED_VERSION:
+                logger.info(
+                    "Seed version changed (%s → %s) — clearing cache",
+                    cached_version,
+                    SEED_VERSION,
+                )
+            store.reset()
+            seed_all_domains(store)
+        else:
+            logger.info("Seed version %s matches cache — skipping re-seed", SEED_VERSION)
+
         app.state.service = MockDomainService(store)
-        app.state.mock_store = store  # for admin/reset
+        app.state.mock_store = store
     else:
         logger.info("Starting in REAL mode -- wiring LiveDomainService stubs")
         from unified_trading_api.services.live_service import LiveDomainService
