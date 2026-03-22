@@ -48,7 +48,7 @@ def get_mock_store_raw(request: Request) -> object:
     Callers that need typed store methods should import MockStateStore
     and use ``isinstance()`` to narrow.
     """
-    store: object = request.app.state.mock_store  # pyright: ignore[reportAny]
+    store: object = getattr(request.app.state, "mock_store", None)  # pyright: ignore[reportAny]
     return store
 
 

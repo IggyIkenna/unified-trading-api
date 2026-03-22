@@ -25,121 +25,126 @@ logger = logging.getLogger(__name__)
 
 _subscriptions: dict[str, set[WebSocket]] = defaultdict(set)
 
-# Expanded instrument universe with realistic prices and volatilities
-_INSTRUMENTS: list[dict[str, object]] = [
-    # CeFi Spot
-    {
-        "instrument": "BTC-USDT",
-        "venue": "binance",
-        "price": 67500.0,
-        "vol": 80.0,
-        "asset_class": "cefi",
-    },
-    {
-        "instrument": "ETH-USDT",
-        "venue": "binance",
-        "price": 3520.0,
-        "vol": 8.0,
-        "asset_class": "cefi",
-    },
-    {
-        "instrument": "SOL-USDT",
-        "venue": "binance",
-        "price": 142.0,
-        "vol": 2.5,
-        "asset_class": "cefi",
-    },
-    {
-        "instrument": "BNB-USDT",
-        "venue": "binance",
-        "price": 580.0,
-        "vol": 5.0,
-        "asset_class": "cefi",
-    },
-    {
-        "instrument": "XRP-USDT",
-        "venue": "binance",
-        "price": 0.62,
-        "vol": 0.01,
-        "asset_class": "cefi",
-    },
-    {
-        "instrument": "ADA-USDT",
-        "venue": "binance",
-        "price": 0.45,
-        "vol": 0.008,
-        "asset_class": "cefi",
-    },
-    {
-        "instrument": "DOGE-USDT",
-        "venue": "binance",
-        "price": 0.15,
-        "vol": 0.003,
-        "asset_class": "cefi",
-    },
-    # CeFi Perpetuals
-    {
-        "instrument": "BTC-USDT-PERP",
-        "venue": "binance-futures",
-        "price": 67520.0,
-        "vol": 85.0,
-        "asset_class": "cefi",
-    },
-    {
-        "instrument": "ETH-USDT-PERP",
-        "venue": "binance-futures",
-        "price": 3525.0,
-        "vol": 8.5,
-        "asset_class": "cefi",
-    },
-    {
-        "instrument": "BTC-USD-PERP",
-        "venue": "deribit",
-        "price": 67500.0,
-        "vol": 80.0,
-        "asset_class": "cefi",
-    },
-    {
-        "instrument": "ETH-USD-PERP",
-        "venue": "hyperliquid",
-        "price": 3518.0,
-        "vol": 8.0,
-        "asset_class": "cefi",
-    },
-    # TradFi
-    {"instrument": "AAPL", "venue": "nasdaq", "price": 178.50, "vol": 1.5, "asset_class": "tradfi"},
-    {"instrument": "QQQ", "venue": "nasdaq", "price": 445.0, "vol": 3.0, "asset_class": "tradfi"},
-    {
-        "instrument": "ES-FRONT",
-        "venue": "cme",
-        "price": 5250.0,
-        "vol": 15.0,
-        "asset_class": "tradfi",
-    },
-    {"instrument": "GLD", "venue": "nyse", "price": 215.0, "vol": 1.0, "asset_class": "tradfi"},
-    # DeFi
-    {
-        "instrument": "AAVE-ETH-LEND",
-        "venue": "aave_v3",
-        "price": 1.0,
-        "vol": 0.0001,
-        "asset_class": "defi",
-    },
-    {
-        "instrument": "UNI-V3-ETH-USDC",
-        "venue": "uniswap_v3",
-        "price": 1.0,
-        "vol": 0.0002,
-        "asset_class": "defi",
-    },
-    {
-        "instrument": "LIDO-STETH",
-        "venue": "lido",
-        "price": 1.0,
-        "vol": 0.00005,
-        "asset_class": "defi",
-    },
-]
+
+def _build_instruments_from_registry() -> list[dict[str, object]]:
+    """Build instrument list from UAC representative_sample.py.
+
+    If UAC import fails (e.g. not installed), falls back to a minimal
+    hardcoded set so the WebSocket still works in development.
+    """
+    from unified_trading_api.mock_data.seed_tickers import BASE_PRICES
+
+    instruments: list[dict[str, object]] = []
+    try:
+        from unified_api_contracts.registry.representative_sample import (
+            CEFI_PERPETUAL_SPECS,
+            CEFI_SPOT_SPECS,
+            DEFI_INSTRUMENT_SPECS,
+            SPORTS_INSTRUMENT_SPECS,
+            TRADFI_EQUITY_SPECS,
+            TRADFI_FUTURES_SPECS,
+        )
+
+        for spec in CEFI_SPOT_SPECS:
+            base = str(spec["base"])
+            price = BASE_PRICES.get(base, 100.0)
+            instruments.append(
+                {
+                    "instrument": str(spec["symbol"]),
+                    "venue": str(spec["venue"]),
+                    "price": price,
+                    "vol": price * 0.001,
+                    "asset_class": "cefi",
+                }
+            )
+        for spec in CEFI_PERPETUAL_SPECS:
+            base = str(spec.get("base", spec.get("symbol", "")))
+            price = BASE_PRICES.get(base, 67000.0)
+            instruments.append(
+                {
+                    "instrument": str(spec["symbol"]),
+                    "venue": str(spec["venue"]),
+                    "price": price,
+                    "vol": price * 0.0012,
+                    "asset_class": "cefi",
+                }
+            )
+        for spec in TRADFI_EQUITY_SPECS:
+            sym = str(spec["symbol"])
+            price = BASE_PRICES.get(sym, 100.0)
+            instruments.append(
+                {
+                    "instrument": sym,
+                    "venue": str(spec["venue"]),
+                    "price": price,
+                    "vol": price * 0.008,
+                    "asset_class": "tradfi",
+                }
+            )
+        for spec in TRADFI_FUTURES_SPECS:
+            sym = str(spec["symbol"])
+            price = BASE_PRICES.get(sym, 5000.0)
+            instruments.append(
+                {
+                    "instrument": sym,
+                    "venue": str(spec["venue"]),
+                    "price": price,
+                    "vol": price * 0.003,
+                    "asset_class": "tradfi",
+                }
+            )
+        for spec in DEFI_INSTRUMENT_SPECS:
+            sym = str(spec.get("symbol", spec.get("base", "")))
+            price = BASE_PRICES.get(sym, 1.0)
+            instruments.append(
+                {
+                    "instrument": sym,
+                    "venue": str(spec["venue"]),
+                    "price": price,
+                    "vol": price * 0.0001,
+                    "asset_class": "defi",
+                }
+            )
+        for spec in SPORTS_INSTRUMENT_SPECS:
+            sym = str(spec.get("symbol", spec.get("event_id", "")))
+            instruments.append(
+                {
+                    "instrument": sym,
+                    "venue": str(spec["venue"]),
+                    "price": 0.55,
+                    "vol": 0.02,
+                    "asset_class": "sports",
+                }
+            )
+    except (ImportError, KeyError):
+        logger.warning("UAC representative_sample not available — using minimal instrument set")
+        instruments = [
+            {
+                "instrument": "BTC-USDT",
+                "venue": "binance",
+                "price": 67500.0,
+                "vol": 80.0,
+                "asset_class": "cefi",
+            },
+            {
+                "instrument": "ETH-USDT",
+                "venue": "binance",
+                "price": 3520.0,
+                "vol": 8.0,
+                "asset_class": "cefi",
+            },
+            {
+                "instrument": "SOL-USDT",
+                "venue": "binance",
+                "price": 142.0,
+                "vol": 2.5,
+                "asset_class": "cefi",
+            },
+        ]
+    return instruments
+
+
+_INSTRUMENTS: list[dict[str, object]] = _build_instruments_from_registry()
 
 
 @router.websocket("/ws")
