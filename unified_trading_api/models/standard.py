@@ -25,7 +25,9 @@ class PaginationMeta(BaseModel):
     has_next: bool
 
 
-def paginate(records: list[object], page: int = 1, page_size: int = 50) -> tuple[list[object], PaginationMeta]:
+def paginate(
+    records: list[object], page: int = 1, page_size: int = 50
+) -> tuple[list[object], PaginationMeta]:
     """Slice a list and return (page_data, pagination_meta)."""
     total = len(records)
     offset = (page - 1) * page_size

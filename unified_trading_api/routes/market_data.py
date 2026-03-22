@@ -5,12 +5,8 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Query, Request
 
 from unified_trading_api.middleware.auth import verify_api_key
-from unified_trading_api.mock_data.state_store import mock_store
-from unified_trading_api.models.standard import (
-    ErrorDetail,
-    StandardErrorResponse,
-    paginate,
-)
+from unified_trading_api.models.standard import paginate
+from unified_trading_api.services.factory import get_service
 
 router = APIRouter(dependencies=[Depends(verify_api_key)])
 
@@ -30,19 +26,16 @@ async def get_candles(
     page_size: int = Query(100, ge=1, le=500),
 ) -> dict[str, object]:
     """Get OHLCV candles for an instrument."""
-    if getattr(request.app.state, "mock_mode", True):
-        all_candles = mock_store.list("candles")
-        data, pagination = paginate(all_candles, page, page_size)
-        return {
-            "venue": venue,
-            "instrument": instrument,
-            "timeframe": timeframe,
-            "data": data,
-            "pagination": pagination.model_dump(),
-        }
-    return StandardErrorResponse(
-        error=ErrorDetail(code="NOT_IMPLEMENTED", message="Real mode not yet wired")
-    ).model_dump()
+    service = get_service(request)
+    records = service.list("candles")
+    data, pagination = paginate(records, page, page_size)
+    return {
+        "venue": venue,
+        "instrument": instrument,
+        "timeframe": timeframe,
+        "data": data,
+        "pagination": pagination.model_dump(),
+    }
 
 
 @router.get("/orderbook")
@@ -53,11 +46,15 @@ async def get_orderbook(
     depth: int = Query(10),
 ) -> dict[str, object]:
     """Get order book snapshot."""
-    if getattr(request.app.state, "mock_mode", True):
-        return {"venue": venue, "instrument": instrument, "depth": depth, "bids": [], "asks": []}
-    return StandardErrorResponse(
-        error=ErrorDetail(code="NOT_IMPLEMENTED", message="Real mode not yet wired")
-    ).model_dump()
+    service = get_service(request)
+    book = service.list("orderbook", filters={"venue": venue, "instrument": instrument})
+    return {
+        "venue": venue,
+        "instrument": instrument,
+        "depth": depth,
+        "bids": book[:depth],
+        "asks": book[depth:],
+    }
 
 
 @router.get("/trades")
@@ -69,18 +66,15 @@ async def get_trades(
     page_size: int = Query(100, ge=1, le=500),
 ) -> dict[str, object]:
     """Get recent trades."""
-    if getattr(request.app.state, "mock_mode", True):
-        all_trades = mock_store.list("trades")
-        data, pagination = paginate(all_trades, page, page_size)
-        return {
-            "venue": venue,
-            "instrument": instrument,
-            "data": data,
-            "pagination": pagination.model_dump(),
-        }
-    return StandardErrorResponse(
-        error=ErrorDetail(code="NOT_IMPLEMENTED", message="Real mode not yet wired")
-    ).model_dump()
+    service = get_service(request)
+    records = service.list("trades")
+    data, pagination = paginate(records, page, page_size)
+    return {
+        "venue": venue,
+        "instrument": instrument,
+        "data": data,
+        "pagination": pagination.model_dump(),
+    }
 
 
 @router.get("/tickers")
@@ -89,8 +83,5 @@ async def get_tickers(
     venue: str = Query(...),
 ) -> dict[str, object]:
     """Get all tickers for a venue."""
-    if getattr(request.app.state, "mock_mode", True):
-        return {"venue": venue, "tickers": mock_store.list("tickers")}
-    return StandardErrorResponse(
-        error=ErrorDetail(code="NOT_IMPLEMENTED", message="Real mode not yet wired")
-    ).model_dump()
+    service = get_service(request)
+    return {"venue": venue, "tickers": service.list("tickers")}

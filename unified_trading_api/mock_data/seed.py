@@ -2,11 +2,25 @@
 
 from __future__ import annotations
 
-from unified_trading_api.mock_data.state_store import mock_store
+from typing import Protocol
 
 
-def seed_all_domains() -> None:
-    """Populate every mock-store domain with synthetic records."""
+class _Seedable(Protocol):
+    def seed(self, domain: str, records: list[dict[str, object]]) -> None: ...
+
+
+def seed_all_domains(store: _Seedable | None = None) -> None:
+    """Populate every mock-store domain with synthetic records.
+
+    Args:
+        store: UTL MockStateStore or any object with a seed(domain, records) method.
+               Falls back to legacy singleton for backwards compatibility.
+    """
+    if store is None:
+        from unified_trading_api.mock_data.state_store import mock_store
+
+        store = mock_store
+    mock_store = store
 
     # ── Execution ──────────────────────────────────────────────
 

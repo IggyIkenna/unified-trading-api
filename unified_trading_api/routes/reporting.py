@@ -5,12 +5,8 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Query, Request
 
 from unified_trading_api.middleware.auth import verify_api_key
-from unified_trading_api.mock_data.state_store import mock_store
-from unified_trading_api.models.standard import (
-    ErrorDetail,
-    StandardErrorResponse,
-    paginate,
-)
+from unified_trading_api.models.standard import paginate
+from unified_trading_api.services.factory import get_service
 
 router = APIRouter(dependencies=[Depends(verify_api_key)])
 
@@ -23,15 +19,10 @@ async def get_reports(
     page_size: int = Query(50, ge=1, le=200),
 ) -> dict[str, object]:
     """Get generated reports."""
-    if getattr(request.app.state, "mock_mode", True):
-        records = mock_store.list("reports")
-        if report_type:
-            records = [r for r in records if r.get("report_type") == report_type]
-        data, pagination = paginate(records, page, page_size)
-        return {"data": data, "pagination": pagination.model_dump()}
-    return StandardErrorResponse(
-        error=ErrorDetail(code="NOT_IMPLEMENTED", message="Real mode not yet wired")
-    ).model_dump()
+    service = get_service(request)
+    records = service.list("reports", filters={"report_type": report_type})
+    data, pagination = paginate(records, page, page_size)
+    return {"data": data, "pagination": pagination.model_dump()}
 
 
 @router.get("/settlements")
@@ -42,15 +33,10 @@ async def get_settlements(
     page_size: int = Query(50, ge=1, le=200),
 ) -> dict[str, object]:
     """Get settlement reports."""
-    if getattr(request.app.state, "mock_mode", True):
-        records = mock_store.list("reporting_settlements")
-        if status:
-            records = [r for r in records if r.get("status") == status]
-        data, pagination = paginate(records, page, page_size)
-        return {"data": data, "pagination": pagination.model_dump()}
-    return StandardErrorResponse(
-        error=ErrorDetail(code="NOT_IMPLEMENTED", message="Real mode not yet wired")
-    ).model_dump()
+    service = get_service(request)
+    records = service.list("reporting_settlements", filters={"status": status})
+    data, pagination = paginate(records, page, page_size)
+    return {"data": data, "pagination": pagination.model_dump()}
 
 
 @router.get("/reconciliation")
@@ -61,12 +47,7 @@ async def get_reconciliation(
     page_size: int = Query(50, ge=1, le=200),
 ) -> dict[str, object]:
     """Get reconciliation results."""
-    if getattr(request.app.state, "mock_mode", True):
-        records = mock_store.list("reconciliation")
-        if date:
-            records = [r for r in records if r.get("date") == date]
-        data, pagination = paginate(records, page, page_size)
-        return {"data": data, "pagination": pagination.model_dump()}
-    return StandardErrorResponse(
-        error=ErrorDetail(code="NOT_IMPLEMENTED", message="Real mode not yet wired")
-    ).model_dump()
+    service = get_service(request)
+    records = service.list("reconciliation", filters={"date": date})
+    data, pagination = paginate(records, page, page_size)
+    return {"data": data, "pagination": pagination.model_dump()}

@@ -5,19 +5,10 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Query, Request
 
 from unified_trading_api.middleware.auth import verify_api_key
-from unified_trading_api.mock_data.state_store import mock_store
-from unified_trading_api.models.standard import (
-    ErrorDetail,
-    StandardErrorResponse,
-    paginate,
-)
+from unified_trading_api.models.standard import paginate
+from unified_trading_api.services.factory import get_service
 
 router = APIRouter(dependencies=[Depends(verify_api_key)])
-
-
-# ---------------------------------------------------------------------------
-# Routes
-# ---------------------------------------------------------------------------
 
 
 @router.get("/orders")
@@ -29,17 +20,10 @@ async def get_orders(
     page_size: int = Query(50, ge=1, le=200),
 ) -> dict[str, object]:
     """Get orders, optionally filtered by venue and status."""
-    if getattr(request.app.state, "mock_mode", True):
-        records = mock_store.list("orders")
-        if venue:
-            records = [r for r in records if r.get("venue") == venue]
-        if status:
-            records = [r for r in records if r.get("status") == status]
-        data, pagination = paginate(records, page, page_size)
-        return {"data": data, "pagination": pagination.model_dump()}
-    return StandardErrorResponse(
-        error=ErrorDetail(code="NOT_IMPLEMENTED", message="Real mode not yet wired")
-    ).model_dump()
+    service = get_service(request)
+    records = service.list("orders", filters={"venue": venue, "status": status})
+    data, pagination = paginate(records, page, page_size)
+    return {"data": data, "pagination": pagination.model_dump()}
 
 
 @router.get("/fills")
@@ -51,41 +35,24 @@ async def get_fills(
     page_size: int = Query(50, ge=1, le=200),
 ) -> dict[str, object]:
     """Get trade fills."""
-    if getattr(request.app.state, "mock_mode", True):
-        records = mock_store.list("fills")
-        if venue:
-            records = [r for r in records if r.get("venue") == venue]
-        if order_id:
-            records = [r for r in records if r.get("order_id") == order_id]
-        data, pagination = paginate(records, page, page_size)
-        return {"data": data, "pagination": pagination.model_dump()}
-    return StandardErrorResponse(
-        error=ErrorDetail(code="NOT_IMPLEMENTED", message="Real mode not yet wired")
-    ).model_dump()
+    service = get_service(request)
+    records = service.list("fills", filters={"venue": venue, "order_id": order_id})
+    data, pagination = paginate(records, page, page_size)
+    return {"data": data, "pagination": pagination.model_dump()}
 
 
 @router.get("/venues")
-async def get_venues(
-    request: Request,
-) -> dict[str, object]:
+async def get_venues(request: Request) -> dict[str, object]:
     """Get configured execution venues."""
-    if getattr(request.app.state, "mock_mode", True):
-        return {"venues": mock_store.list("execution_venues")}
-    return StandardErrorResponse(
-        error=ErrorDetail(code="NOT_IMPLEMENTED", message="Real mode not yet wired")
-    ).model_dump()
+    service = get_service(request)
+    return {"venues": service.list("execution_venues")}
 
 
 @router.get("/algos")
-async def get_algos(
-    request: Request,
-) -> dict[str, object]:
+async def get_algos(request: Request) -> dict[str, object]:
     """Get available execution algorithms."""
-    if getattr(request.app.state, "mock_mode", True):
-        return {"algos": mock_store.list("algos")}
-    return StandardErrorResponse(
-        error=ErrorDetail(code="NOT_IMPLEMENTED", message="Real mode not yet wired")
-    ).model_dump()
+    service = get_service(request)
+    return {"algos": service.list("algos")}
 
 
 @router.get("/backtests")
@@ -95,10 +62,18 @@ async def get_backtests(
     page_size: int = Query(50, ge=1, le=200),
 ) -> dict[str, object]:
     """Get backtest runs."""
-    if getattr(request.app.state, "mock_mode", True):
-        records = mock_store.list("backtests")
-        data, pagination = paginate(records, page, page_size)
-        return {"data": data, "pagination": pagination.model_dump()}
-    return StandardErrorResponse(
-        error=ErrorDetail(code="NOT_IMPLEMENTED", message="Real mode not yet wired")
-    ).model_dump()
+    service = get_service(request)
+    records = service.list("backtests")
+    data, pagination = paginate(records, page, page_size)
+    return {"data": data, "pagination": pagination.model_dump()}
+
+
+@router.post("/orders")
+async def create_order(
+    request: Request,
+    body: dict[str, object],
+) -> dict[str, object]:
+    """Place a new order (mock: persists to store, real: routes to execution-service)."""
+    service = get_service(request)
+    order = service.create("orders", body)
+    return {"data": order, "status": "created"}

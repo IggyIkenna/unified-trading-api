@@ -16,6 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from unified_config_interface import UnifiedCloudConfig
 
 from unified_trading_api.routes import (
+    admin,
     alerts,
     audit,
     config,
@@ -50,12 +51,21 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.disable_auth = cloud_config.disable_auth
 
     if app.state.mock_mode:
-        logger.info("Starting in MOCK mode -- seeding mock data")
-        from unified_trading_api.mock_data.seed import seed_all_domains
+        logger.info("Starting in MOCK mode -- wiring MockDomainService + seeding")
+        from unified_trading_library.core.mock_state_store import MockStateStore
 
-        seed_all_domains()
+        from unified_trading_api.mock_data.seed import seed_all_domains
+        from unified_trading_api.services.mock_service import MockDomainService
+
+        store = MockStateStore("unified-trading-api")
+        seed_all_domains(store)
+        app.state.service = MockDomainService(store)
+        app.state.mock_store = store  # for admin/reset
     else:
-        logger.info("Starting in REAL mode -- connecting to backend services")
+        logger.info("Starting in REAL mode -- wiring LiveDomainService stubs")
+        from unified_trading_api.services.live_service import LiveDomainService
+
+        app.state.service = LiveDomainService()
 
     yield
 
@@ -80,8 +90,9 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    # Health (unauthenticated)
+    # Health + Admin (unauthenticated)
     app.include_router(health.router, tags=["health"])
+    app.include_router(admin.router, prefix="/admin", tags=["admin"])
 
     # Domain routers
     app.include_router(market_data.router, prefix="/market-data", tags=["market-data"])
