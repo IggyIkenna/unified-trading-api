@@ -8,10 +8,10 @@ vertex 12%, beta 8%.
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Final, Protocol, TypeAlias
+from typing import Final, Protocol
 
 # Callable type for store.list() used in validation helpers
-_ListFn: TypeAlias = Callable[[str], list[dict[str, object]]]
+type _ListFn = Callable[[str], list[dict[str, object]]]
 
 SEED_VERSION: Final[str] = "4.1.0"
 
@@ -1071,7 +1071,8 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
     )
 
     # fills_live and fills_batch — copy fills data into live/batch collections
-    _fills_for_copy: list[dict[str, object]] = _store.list("fills")
+    _store_list = getattr(_store, "list", None)
+    _fills_for_copy: list[dict[str, object]] = _store_list("fills") if _store_list else []  # pyright: ignore[reportAny]
     _seed("fills_live", _fills_for_copy)
     _seed("fills_batch", [{**f, "reconciled": True} for f in _fills_for_copy])
 
