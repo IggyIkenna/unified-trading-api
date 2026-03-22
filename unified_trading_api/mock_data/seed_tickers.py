@@ -1,5 +1,10 @@
 """Ticker price generation for all instruments in the UAC representative sample.
 
+ARCHITECTURAL CONSTRAINT:
+- DO NOT hardcode instrument lists. Import from UAC representative_sample.py.
+- Tickers serve as starting point for WebSocket mock tick generator (Agent 5).
+- Both _live and _batch variants generated (batch = yesterday's close).
+
 Generates deterministic ticker records (price, bid, ask, volume, change)
 for every instrument registered in representative_sample.py. Two modes:
 

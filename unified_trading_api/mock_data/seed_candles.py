@@ -1,4 +1,11 @@
-"""Brownian-motion OHLCV candle generator seeded from UAC representative sample."""
+"""Brownian-motion OHLCV candle generator seeded from UAC representative sample.
+
+ARCHITECTURAL CONSTRAINT:
+- DO NOT hardcode instrument lists. Import from UAC representative_sample.py.
+- If UAC expands instruments, POST /admin/reset regenerates candles automatically.
+- TradFi candles respect market hours (NYSE 09:30-16:00 ET, CME near-24hr).
+- Deterministic via seeded random — same seed always produces same candles.
+"""
 
 from __future__ import annotations
 

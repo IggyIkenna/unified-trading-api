@@ -1,5 +1,13 @@
 """Generate 50 strategies by combining archetypes x asset classes.
 
+ARCHITECTURAL CONSTRAINT:
+- Strategies are CONFIG, not code. Expanding means adding entries here, not new
+  engine code paths. The EventDrivenStrategyEngine is parameterised.
+- All instrument references MUST exist in UAC representative_sample.py.
+- The original 18 strategies (strat-001..018) MUST keep their IDs for Dashboard
+  visual parity. Do NOT rename or remove them.
+- SSOT: unified-trading-codex/09-strategy/ for archetypes.
+
 Imported by seed.py. Preserves the original 18 strategies (strat-001 through
 strat-018) and adds 32 new strategies following the naming convention
 ``{ASSET}_{ARCHETYPE}_{MODE}_{TIMEFRAME}``.
