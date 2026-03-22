@@ -62,7 +62,9 @@ async def get_registry(
 def _require_mock_mode(request: Request) -> None:
     """Raise 403 if not in mock mode."""
     if not getattr(request.app.state, "mock_mode", False):
-        raise HTTPException(status_code=403, detail="Mock instrument endpoints only available in mock mode")
+        raise HTTPException(
+            status_code=403, detail="Mock instrument endpoints only available in mock mode"
+        )
 
 
 def _get_generator(request: Request) -> "InstrumentGenerator":

@@ -27,6 +27,55 @@ _CLIENT_VERTEX = "client-vertex-partners"
 _CLIENT_BETA = "client-beta-fund"
 
 
+_ID_FIELD_MAP: dict[str, str] = {
+    "orders": "order_id",
+    "fills": "fill_id",
+    "positions": "position_id",
+    "positions_batch": "position_id",
+    "positions_live": "position_id",
+    "execution_venues": "venue_id",
+    "algos": "algo_id",
+    "backtests": "backtest_id",
+    "strategies": "id",
+    "alerts": "alert_id",
+    "settlements": "settlement_id",
+    "invoices": "invoice_id",
+    "fee_schedules": "schedule_id",
+    "model_families": "family_id",
+    "experiments": "experiment_id",
+    "training_runs": "run_id",
+    "model_versions": "version_id",
+    "model_deployments": "deployment_id",
+    "ml_features": "feature_id",
+    "datasets": "dataset_id",
+    "reports": "report_id",
+    "reporting_settlements": "settlement_id",
+    "reconciliation": "recon_id",
+    "audit_events": "event_id",
+    "compliance": "check_id",
+    "audit_logs": "log_id",
+    "instruments": "instrument_id",
+    "documents": "document_id",
+    "deployments": "deployment_id",
+    "builds": "build_id",
+    "members": "member_id",
+    "subscriptions": "subscription_id",
+    "trades": "trade_id",
+}
+
+
+def _ensure_id(domain: str, records: list[dict[str, object]]) -> list[dict[str, object]]:
+    """Add 'id' field to records if missing, copying from the domain-specific ID."""
+    id_field = _ID_FIELD_MAP.get(domain)
+    for i, record in enumerate(records):
+        if "id" not in record:
+            if id_field and id_field in record:
+                record["id"] = record[id_field]
+            else:
+                record["id"] = f"{domain}-{i}"
+    return records
+
+
 def seed_all_domains(store: _Seedable | None = None) -> None:
     """Populate every mock-store domain with synthetic records.
 
@@ -38,7 +87,15 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         from unified_trading_api.mock_data.state_store import mock_store
 
         store = mock_store
+
+    _original_seed = store.seed
+
+    def _patched_seed(domain: str, records: list[dict[str, object]]) -> None:
+        _ensure_id(domain, records)
+        _original_seed(domain, records)
+
     mock_store = store
+    mock_store.seed = _patched_seed  # type: ignore[assignment]
 
     # ══════════════════════════════════════════════════════════════════
     #  STRATEGIES (18) — matches UI trading-data.ts
