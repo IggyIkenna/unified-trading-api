@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from collections.abc import Sequence
 
 from pydantic import BaseModel, Field
 
@@ -26,8 +27,8 @@ class PaginationMeta(BaseModel):
 
 
 def paginate(
-    records: list[object], page: int = 1, page_size: int = 50
-) -> tuple[list[object], PaginationMeta]:
+    records: Sequence[object], page: int = 1, page_size: int = 50
+) -> tuple[Sequence[object], PaginationMeta]:
     """Slice a list and return (page_data, pagination_meta)."""
     total = len(records)
     offset = (page - 1) * page_size

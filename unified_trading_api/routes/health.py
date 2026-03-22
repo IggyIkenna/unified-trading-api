@@ -9,6 +9,7 @@ from fastapi import APIRouter, Request
 from unified_config_interface import UnifiedCloudConfig
 
 from unified_trading_api import __version__ as _api_version
+from unified_trading_api.services.app_state import get_disable_auth, get_mock_mode, get_start_time
 
 router = APIRouter()
 _cloud_cfg = UnifiedCloudConfig()
@@ -35,7 +36,7 @@ _DOMAINS: list[str] = [
 @router.get("/health")
 async def health(request: Request) -> dict[str, object]:
     """Standard Cloud Run liveness probe."""
-    start_time: float = getattr(request.app.state, "start_time", time.time())
+    start_time = get_start_time(request)
     return {
         "status": "healthy",
         "service": "unified-trading-api",
@@ -49,9 +50,43 @@ async def health(request: Request) -> dict[str, object]:
 
 
 @router.get("/readiness")
-async def readiness() -> dict[str, str]:
-    """Standard Cloud Run readiness probe."""
-    return {"status": "ready", "service": "unified-trading-api"}
+async def readiness(request: Request) -> dict[str, object]:
+    """Runtime readiness with tier detection."""
+    import os
+
+    mock_mode = get_mock_mode(request)
+    disable_auth = get_disable_auth(request)
+
+    # Determine tiers
+    declared_tier = 0  # Start with Tier 0
+    if mock_mode:
+        declared_tier = 1  # Mock mode = Tier 1
+
+    # Check for live service URLs (would indicate Tier 2)
+    live_urls_configured = bool(os.environ.get("LIVE_SERVICE_BASE_URL"))
+    if live_urls_configured and not mock_mode:
+        declared_tier = 2
+
+    effective_tier = declared_tier
+    degraded_reasons: list[str] = []
+
+    # In tier 2, probe upstreams
+    upstream_checks: list[dict[str, object]] = []
+
+    return {
+        "status": "ready",
+        "service": "unified-trading-api",
+        "version": _api_version,
+        "app_env": _cloud_cfg.environment,
+        "mock_mode": mock_mode,
+        "disable_auth": disable_auth,
+        "declared_runtime_tier": declared_tier,
+        "effective_runtime_tier": effective_tier,
+        "mock_domain_service": mock_mode,
+        "external_data_mocked": mock_mode,
+        "upstream_checks": upstream_checks,
+        "degraded_reasons": degraded_reasons,
+    }
 
 
 @router.get("/version")

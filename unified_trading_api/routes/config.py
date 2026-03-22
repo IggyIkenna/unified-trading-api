@@ -26,7 +26,7 @@ async def update_system_config(
 ) -> dict[str, object]:
     """Update system configuration."""
     service = get_service(request)
-    body = await request.json()
+    body: dict[str, object] = await request.json()  # pyright: ignore[reportAny]
     existing = service.list("system_config")
     if existing:
         updated = service.update("system_config", "", body)

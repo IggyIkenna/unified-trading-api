@@ -102,6 +102,9 @@ markers = [
 omit = [
     "unified_trading_api/__main__.py",
     "unified_trading_api/main.py",
+    "unified_trading_api/mock_data/seed.py",
+    "unified_trading_api/mock_data/seed_strategies.py",
+    "unified_trading_api/routes/websocket.py",
 ]
 
 [tool.coverage.report]

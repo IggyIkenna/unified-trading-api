@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import logging
 from enum import StrEnum
+from typing import cast
 
 from fastapi import Request
 
@@ -50,7 +51,7 @@ def get_entitlement_context(request: Request) -> EntitlementContext:
     In production: decoded from JWT claims (org_id, org_type, tier).
     In mock mode: returns internal context with full access.
     """
-    disable_auth = getattr(request.app.state, "disable_auth", False)
+    disable_auth = cast(bool, getattr(request.app.state, "disable_auth", False))  # pyright: ignore[reportAny]
     if disable_auth:
         return EntitlementContext(
             org_id="mock-org",
@@ -59,11 +60,13 @@ def get_entitlement_context(request: Request) -> EntitlementContext:
         )
 
     # In real mode, extract from JWT (set by auth middleware upstream)
-    auth_claims = getattr(request.state, "auth_claims", {})
+    auth_claims: dict[str, object] = getattr(request.state, "auth_claims", {})
+    raw_venues = auth_claims.get("scoped_venues", [])
+    venues_list: list[str] = list(raw_venues) if isinstance(raw_venues, list) else []
     return EntitlementContext(
         org_id=str(auth_claims.get("org_id", "unknown")),
-        org_type=OrgType(auth_claims.get("org_type", "external")),
+        org_type=OrgType(str(auth_claims.get("org_type", "external"))),
         tier=str(auth_claims.get("tier", "basic")),
-        scoped_venues=list(auth_claims.get("scoped_venues", [])),
-        max_instruments=int(auth_claims.get("max_instruments", 100)),
+        scoped_venues=venues_list,
+        max_instruments=int(str(auth_claims.get("max_instruments", 100))),
     )

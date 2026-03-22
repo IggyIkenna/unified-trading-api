@@ -188,6 +188,137 @@ class TestAdminRoutes:
         assert len(r.json()["data"]) > 0
 
 
+class TestAuditRoutes:
+    def test_get_audit_events(self, client: TestClient) -> None:
+        r = client.get("/audit/events")
+        assert r.status_code == 200
+        assert "data" in r.json()
+
+    def test_get_compliance(self, client: TestClient) -> None:
+        r = client.get("/audit/compliance")
+        assert r.status_code == 200
+
+    def test_get_data_health(self, client: TestClient) -> None:
+        r = client.get("/audit/data-health")
+        assert r.status_code == 200
+
+    def test_get_audit_logs(self, client: TestClient) -> None:
+        r = client.get("/audit/logs")
+        assert r.status_code == 200
+
+
+class TestConfigRoutes:
+    def test_get_system_config(self, client: TestClient) -> None:
+        r = client.get("/config/system")
+        assert r.status_code == 200
+
+    def test_get_venues(self, client: TestClient) -> None:
+        r = client.get("/config/venues")
+        assert r.status_code == 200
+
+    def test_get_feature_flags(self, client: TestClient) -> None:
+        r = client.get("/config/feature-flags")
+        assert r.status_code == 200
+
+
+class TestDeploymentRoutes:
+    def test_get_services(self, client: TestClient) -> None:
+        r = client.get("/deployment/services")
+        assert r.status_code == 200
+
+    def test_get_deployments(self, client: TestClient) -> None:
+        r = client.get("/deployment/deployments")
+        assert r.status_code == 200
+
+    def test_get_builds(self, client: TestClient) -> None:
+        r = client.get("/deployment/builds")
+        assert r.status_code == 200
+
+
+class TestDocumentsRoutes:
+    def test_list_documents(self, client: TestClient) -> None:
+        r = client.get("/documents/list")
+        assert r.status_code == 200
+
+    def test_get_upload_url(self, client: TestClient) -> None:
+        r = client.get("/documents/upload-url?filename=test.pdf")
+        assert r.status_code == 200
+
+    def test_get_download_url(self, client: TestClient) -> None:
+        r = client.get("/documents/download-url?document_id=doc-001")
+        assert r.status_code == 200
+
+
+class TestInstrumentsRoutes:
+    def test_list_instruments(self, client: TestClient) -> None:
+        r = client.get("/instruments/list")
+        assert r.status_code == 200
+
+    def test_get_catalogue(self, client: TestClient) -> None:
+        r = client.get("/instruments/catalogue")
+        assert r.status_code == 200
+
+    def test_get_registry(self, client: TestClient) -> None:
+        r = client.get("/instruments/registry")
+        assert r.status_code == 200
+
+
+class TestUsersRoutes:
+    def test_get_organizations(self, client: TestClient) -> None:
+        r = client.get("/users/organizations")
+        assert r.status_code == 200
+
+    def test_get_members(self, client: TestClient) -> None:
+        r = client.get("/users/members")
+        assert r.status_code == 200
+
+    def test_get_subscriptions(self, client: TestClient) -> None:
+        r = client.get("/users/subscriptions")
+        assert r.status_code == 200
+
+
+class TestReportingRoutes:
+    def test_get_reports(self, client: TestClient) -> None:
+        r = client.get("/reporting/reports")
+        assert r.status_code == 200
+
+    def test_get_settlements(self, client: TestClient) -> None:
+        r = client.get("/reporting/settlements")
+        assert r.status_code == 200
+
+    def test_get_reconciliation(self, client: TestClient) -> None:
+        r = client.get("/reporting/reconciliation")
+        assert r.status_code == 200
+
+
+class TestRiskRoutesExtended:
+    def test_get_greeks(self, client: TestClient) -> None:
+        r = client.get("/risk/greeks")
+        assert r.status_code == 200
+
+    def test_get_stress_tests(self, client: TestClient) -> None:
+        r = client.get("/risk/stress")
+        assert r.status_code == 200
+
+
+class TestMLRoutesExtended:
+    def test_get_training_runs(self, client: TestClient) -> None:
+        r = client.get("/ml/training-runs")
+        assert r.status_code == 200
+
+    def test_get_versions(self, client: TestClient) -> None:
+        r = client.get("/ml/versions")
+        assert r.status_code == 200
+
+    def test_get_deployments(self, client: TestClient) -> None:
+        r = client.get("/ml/deployments")
+        assert r.status_code == 200
+
+    def test_get_datasets(self, client: TestClient) -> None:
+        r = client.get("/ml/datasets")
+        assert r.status_code == 200
+
+
 class TestPagination:
     def test_pagination_meta(self, client: TestClient) -> None:
         r = client.get("/execution/orders?page=1&page_size=2")

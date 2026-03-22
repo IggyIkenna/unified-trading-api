@@ -19,8 +19,10 @@ from unified_trading_api.routes import (
     admin,
     alerts,
     audit,
+    compliance,
     config,
     deployment,
+    derivatives,
     documents,
     execution,
     health,
@@ -117,6 +119,15 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
+    # Latency simulation (mock mode only, interactive)
+    import os
+
+    mock_latency_ms = int(os.environ.get("MOCK_LATENCY_MS", "0"))
+    if mock_latency_ms > 0:
+        from unified_trading_api.middleware.latency import LatencyMiddleware
+
+        app.add_middleware(LatencyMiddleware, base_ms=mock_latency_ms)
+
     # Health + Admin (unauthenticated)
     app.include_router(health.router, tags=["health"])
     app.include_router(admin.router, prefix="/admin", tags=["admin"])
@@ -141,6 +152,8 @@ def create_app() -> FastAPI:
         tags=["service-status"],
     )
     app.include_router(users.router, prefix="/users", tags=["users"])
+    app.include_router(compliance.router, prefix="/compliance", tags=["compliance"])
+    app.include_router(derivatives.router, prefix="/derivatives", tags=["derivatives"])
 
     # WebSocket (unauthenticated connect, auth on subscribe)
     app.include_router(websocket.router, tags=["websocket"])

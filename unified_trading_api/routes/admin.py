@@ -5,6 +5,13 @@ from __future__ import annotations
 import logging
 
 from fastapi import APIRouter, Request
+from unified_trading_library.core.mock_state_store import MockStateStore
+
+from unified_trading_api.services.app_state import (
+    get_mock_mode,
+    get_mock_store_raw,
+    get_service_from_state,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -18,17 +25,18 @@ async def reset_demo(request: Request) -> dict[str, str]:
     Only available in mock mode. In real mode, returns 403.
     The UI's "Reset Demo" button calls this endpoint.
     """
-    if not getattr(request.app.state, "mock_mode", False):
+    if not get_mock_mode(request):
         return {"status": "forbidden", "message": "Reset only available in mock mode"}
 
-    service = request.app.state.service
+    service = get_service_from_state(request)
     service.reset()
 
     # Re-seed from scratch
-    store = request.app.state.mock_store
-    from unified_trading_api.mock_data.seed import seed_all_domains
+    raw_store = get_mock_store_raw(request)
+    if isinstance(raw_store, MockStateStore):
+        from unified_trading_api.mock_data.seed import seed_all_domains
 
-    seed_all_domains(store)
+        seed_all_domains(raw_store)
 
     logger.info("POST /admin/reset — mock state reset to seed")
     return {"status": "ok", "message": "Demo state reset to seed data"}

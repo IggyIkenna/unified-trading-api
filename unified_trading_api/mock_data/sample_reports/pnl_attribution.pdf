@@ -1,0 +1,89 @@
+%PDF-1.4
+1 0 obj
+<</Type/Catalog/Pages 2 0 R>>
+endobj
+2 0 obj
+<</Type/Pages/Kids[6 0 R 8 0 R]/Count 2>>
+endobj
+3 0 obj
+<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>
+endobj
+4 0 obj
+<</Type/Font/Subtype/Type1/BaseFont/Helvetica-Bold>>
+endobj
+5 0 obj
+<</Length 2196>>
+stream
+BT /F2 24 Tf 50 750 Td (P&L Attribution Report) Tj ET
+0.7 0.7 0.7 RG 0.5 w 50 716 m 562 716 l S
+BT /F2 18 Tf 50 686 Td (Strategy Attribution - Top 10) Tj ET
+BT /F1 10 Tf 50 650 Td (  #   Strategy                  Daily PnL      MTD PnL       YTD PnL) Tj ET
+BT /F1 10 Tf 50 634 Td (  -----------------------------------------------------------------------) Tj ET
+BT /F1 10 Tf 50 618 Td (  1   Momentum Alpha            +$42,300       +$312,000     +$1,245,000) Tj ET
+BT /F1 10 Tf 50 602 Td (  2   Mean Reversion Beta       +$38,100       +$287,000     +$1,102,000) Tj ET
+BT /F1 10 Tf 50 586 Td (  3   Stat Arb Gamma            +$31,500       +$245,000     +$987,000) Tj ET
+BT /F1 10 Tf 50 570 Td (  4   Volatility Delta          +$27,200       +$193,000     +$812,000) Tj ET
+BT /F1 10 Tf 50 554 Td (  5   Trend Epsilon             +$22,800       +$168,000     +$723,000) Tj ET
+BT /F1 10 Tf 50 538 Td (  6   Pairs Zeta                +$18,400       +$142,000     +$598,000) Tj ET
+BT /F1 10 Tf 50 522 Td (  7   Carry Eta                 +$15,600       +$118,000     +$487,000) Tj ET
+BT /F1 10 Tf 50 506 Td (  8   Macro Theta               +$12,100       +$94,000      +$412,000) Tj ET
+BT /F1 10 Tf 50 490 Td (  9   Event Iota                +$8,700        +$72,000      +$298,000) Tj ET
+BT /F1 10 Tf 50 474 Td (  10  Dispersion Kappa          +$5,200        +$48,000      +$187,000) Tj ET
+BT /F1 10 Tf 50 458 Td (  -----------------------------------------------------------------------) Tj ET
+BT /F1 10 Tf 50 442 Td (       Total                    +$221,900      +$1,679,000   +$6,851,000) Tj ET
+BT /F2 18 Tf 50 406 Td (Attribution by Asset Class) Tj ET
+BT /F1 10 Tf 50 370 Td (  Asset Class           Daily PnL      Allocation) Tj ET
+BT /F1 10 Tf 50 354 Td (  --------------------------------------------------) Tj ET
+BT /F1 10 Tf 50 338 Td (  Equities              +$98,400       42.1%) Tj ET
+BT /F1 10 Tf 50 322 Td (  Fixed Income          +$52,300       23.8%) Tj ET
+BT /F1 10 Tf 50 306 Td (  FX                    +$38,700       17.2%) Tj ET
+BT /F1 10 Tf 50 290 Td (  Commodities           +$22,100       11.4%) Tj ET
+BT /F1 10 Tf 50 274 Td (  Crypto                +$10,400       5.5%) Tj ET
+endstream
+endobj
+6 0 obj
+<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Contents 5 0 R/Resources<</Font<</F1 3 0 R/F2 4 0 R>>>>>>
+endobj
+7 0 obj
+<</Length 1372>>
+stream
+BT /F2 24 Tf 50 750 Td (P&L Attribution - Continued) Tj ET
+0.7 0.7 0.7 RG 0.5 w 50 716 m 562 716 l S
+BT /F2 18 Tf 50 686 Td (Attribution by Region) Tj ET
+BT /F1 10 Tf 50 650 Td (  Region                Daily PnL      Allocation) Tj ET
+BT /F1 10 Tf 50 634 Td (  --------------------------------------------------) Tj ET
+BT /F1 10 Tf 50 618 Td (  North America         +$112,500      48.3%) Tj ET
+BT /F1 10 Tf 50 602 Td (  Europe                +$58,200       26.1%) Tj ET
+BT /F1 10 Tf 50 586 Td (  Asia Pacific          +$38,900       18.7%) Tj ET
+BT /F1 10 Tf 50 570 Td (  Emerging Markets      +$12,300       6.9%) Tj ET
+BT /F2 18 Tf 50 534 Td (Factor Decomposition) Tj ET
+BT /F1 10 Tf 50 498 Td (  Factor                Contribution   Exposure) Tj ET
+BT /F1 10 Tf 50 482 Td (  --------------------------------------------------) Tj ET
+BT /F1 10 Tf 50 466 Td (  Market Beta           +$45,200       0.12) Tj ET
+BT /F1 10 Tf 50 450 Td (  Momentum              +$62,300       0.34) Tj ET
+BT /F1 10 Tf 50 434 Td (  Value                 +$28,100       0.18) Tj ET
+BT /F1 10 Tf 50 418 Td (  Size                  +$12,400       0.08) Tj ET
+BT /F1 10 Tf 50 402 Td (  Volatility            +$18,900       -0.15) Tj ET
+BT /F1 10 Tf 50 386 Td (  Residual Alpha        +$55,000       --) Tj ET
+BT /F1 10 Tf 50 350 Td (  Report generated: 2026-03-22 | Unified Trading System) Tj ET
+endstream
+endobj
+8 0 obj
+<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Contents 7 0 R/Resources<</Font<</F1 3 0 R/F2 4 0 R>>>>>>
+endobj
+xref
+0 9
+0000000000 65535 f 
+0000000009 00000 n 
+0000000054 00000 n 
+0000000111 00000 n 
+0000000174 00000 n 
+0000000242 00000 n 
+0000002488 00000 n 
+0000002609 00000 n 
+0000004031 00000 n 
+trailer
+<</Size 9/Root 1 0 R>>
+startxref
+4152
+%%EOF

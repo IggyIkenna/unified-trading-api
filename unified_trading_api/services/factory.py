@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from fastapi import Request
 
+from unified_trading_api.services.app_state import get_service_from_state
 from unified_trading_api.services.base import DomainService
 
 
@@ -18,7 +19,7 @@ def get_service(request: Request) -> DomainService:
     Sets persona_org_id from X-Demo-Persona header for org-scoped queries.
     In real mode: returns LiveDomainService (stubs).
     """
-    service = request.app.state.service
+    service = get_service_from_state(request)
 
     # Apply org scoping from persona header (mock mode only)
     persona_id = request.headers.get("x-demo-persona")
@@ -27,13 +28,13 @@ def get_service(request: Request) -> DomainService:
 
         persona = next((p for p in PERSONAS if p["id"] == persona_id), None)
         if persona:
-            service.persona_org_id = str(persona["org_id"])
-            service.persona_role = str(persona["role"])
+            setattr(service, "persona_org_id", str(persona["org_id"]))  # noqa: B010
+            setattr(service, "persona_role", str(persona["role"]))  # noqa: B010
         else:
-            service.persona_org_id = None
-            service.persona_role = None
+            setattr(service, "persona_org_id", None)  # noqa: B010
+            setattr(service, "persona_role", None)  # noqa: B010
     elif hasattr(service, "persona_org_id"):
-        service.persona_org_id = None
-        service.persona_role = None
+        setattr(service, "persona_org_id", None)  # noqa: B010
+        setattr(service, "persona_role", None)  # noqa: B010
 
-    return service  # type: ignore[no-any-return]
+    return service

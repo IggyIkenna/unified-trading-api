@@ -10,12 +10,15 @@ They mutate the InstrumentGenerator's ad-hoc pool for scenario testing:
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import cast
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel
+from unified_internal_contracts.testing.instrument_generator import InstrumentGenerator
 
 from unified_trading_api.middleware.auth import verify_api_key
 from unified_trading_api.models.standard import paginate
+from unified_trading_api.services.app_state import get_mock_mode
 from unified_trading_api.services.factory import get_service
 
 router = APIRouter(dependencies=[Depends(verify_api_key)])
@@ -61,20 +64,21 @@ async def get_registry(
 
 def _require_mock_mode(request: Request) -> None:
     """Raise 403 if not in mock mode."""
-    if not getattr(request.app.state, "mock_mode", False):
+    if not get_mock_mode(request):
         raise HTTPException(
             status_code=403, detail="Mock instrument endpoints only available in mock mode"
         )
 
 
-def _get_generator(request: Request) -> object:
+def _get_generator(request: Request) -> InstrumentGenerator:
     """Get or create the shared InstrumentGenerator on app state."""
-    from unified_internal_contracts.testing.instrument_generator import InstrumentGenerator
-
-    gen = getattr(request.app.state, "_instrument_generator", None)
+    gen = cast(
+        InstrumentGenerator | None,
+        getattr(request.app.state, "_instrument_generator", None),  # pyright: ignore[reportAny]
+    )
     if gen is None:
         gen = InstrumentGenerator(seed=42)
-        request.app.state._instrument_generator = gen
+        request.app.state._instrument_generator = gen  # pyright: ignore[reportAny]
     return gen
 
 
@@ -116,7 +120,7 @@ async def create_mock_instrument(
         "base_asset": body.base_asset,
         "quote_asset": body.quote_asset,
         "asset_class": body.asset_class,
-        "timestamp": datetime.now(UTC),
+        "timestamp": datetime.now(UTC).isoformat(),
     }
     if body.strike is not None:
         kwargs["strike"] = body.strike

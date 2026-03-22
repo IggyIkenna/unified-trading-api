@@ -7,13 +7,17 @@ vertex 12%, beta 8%.
 
 from __future__ import annotations
 
-from typing import Final, Protocol
+from collections.abc import Callable
+from typing import Final, Protocol, TypeAlias
 
-SEED_VERSION: Final[str] = "1.0.0"
+# Callable type for store.list() used in validation helpers
+_ListFn: TypeAlias = Callable[[str], list[dict[str, object]]]
+
+SEED_VERSION: Final[str] = "4.1.0"
 
 
 class _Seedable(Protocol):
-    def seed(self, domain: str, records: list[dict[str, object]]) -> None: ...
+    def seed(self, collection: str, items: list[dict[str, object]]) -> None: ...
 
 
 # ── Org helpers ───────────────────────────────────────────────────────
@@ -32,6 +36,8 @@ _CLIENT_BETA = "client-beta-fund"
 _ID_FIELD_MAP: dict[str, str] = {
     "orders": "order_id",
     "fills": "fill_id",
+    "fills_live": "fill_id",
+    "fills_batch": "fill_id",
     "positions": "position_id",
     "positions_batch": "position_id",
     "positions_live": "position_id",
@@ -63,7 +69,130 @@ _ID_FIELD_MAP: dict[str, str] = {
     "members": "member_id",
     "subscriptions": "subscription_id",
     "trades": "trade_id",
+    "alerts_batch": "alert_id",
+    "var_metrics": "strategy_id",
+    "stress_test_results": "scenario_id",
+    "correlation_matrix": "matrix_id",
+    "market_regime": "regime_id",
+    "options_chain": "option_id",
+    "vol_surfaces": "surface_id",
+    "portfolio_greeks": "portfolio_id",
+    "fx_rates": "pair",
+    "regulatory_reports": "report_id",
+    "risk_exposure": "strategy_id",
+    "risk_batch": "strategy_id",
+    "strategy_configs": "config_id",
+    "alerts_live": "alert_id",
+    "risk_live": "strategy_id",
+    "orders_live": "order_id",
+    "orders_batch": "order_id",
+    "tickers_live": "instrument",
+    "regime": "id",
 }
+
+
+def _check_org_integrity(
+    domains: tuple[str, ...],
+    list_fn: _ListFn,
+) -> list[str]:
+    """Return errors for records with invalid org_id values."""
+    from unified_trading_api.mock_data.personas import ORG_IDS
+
+    errors: list[str] = []
+    valid_orgs = set(ORG_IDS)
+    for domain in domains:
+        records: list[dict[str, object]] = list_fn(domain)  # pyright: ignore[reportAny]
+        for rec in records:
+            org = rec.get("org_id")
+            if org is not None and str(org) not in valid_orgs:
+                errors.append(f"{domain} record {rec.get('id', '?')} has invalid org_id: {org}")
+    return errors
+
+
+def _check_temporal_consistency(
+    strategies: list[dict[str, object]],
+    positions: list[dict[str, object]],
+) -> list[str]:
+    """Return errors for positions opened before their strategy's inception_date."""
+    errors: list[str] = []
+    strategy_inception: dict[str, str] = {}
+    for s in strategies:
+        inception = s.get("inception_date")
+        if inception is not None:
+            strategy_inception[str(s.get("id", ""))] = str(inception)
+
+    for pos in positions:
+        sid = pos.get("strategy_id")
+        opened = pos.get("opened_at")
+        if sid is not None and opened is not None and str(sid) in strategy_inception:
+            inception_date = strategy_inception[str(sid)]
+            if str(opened) < inception_date:
+                errors.append(
+                    f"position {pos.get('id', '?')} opened_at {opened} is before "
+                    f"strategy {sid} inception_date {inception_date}"
+                )
+    return errors
+
+
+def _check_batch_live_consistency(
+    batch_positions: list[dict[str, object]],
+    live_positions: list[dict[str, object]],
+) -> list[str]:
+    """Return errors for batch positions not present in live positions."""
+    errors: list[str] = []
+    if batch_positions and live_positions:
+        live_position_ids = {str(p.get("position_id", "")) for p in live_positions}
+        for bp in batch_positions:
+            bp_id = str(bp.get("position_id", ""))
+            if bp_id and bp_id not in live_position_ids:
+                errors.append(f"batch position {bp_id} not found in live positions")
+    return errors
+
+
+def validate_consistency(store: _Seedable) -> list[str]:
+    """Validate cross-domain data consistency after seeding.
+
+    Returns a list of error messages. Empty list = all valid.
+    Raises ValueError if critical violations found (enabled by default).
+    """
+    errors: list[str] = []
+    _list_fn = getattr(store, "list", None)
+    if _list_fn is None:
+        return errors
+
+    def _list(domain: str) -> list[dict[str, object]]:
+        result: list[dict[str, object]] = _list_fn(domain)  # pyright: ignore[reportAny]
+        return result
+
+    # 1. Strategy reference integrity
+    strategies = _list("strategies")
+    strategy_ids = {str(s.get("id", "")) for s in strategies}
+
+    for domain in ("positions", "orders"):
+        for rec in _list(domain):
+            sid = rec.get("strategy_id")
+            if sid is not None and str(sid) not in strategy_ids:
+                errors.append(
+                    f"{domain} record {rec.get('id', '?')} references invalid strategy_id: {sid}"
+                )
+
+    # 2. Order reference integrity (fills → orders)
+    order_ids = {str(o.get("order_id", o.get("id", ""))) for o in _list("orders")}
+    for fill in _list("fills"):
+        oid = fill.get("order_id")
+        if oid is not None and str(oid) not in order_ids:
+            errors.append(f"fill {fill.get('fill_id', '?')} references invalid order_id: {oid}")
+
+    # 3. Org reference integrity
+    errors.extend(_check_org_integrity(("strategies", "positions", "orders", "alerts"), _list))
+
+    # 4. Temporal consistency — no position opened before strategy inception
+    errors.extend(_check_temporal_consistency(strategies, _list("positions")))
+
+    # 5. Batch/live consistency — batch positions must be subset of live positions
+    errors.extend(_check_batch_live_consistency(_list("positions_batch"), _list("positions_live")))
+
+    return errors
 
 
 def _ensure_id(domain: str, records: list[dict[str, object]]) -> list[dict[str, object]]:
@@ -88,225 +217,44 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
     if store is None:
         from unified_trading_api.mock_data.state_store import mock_store as _legacy
 
-        store = _legacy
+        store = _legacy  # pyright: ignore[reportAssignmentType]
+
+    assert store is not None  # guaranteed by the guard above
+    _store: _Seedable = store  # bind for closure — store is guaranteed non-None
 
     def _seed(domain: str, records: list[dict[str, object]]) -> None:
         """Seed with auto-id: ensures every record has an 'id' field."""
         _ensure_id(domain, records)
-        store.seed(domain, records)  # type: ignore[union-attr]
+        _store.seed(domain, records)
 
     # Seed version marker for cache invalidation
     _seed("_meta", [{"id": "seed_version", "version": SEED_VERSION}])
 
     # ══════════════════════════════════════════════════════════════════
-    #  STRATEGIES (18) — matches UI trading-data.ts
+    #  STRATEGIES (50+) — registry-driven via seed_strategies.py
     # ══════════════════════════════════════════════════════════════════
 
-    _seed(
-        "strategies",
-        [
-            # ── 8 named strategies from spec ──
-            {
-                "id": "strat-001",
-                "name": "DEFI_ETH_BASIS_SCE_1H",
-                "asset_class": "defi",
-                "venue": "uniswap_v3",
-                "status": "live",
-                "version": "2.1.0",
-                "org_id": _O,
-                "client_id": _CLIENT_ODUM,
-                "desk": "delta-one",
-            },
-            {
-                "id": "strat-002",
-                "name": "CEFI_BTC_ML_DIR_HUF_4H",
-                "asset_class": "cefi",
-                "venue": "binance",
-                "status": "live",
-                "version": "3.4.1",
-                "org_id": _A,
-                "client_id": _CLIENT_ACME,
-                "desk": "quant-fund",
-            },
-            {
-                "id": "strat-003",
-                "name": "CEFI_ETH_OPT_MM_EVT_TICK",
-                "asset_class": "cefi",
-                "venue": "deribit",
-                "status": "live",
-                "version": "1.8.0",
-                "org_id": _O,
-                "client_id": _CLIENT_ODUM,
-                "desk": "delta-one",
-            },
-            {
-                "id": "strat-004",
-                "name": "CEFI_BTC_MM_HUF_15S",
-                "asset_class": "cefi",
-                "venue": "binance",
-                "status": "live",
-                "version": "4.0.2",
-                "org_id": _A,
-                "client_id": _CLIENT_ACME,
-                "desk": "quant-fund",
-            },
-            {
-                "id": "strat-005",
-                "name": "TRADFI_ES_STAT_ARB_SCE_5M",
-                "asset_class": "tradfi",
-                "venue": "cme",
-                "status": "staging",
-                "version": "0.9.3",
-                "org_id": _V,
-                "client_id": _CLIENT_VERTEX,
-                "desk": "quant-fund",
-            },
-            {
-                "id": "strat-006",
-                "name": "CEFI_MULTI_MOM_HUF_1H",
-                "asset_class": "cefi",
-                "venue": "binance",
-                "status": "live",
-                "version": "2.3.0",
-                "org_id": _O,
-                "client_id": _CLIENT_ODUM,
-                "desk": "delta-one",
-            },
-            {
-                "id": "strat-007",
-                "name": "DEFI_AAVE_YIELD_EVT_BLOCK",
-                "asset_class": "defi",
-                "venue": "aave_v3",
-                "status": "live",
-                "version": "1.2.0",
-                "org_id": _O,
-                "client_id": _CLIENT_ODUM,
-                "desk": "defi",
-            },
-            {
-                "id": "strat-008",
-                "name": "SPORTS_NFL_ARB_EVT_GAME",
-                "asset_class": "sports",
-                "venue": "betfair",
-                "status": "live",
-                "version": "1.5.1",
-                "org_id": _O,
-                "client_id": _CLIENT_ODUM,
-                "desk": "sports",
-            },
-            # ── 10 additional strategies (mix of status/asset/org) ──
-            {
-                "id": "strat-009",
-                "name": "CEFI_SOL_PERP_TREND_HUF_30M",
-                "asset_class": "cefi",
-                "venue": "hyperliquid",
-                "status": "live",
-                "version": "1.1.0",
-                "org_id": _O,
-                "client_id": _CLIENT_ODUM,
-                "desk": "delta-one",
-            },
-            {
-                "id": "strat-010",
-                "name": "DEFI_UNI_LP_REBAL_SCE_1H",
-                "asset_class": "defi",
-                "venue": "uniswap_v3",
-                "status": "staging",
-                "version": "0.7.2",
-                "org_id": _V,
-                "client_id": _CLIENT_VERTEX,
-                "desk": "defi",
-            },
-            {
-                "id": "strat-011",
-                "name": "CEFI_ETH_FUNDING_ARB_HUF_8H",
-                "asset_class": "cefi",
-                "venue": "binance",
-                "status": "live",
-                "version": "2.0.1",
-                "org_id": _O,
-                "client_id": _CLIENT_ODUM,
-                "desk": "quant-fund",
-            },
-            {
-                "id": "strat-012",
-                "name": "SPORTS_EPL_ML_DIR_EVT_MATCH",
-                "asset_class": "sports",
-                "venue": "betfair",
-                "status": "live",
-                "version": "3.1.0",
-                "org_id": _O,
-                "client_id": _CLIENT_ODUM,
-                "desk": "sports",
-            },
-            {
-                "id": "strat-013",
-                "name": "TRADFI_NQ_MOM_SCE_15M",
-                "asset_class": "tradfi",
-                "venue": "cme",
-                "status": "paper",
-                "version": "0.5.0",
-                "org_id": _B,
-                "client_id": _CLIENT_BETA,
-                "desk": "quant-fund",
-            },
-            {
-                "id": "strat-014",
-                "name": "CEFI_MULTI_VOL_SURF_EVT_1H",
-                "asset_class": "cefi",
-                "venue": "deribit",
-                "status": "live",
-                "version": "1.9.4",
-                "org_id": _A,
-                "client_id": _CLIENT_ACME,
-                "desk": "delta-one",
-            },
-            {
-                "id": "strat-015",
-                "name": "DEFI_FLASH_LOAN_ARB_EVT_BLOCK",
-                "asset_class": "defi",
-                "venue": "aave_v3",
-                "status": "paper",
-                "version": "0.3.1",
-                "org_id": _O,
-                "client_id": _CLIENT_ODUM,
-                "desk": "defi",
-            },
-            {
-                "id": "strat-016",
-                "name": "SPORTS_NBA_LIVE_EVT_QUARTER",
-                "asset_class": "sports",
-                "venue": "smarkets",
-                "status": "staging",
-                "version": "0.8.0",
-                "org_id": _B,
-                "client_id": _CLIENT_BETA,
-                "desk": "sports",
-            },
-            {
-                "id": "strat-017",
-                "name": "CEFI_BTC_GRID_HUF_5M",
-                "asset_class": "cefi",
-                "venue": "binance",
-                "status": "paper",
-                "version": "0.4.0",
-                "org_id": _V,
-                "client_id": _CLIENT_VERTEX,
-                "desk": "delta-one",
-            },
-            {
-                "id": "strat-018",
-                "name": "PREDICTION_POLY_SENT_EVT_1H",
-                "asset_class": "prediction",
-                "venue": "polymarket",
-                "status": "live",
-                "version": "1.0.0",
-                "org_id": _O,
-                "client_id": _CLIENT_ODUM,
-                "desk": "quant-fund",
-            },
-        ],
-    )
+    from unified_trading_api.mock_data.seed_strategies import generate_strategies
+
+    _strategies = generate_strategies()
+    _seed("strategies", _strategies)
+
+    # Also seed strategy_configs for the config-driven expansion
+    _strategy_configs = [
+        {
+            "config_id": s["id"],
+            "strategy_id": s["id"],
+            "name": s["name"],
+            "archetype": s.get("archetype", "unknown"),
+            "asset_class": s.get("asset_class", "cefi"),
+            "instruments": s.get("instruments", []),
+            "execution_mode": s.get("status", "live"),
+            "timeframe": "1h",
+            "org_id": s.get("org_id", _O),
+        }
+        for s in _strategies
+    ]
+    _seed("strategy_configs", _strategy_configs)
 
     # ══════════════════════════════════════════════════════════════════
     #  ORDERS (25) — 40% filled, 20% partial, 20% open, 10% cancelled,
@@ -1122,6 +1070,11 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
+    # fills_live and fills_batch — copy fills data into live/batch collections
+    _fills_for_copy: list[dict[str, object]] = _store.list("fills")
+    _seed("fills_live", _fills_for_copy)
+    _seed("fills_batch", [{**f, "reconciled": True} for f in _fills_for_copy])
+
     # ══════════════════════════════════════════════════════════════════
     #  EXECUTION VENUES (5)
     # ══════════════════════════════════════════════════════════════════
@@ -1280,6 +1233,8 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
                 "margin_used": 11133.33,
                 "org_id": _O,
                 "strategy_id": "strat-002",
+                "denomination_currency": "USDT",
+                "fx_rate_to_usd": 1.0001,
             },
             {
                 "position_id": "pos-d2e3f4a5-4002",
@@ -1293,6 +1248,8 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
                 "margin_used": 3480.00,
                 "org_id": _O,
                 "strategy_id": "strat-006",
+                "denomination_currency": "USDT",
+                "fx_rate_to_usd": 1.0001,
             },
             {
                 "position_id": "pos-d2e3f4a5-4003",
@@ -1306,6 +1263,8 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
                 "margin_used": 4816.67,
                 "org_id": _V,
                 "strategy_id": "strat-017",
+                "denomination_currency": "USDT",
+                "fx_rate_to_usd": 1.0001,
             },
             {
                 "position_id": "pos-d2e3f4a5-4004",
@@ -1319,6 +1278,8 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
                 "margin_used": 1033.33,
                 "org_id": _B,
                 "strategy_id": "strat-006",
+                "denomination_currency": "USDT",
+                "fx_rate_to_usd": 1.0001,
             },
             {
                 "position_id": "pos-d2e3f4a5-4005",
@@ -1332,6 +1293,8 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
                 "margin_used": 4473.33,
                 "org_id": _A,
                 "strategy_id": "strat-002",
+                "denomination_currency": "USDT",
+                "fx_rate_to_usd": 1.0001,
             },
             # ── Deribit (4) ──
             {
@@ -1346,6 +1309,8 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
                 "margin_used": 5200.00,
                 "org_id": _O,
                 "strategy_id": "strat-014",
+                "denomination_currency": "BTC",
+                "fx_rate_to_usd": 67000.0,
             },
             {
                 "position_id": "pos-d2e3f4a5-4007",
@@ -1359,6 +1324,8 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
                 "margin_used": 8800.00,
                 "org_id": _O,
                 "strategy_id": "strat-003",
+                "denomination_currency": "BTC",
+                "fx_rate_to_usd": 67000.0,
             },
             {
                 "position_id": "pos-d2e3f4a5-4008",
@@ -1372,6 +1339,8 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
                 "margin_used": 1750.00,
                 "org_id": _A,
                 "strategy_id": "strat-014",
+                "denomination_currency": "BTC",
+                "fx_rate_to_usd": 67000.0,
             },
             {
                 "position_id": "pos-d2e3f4a5-4009",
@@ -1385,6 +1354,8 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
                 "margin_used": 2460.00,
                 "org_id": _O,
                 "strategy_id": "strat-014",
+                "denomination_currency": "BTC",
+                "fx_rate_to_usd": 67000.0,
             },
             # ── Hyperliquid (4) ──
             {
@@ -1399,6 +1370,8 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
                 "margin_used": 2870.00,
                 "org_id": _O,
                 "strategy_id": "strat-009",
+                "denomination_currency": "USD",
+                "fx_rate_to_usd": 1.0,
             },
             {
                 "position_id": "pos-d2e3f4a5-4011",
@@ -1412,6 +1385,8 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
                 "margin_used": 6950.00,
                 "org_id": _O,
                 "strategy_id": "strat-009",
+                "denomination_currency": "USD",
+                "fx_rate_to_usd": 1.0,
             },
             {
                 "position_id": "pos-d2e3f4a5-4012",
@@ -1425,6 +1400,8 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
                 "margin_used": 1620.00,
                 "org_id": _O,
                 "strategy_id": "strat-011",
+                "denomination_currency": "USD",
+                "fx_rate_to_usd": 1.0,
             },
             {
                 "position_id": "pos-d2e3f4a5-4013",
@@ -1438,6 +1415,8 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
                 "margin_used": 1150.00,
                 "org_id": _V,
                 "strategy_id": "strat-009",
+                "denomination_currency": "USD",
+                "fx_rate_to_usd": 1.0,
             },
             # ── Uniswap V3 (4) ──
             {
@@ -1452,6 +1431,11 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
                 "margin_used": 10435.50,
                 "org_id": _O,
                 "strategy_id": "strat-001",
+                "denomination_currency": "ETH",
+                "fx_rate_to_usd": 3500.0,
+                "il_pct": 0.85,
+                "pool_share_pct": 0.0012,
+                "fee_accrued_usd": 142.30,
             },
             {
                 "position_id": "pos-d2e3f4a5-4015",
@@ -1465,6 +1449,11 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
                 "margin_used": 11.59,
                 "org_id": _A,
                 "strategy_id": "strat-010",
+                "denomination_currency": "ETH",
+                "fx_rate_to_usd": 3500.0,
+                "il_pct": 2.10,
+                "pool_share_pct": 0.0003,
+                "fee_accrued_usd": 28.50,
             },
             {
                 "position_id": "pos-d2e3f4a5-4016",
@@ -1478,6 +1467,11 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
                 "margin_used": 3470.00,
                 "org_id": _O,
                 "strategy_id": "strat-010",
+                "denomination_currency": "ETH",
+                "fx_rate_to_usd": 3500.0,
+                "il_pct": 4.25,
+                "pool_share_pct": 0.0045,
+                "fee_accrued_usd": 310.75,
             },
             {
                 "position_id": "pos-d2e3f4a5-4017",
@@ -1491,6 +1485,11 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
                 "margin_used": 1.90,
                 "org_id": _V,
                 "strategy_id": "strat-010",
+                "denomination_currency": "ETH",
+                "fx_rate_to_usd": 3500.0,
+                "il_pct": 1.30,
+                "pool_share_pct": 0.0008,
+                "fee_accrued_usd": 15.20,
             },
             # ── Aave V3 (3) ──
             {
@@ -1505,6 +1504,13 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
                 "margin_used": 17400.00,
                 "org_id": _O,
                 "strategy_id": "strat-007",
+                "denomination_currency": "ETH",
+                "fx_rate_to_usd": 3500.0,
+                "health_factor": 2.5,
+                "ltv_ratio": 0.42,
+                "liquidation_price": 2150.00,
+                "collateral_value_usd": 17410.00,
+                "borrow_value_usd": 7312.20,
             },
             {
                 "position_id": "pos-d2e3f4a5-4019",
@@ -1518,6 +1524,13 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
                 "margin_used": 50000.00,
                 "org_id": _O,
                 "strategy_id": "strat-007",
+                "denomination_currency": "ETH",
+                "fx_rate_to_usd": 3500.0,
+                "health_factor": 1.48,
+                "ltv_ratio": 0.68,
+                "liquidation_price": 0.92,
+                "collateral_value_usd": 50000.00,
+                "borrow_value_usd": 34000.00,
             },
             {
                 "position_id": "pos-d2e3f4a5-4020",
@@ -1531,6 +1544,13 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
                 "margin_used": 3360.00,
                 "org_id": _O,
                 "strategy_id": "strat-015",
+                "denomination_currency": "ETH",
+                "fx_rate_to_usd": 3500.0,
+                "health_factor": 1.22,
+                "ltv_ratio": 0.65,
+                "liquidation_price": 72500.00,
+                "collateral_value_usd": 5180.00,
+                "borrow_value_usd": 3362.50,
             },
         ],
     )
@@ -3109,185 +3129,221 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
             {
                 "alert_id": "alrt-a2b3c4d5-8001",
                 "severity": "critical",
+                "status": "active",
                 "message": "Execution-service circuit breaker OPEN on binance",
                 "source": "execution-service",
                 "strategy_id": "strat-002",
                 "org_id": _O,
                 "timestamp": "2026-03-21T09:28:00Z",
                 "acknowledged": False,
+                "escalated_at": "2026-03-21T09:28:30Z",
             },
             {
                 "alert_id": "alrt-a2b3c4d5-8002",
                 "severity": "critical",
+                "status": "active",
                 "message": "Aave V3 health factor below 1.1 - liquidation risk",
                 "source": "risk-and-exposure-service",
                 "strategy_id": "strat-007",
                 "org_id": _O,
                 "timestamp": "2026-03-21T09:20:00Z",
                 "acknowledged": False,
+                "escalated_at": "2026-03-21T09:20:15Z",
             },
             {
                 "alert_id": "alrt-a2b3c4d5-8003",
                 "severity": "critical",
+                "status": "resolved",
                 "message": "Market-tick-data-service unresponsive for 120s",
                 "source": "alerting-service",
                 "strategy_id": None,
                 "org_id": _O,
                 "timestamp": "2026-03-21T09:25:00Z",
                 "acknowledged": True,
+                "escalated_at": "2026-03-21T09:25:10Z",
             },
             # ── High (5) ──
             {
                 "alert_id": "alrt-a2b3c4d5-8004",
                 "severity": "high",
+                "status": "active",
                 "message": "Position limit 80% reached on SOL-USD-PERP",
                 "source": "risk-and-exposure-service",
                 "strategy_id": "strat-009",
                 "org_id": _O,
                 "timestamp": "2026-03-21T09:16:00Z",
                 "acknowledged": False,
+                "escalated_at": None,
             },
             {
                 "alert_id": "alrt-a2b3c4d5-8005",
                 "severity": "high",
+                "status": "active",
                 "message": "Hyperliquid API rate limit 90% utilization",
                 "source": "execution-service",
                 "strategy_id": "strat-009",
                 "org_id": _O,
                 "timestamp": "2026-03-21T09:10:00Z",
                 "acknowledged": False,
+                "escalated_at": None,
             },
             {
                 "alert_id": "alrt-a2b3c4d5-8006",
                 "severity": "high",
+                "status": "resolved",
                 "message": "Slippage exceeded 0.1% on WETH-USDC swap",
                 "source": "execution-service",
                 "strategy_id": "strat-001",
                 "org_id": _O,
                 "timestamp": "2026-03-21T11:00:15Z",
                 "acknowledged": True,
+                "escalated_at": None,
             },
             {
                 "alert_id": "alrt-a2b3c4d5-8007",
                 "severity": "high",
+                "status": "active",
                 "message": "Funding rate arb spread collapsed below threshold",
                 "source": "strategy-service",
                 "strategy_id": "strat-011",
                 "org_id": _O,
                 "timestamp": "2026-03-21T08:45:00Z",
                 "acknowledged": False,
+                "escalated_at": None,
             },
             {
                 "alert_id": "alrt-a2b3c4d5-8008",
                 "severity": "high",
+                "status": "resolved",
                 "message": "Order rejection rate above 5% on deribit",
                 "source": "execution-service",
                 "strategy_id": "strat-014",
                 "org_id": _A,
                 "timestamp": "2026-03-21T07:30:00Z",
                 "acknowledged": True,
+                "escalated_at": "2026-03-21T07:35:00Z",
             },
             # ── Medium (6) ──
             {
                 "alert_id": "alrt-a2b3c4d5-8009",
                 "severity": "medium",
+                "status": "active",
                 "message": "Data gap detected on hyperliquid-rest",
                 "source": "market-tick-data-service",
                 "strategy_id": None,
                 "org_id": _O,
                 "timestamp": "2026-03-21T09:25:01Z",
                 "acknowledged": False,
+                "escalated_at": None,
             },
             {
                 "alert_id": "alrt-a2b3c4d5-8010",
                 "severity": "medium",
+                "status": "active",
                 "message": "Features-onchain-service staleness > 5min",
                 "source": "features-onchain-service",
                 "strategy_id": None,
                 "org_id": _O,
                 "timestamp": "2026-03-21T09:20:00Z",
                 "acknowledged": False,
+                "escalated_at": None,
             },
             {
                 "alert_id": "alrt-a2b3c4d5-8011",
                 "severity": "medium",
+                "status": "resolved",
                 "message": "Batch/live position reconciliation mismatch: 3 breaks",
                 "source": "batch-live-reconciliation-service",
                 "strategy_id": None,
                 "org_id": _O,
                 "timestamp": "2026-03-21T08:00:00Z",
                 "acknowledged": True,
+                "escalated_at": None,
             },
             {
                 "alert_id": "alrt-a2b3c4d5-8012",
                 "severity": "medium",
+                "status": "active",
                 "message": "ML model momentum-multi-asset drift detected",
                 "source": "ml-inference-service",
                 "strategy_id": "strat-006",
                 "org_id": _O,
                 "timestamp": "2026-03-21T07:00:00Z",
                 "acknowledged": False,
+                "escalated_at": None,
             },
             {
                 "alert_id": "alrt-a2b3c4d5-8013",
                 "severity": "medium",
+                "status": "active",
                 "message": "Gas price spike on Ethereum mainnet > 50 gwei",
                 "source": "features-onchain-service",
                 "strategy_id": "strat-001",
                 "org_id": _O,
                 "timestamp": "2026-03-21T10:30:00Z",
                 "acknowledged": False,
+                "escalated_at": None,
             },
             {
                 "alert_id": "alrt-a2b3c4d5-8014",
                 "severity": "medium",
+                "status": "resolved",
                 "message": "Strategy CEFI_MULTI_VOL_SURF_EVT_1H PnL drawdown -3.2%",
                 "source": "pnl-attribution-service",
                 "strategy_id": "strat-014",
                 "org_id": _A,
                 "timestamp": "2026-03-21T06:00:00Z",
                 "acknowledged": True,
+                "escalated_at": None,
             },
             # ── Low (4) ──
             {
                 "alert_id": "alrt-a2b3c4d5-8015",
                 "severity": "low",
+                "status": "resolved",
                 "message": "Model latency p99 > 50ms on mean-reversion-btc",
                 "source": "ml-inference-service",
                 "strategy_id": "strat-002",
                 "org_id": _O,
                 "timestamp": "2026-03-21T07:00:00Z",
                 "acknowledged": True,
+                "escalated_at": None,
             },
             {
                 "alert_id": "alrt-a2b3c4d5-8016",
                 "severity": "low",
+                "status": "active",
                 "message": "Sports-features-service last compute > 1h ago",
                 "source": "features-sports-service",
                 "strategy_id": "strat-008",
                 "org_id": _O,
                 "timestamp": "2026-03-21T09:00:00Z",
                 "acknowledged": False,
+                "escalated_at": None,
             },
             {
                 "alert_id": "alrt-a2b3c4d5-8017",
                 "severity": "low",
+                "status": "resolved",
                 "message": "Disk usage above 75% on ml-training-service",
                 "source": "ml-training-service",
                 "strategy_id": None,
                 "org_id": _O,
                 "timestamp": "2026-03-21T06:00:00Z",
                 "acknowledged": True,
+                "escalated_at": None,
             },
             {
                 "alert_id": "alrt-a2b3c4d5-8018",
                 "severity": "low",
+                "status": "active",
                 "message": "Invoice inv-b4c5d6e7-7002 pending for > 7 days",
                 "source": "pnl-attribution-service",
                 "strategy_id": None,
                 "org_id": _V,
                 "timestamp": "2026-03-21T08:00:00Z",
                 "acknowledged": False,
+                "escalated_at": None,
             },
         ],
     )
@@ -4092,41 +4148,18 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
     )
 
     # ══════════════════════════════════════════════════════════════════
-    #  MARKET DATA (for existing routes)
+    #  OHLCV CANDLES — registry-driven via seed_candles.py
+    #  ~32K records from all UAC representative_sample instruments
     # ══════════════════════════════════════════════════════════════════
 
-    _seed(
-        "candles",
-        [
-            {
-                "timestamp": "2026-03-21T09:00:00Z",
-                "open": 67100.00,
-                "high": 67300.00,
-                "low": 67050.00,
-                "close": 67250.50,
-                "volume": 142.5,
-                "org_id": _O,
-            },
-            {
-                "timestamp": "2026-03-21T09:01:00Z",
-                "open": 67250.50,
-                "high": 67280.00,
-                "low": 67200.00,
-                "close": 67220.00,
-                "volume": 88.3,
-                "org_id": _O,
-            },
-            {
-                "timestamp": "2026-03-21T09:02:00Z",
-                "open": 67220.00,
-                "high": 67260.00,
-                "low": 67190.00,
-                "close": 67245.00,
-                "volume": 95.1,
-                "org_id": _O,
-            },
-        ],
-    )
+    from unified_trading_api.mock_data.seed_candles import generate_candles
+
+    _candle_data = generate_candles()
+    for _interval_key, _candle_records in _candle_data.items():
+        _seed(_interval_key, _candle_records)
+
+    # Legacy "candles" alias for backwards compatibility
+    _seed("candles", _candle_data.get("candles_1m", []))
 
     _seed(
         "trades",
@@ -4158,32 +4191,855 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         ],
     )
 
+    # ══════════════════════════════════════════════════════════════════
+    #  TICKERS — registry-driven via seed_tickers.py
+    #  All instruments from UAC representative_sample
+    # ══════════════════════════════════════════════════════════════════
+
+    from unified_trading_api.mock_data.seed_tickers import (
+        generate_tickers_batch,
+        generate_tickers_live,
+    )
+
+    _tickers_live = generate_tickers_live()
+    _seed("tickers", _tickers_live)
+    _seed("tickers_live", _tickers_live)
+    _seed("tickers_batch", generate_tickers_batch())
+
+    # ══════════════════════════════════════════════════════════════════
+    #  ALERTS LIVE/BATCH (for live/batch mode support)
+    # ══════════════════════════════════════════════════════════════════
+
     _seed(
-        "tickers",
+        "alerts_live",
         [
             {
-                "instrument": "BTC-USDT",
-                "bid": 67248.00,
-                "ask": 67250.50,
-                "last": 67250.50,
-                "volume_24h": 18500.0,
+                "alert_id": "alrt-l-001",
+                "severity": "critical",
+                "status": "active",
+                "acknowledged": False,
+                "message": "BTC exposure exceeds 80% of limit",
+                "strategy_id": "strat-002",
+                "org_id": _O,
+                "created_at": "2026-03-22T08:15:00Z",
+            },
+            {
+                "alert_id": "alrt-l-002",
+                "severity": "high",
+                "status": "active",
+                "acknowledged": False,
+                "message": "Latency spike on Binance venue adapter",
+                "strategy_id": "strat-004",
+                "org_id": _O,
+                "created_at": "2026-03-22T08:30:00Z",
+            },
+            {
+                "alert_id": "alrt-l-003",
+                "severity": "medium",
+                "status": "active",
+                "acknowledged": False,
+                "message": "Drawdown warning on DEFI_ETH_BASIS strategy",
+                "strategy_id": "strat-001",
+                "org_id": _O,
+                "created_at": "2026-03-22T09:00:00Z",
+            },
+            {
+                "alert_id": "alrt-l-004",
+                "severity": "high",
+                "status": "active",
+                "acknowledged": False,
+                "message": "Margin call approaching for ACME positions",
+                "strategy_id": "strat-002",
+                "org_id": _A,
+                "created_at": "2026-03-22T09:15:00Z",
+            },
+            {
+                "alert_id": "alrt-l-005",
+                "severity": "low",
+                "status": "active",
+                "acknowledged": False,
+                "message": "Feature pipeline delayed by 5 minutes",
+                "strategy_id": "strat-006",
+                "org_id": _O,
+                "created_at": "2026-03-22T09:30:00Z",
+            },
+            {
+                "alert_id": "alrt-l-006",
+                "severity": "critical",
+                "status": "active",
+                "acknowledged": False,
+                "message": "Kill switch triggered for SPORTS_NFL_ARB",
+                "strategy_id": "strat-008",
+                "org_id": _O,
+                "created_at": "2026-03-22T09:45:00Z",
+            },
+            {
+                "alert_id": "alrt-l-007",
+                "severity": "medium",
+                "status": "acknowledged",
+                "acknowledged": True,
+                "acknowledged_by": "admin",
+                "message": "Stale price detected for DOGE-USDT",
+                "strategy_id": "strat-006",
+                "org_id": _O,
+                "created_at": "2026-03-22T10:00:00Z",
+            },
+        ],
+    )
+
+    _seed(
+        "alerts_batch",
+        [
+            {
+                "alert_id": "alrt-b-001",
+                "severity": "critical",
+                "status": "resolved",
+                "acknowledged": True,
+                "message": "End-of-day BTC exposure breach (resolved)",
+                "strategy_id": "strat-002",
+                "org_id": _O,
+                "created_at": "2026-03-21T16:00:00Z",
+                "resolved_at": "2026-03-21T16:30:00Z",
+            },
+            {
+                "alert_id": "alrt-b-002",
+                "severity": "high",
+                "status": "resolved",
+                "acknowledged": True,
+                "message": "Margin call (resolved)",
+                "strategy_id": "strat-002",
+                "org_id": _A,
+                "created_at": "2026-03-21T14:00:00Z",
+                "resolved_at": "2026-03-21T15:00:00Z",
+            },
+            {
+                "alert_id": "alrt-b-003",
+                "severity": "medium",
+                "status": "resolved",
+                "acknowledged": True,
+                "message": "Latency spike (resolved)",
+                "strategy_id": "strat-004",
+                "org_id": _O,
+                "created_at": "2026-03-21T12:00:00Z",
+                "resolved_at": "2026-03-21T12:15:00Z",
+            },
+        ],
+    )
+
+    # ══════════════════════════════════════════════════════════════════
+    #  RISK LIVE/BATCH (for live/batch mode support)
+    # ══════════════════════════════════════════════════════════════════
+
+    _seed(
+        "risk_live",
+        [
+            {
+                "id": "risk-l-001",
+                "strategy_id": "strat-001",
+                "exposure_usd": 245_000,
+                "max_exposure": 500_000,
+                "utilization_pct": 49.0,
+                "var_99": 12_500,
                 "org_id": _O,
             },
             {
-                "instrument": "ETH-USDT",
-                "bid": 3479.50,
-                "ask": 3480.25,
-                "last": 3480.00,
-                "volume_24h": 92000.0,
+                "id": "risk-l-002",
+                "strategy_id": "strat-002",
+                "exposure_usd": 890_000,
+                "max_exposure": 1_000_000,
+                "utilization_pct": 89.0,
+                "var_99": 45_000,
+                "org_id": _A,
+            },
+            {
+                "id": "risk-l-003",
+                "strategy_id": "strat-003",
+                "exposure_usd": 150_000,
+                "max_exposure": 300_000,
+                "utilization_pct": 50.0,
+                "var_99": 8_000,
                 "org_id": _O,
             },
             {
-                "instrument": "SOL-USDT",
-                "bid": 145.75,
-                "ask": 145.85,
-                "last": 145.80,
-                "volume_24h": 45000.0,
+                "id": "risk-l-004",
+                "strategy_id": "strat-004",
+                "exposure_usd": 520_000,
+                "max_exposure": 750_000,
+                "utilization_pct": 69.3,
+                "var_99": 28_000,
+                "org_id": _A,
+            },
+            {
+                "id": "risk-l-005",
+                "strategy_id": "strat-005",
+                "exposure_usd": 310_000,
+                "max_exposure": 600_000,
+                "utilization_pct": 51.7,
+                "var_99": 18_000,
+                "org_id": _V,
+            },
+        ],
+    )
+
+    _seed(
+        "risk_batch",
+        [
+            {
+                "id": "risk-b-001",
+                "strategy_id": "strat-001",
+                "exposure_usd": 230_000,
+                "max_exposure": 500_000,
+                "utilization_pct": 46.0,
+                "var_99": 11_800,
+                "org_id": _O,
+            },
+            {
+                "id": "risk-b-002",
+                "strategy_id": "strat-002",
+                "exposure_usd": 850_000,
+                "max_exposure": 1_000_000,
+                "utilization_pct": 85.0,
+                "var_99": 43_000,
+                "org_id": _A,
+            },
+            {
+                "id": "risk-b-003",
+                "strategy_id": "strat-003",
+                "exposure_usd": 140_000,
+                "max_exposure": 300_000,
+                "utilization_pct": 46.7,
+                "var_99": 7_500,
                 "org_id": _O,
             },
         ],
     )
+
+    # ══════════════════════════════════════════════════════════════════
+    #  CORRELATION MATRIX
+    # ══════════════════════════════════════════════════════════════════
+
+    _seed(
+        "correlation_matrix",
+        [
+            {
+                "id": "corr-matrix-current",
+                "timestamp": "2026-03-22T00:00:00Z",
+                "instruments": [
+                    "BTC-USDT",
+                    "ETH-USDT",
+                    "SOL-USDT",
+                    "AAPL",
+                    "ES-FRONT",
+                    "AAVE-ETH-LEND",
+                ],
+                "matrix": [
+                    [1.00, 0.85, 0.72, 0.15, 0.20, 0.55],
+                    [0.85, 1.00, 0.78, 0.12, 0.18, 0.62],
+                    [0.72, 0.78, 1.00, 0.08, 0.10, 0.48],
+                    [0.15, 0.12, 0.08, 1.00, 0.92, 0.05],
+                    [0.20, 0.18, 0.10, 0.92, 1.00, 0.08],
+                    [0.55, 0.62, 0.48, 0.05, 0.08, 1.00],
+                ],
+            },
+        ],
+    )
+
+    # ══════════════════════════════════════════════════════════════════
+    #  MARKET REGIME
+    # ══════════════════════════════════════════════════════════════════
+
+    _seed(
+        "regime",
+        [
+            {
+                "id": "regime-current",
+                "regime": "normal",
+                "multiplier": 1.0,
+                "signals": {"volatility": 0.15, "correlation": 0.35, "drawdown_velocity": 0.02},
+                "timestamp": "2026-03-22T00:00:00Z",
+            },
+        ],
+    )
+
+    # ══════════════════════════════════════════════════════════════════
+    #  OPTIONS CHAIN (for derivatives endpoints)
+    # ══════════════════════════════════════════════════════════════════
+
+    _seed(
+        "options_chain",
+        [
+            {
+                "id": "opt-btc-c-70k",
+                "underlying": "BTC",
+                "venue": "deribit",
+                "strike": 70000,
+                "option_type": "call",
+                "expiration": "2026-03-28",
+                "bid": 1250.0,
+                "ask": 1280.0,
+                "implied_vol": 0.62,
+                "delta": 0.42,
+                "gamma": 0.00003,
+                "theta": -85.0,
+                "vega": 120.0,
+                "org_id": _O,
+            },
+            {
+                "id": "opt-btc-p-70k",
+                "underlying": "BTC",
+                "venue": "deribit",
+                "strike": 70000,
+                "option_type": "put",
+                "expiration": "2026-03-28",
+                "bid": 3800.0,
+                "ask": 3850.0,
+                "implied_vol": 0.65,
+                "delta": -0.58,
+                "gamma": 0.00003,
+                "theta": -90.0,
+                "vega": 125.0,
+                "org_id": _O,
+            },
+            {
+                "id": "opt-btc-c-65k",
+                "underlying": "BTC",
+                "venue": "deribit",
+                "strike": 65000,
+                "option_type": "call",
+                "expiration": "2026-03-28",
+                "bid": 3200.0,
+                "ask": 3250.0,
+                "implied_vol": 0.58,
+                "delta": 0.68,
+                "gamma": 0.00002,
+                "theta": -70.0,
+                "vega": 95.0,
+                "org_id": _O,
+            },
+            {
+                "id": "opt-btc-p-65k",
+                "underlying": "BTC",
+                "venue": "deribit",
+                "strike": 65000,
+                "option_type": "put",
+                "expiration": "2026-03-28",
+                "bid": 750.0,
+                "ask": 780.0,
+                "implied_vol": 0.55,
+                "delta": -0.32,
+                "gamma": 0.00002,
+                "theta": -65.0,
+                "vega": 90.0,
+                "org_id": _O,
+            },
+            {
+                "id": "opt-btc-c-75k",
+                "underlying": "BTC",
+                "venue": "deribit",
+                "strike": 75000,
+                "option_type": "call",
+                "expiration": "2026-03-28",
+                "bid": 350.0,
+                "ask": 380.0,
+                "implied_vol": 0.68,
+                "delta": 0.22,
+                "gamma": 0.00002,
+                "theta": -55.0,
+                "vega": 80.0,
+                "org_id": _O,
+            },
+            {
+                "id": "opt-eth-c-3500",
+                "underlying": "ETH",
+                "venue": "deribit",
+                "strike": 3500,
+                "option_type": "call",
+                "expiration": "2026-03-28",
+                "bid": 85.0,
+                "ask": 90.0,
+                "implied_vol": 0.60,
+                "delta": 0.50,
+                "gamma": 0.0005,
+                "theta": -12.0,
+                "vega": 8.0,
+                "org_id": _O,
+            },
+            {
+                "id": "opt-eth-p-3500",
+                "underlying": "ETH",
+                "venue": "deribit",
+                "strike": 3500,
+                "option_type": "put",
+                "expiration": "2026-03-28",
+                "bid": 80.0,
+                "ask": 85.0,
+                "implied_vol": 0.62,
+                "delta": -0.50,
+                "gamma": 0.0005,
+                "theta": -11.0,
+                "vega": 7.5,
+                "org_id": _O,
+            },
+        ],
+    )
+
+    # ══════════════════════════════════════════════════════════════════
+    #  VOL SURFACES
+    # ══════════════════════════════════════════════════════════════════
+
+    _seed(
+        "vol_surfaces",
+        [
+            {
+                "id": "vol-btc",
+                "underlying": "BTC",
+                "atm_iv": 0.62,
+                "skew_25d": -0.05,
+                "butterfly_25d": 0.03,
+                "slices": [
+                    {
+                        "expiry": "2026-03-28",
+                        "smile": [
+                            {"strike": 60000, "iv": 0.70},
+                            {"strike": 65000, "iv": 0.62},
+                            {"strike": 67000, "iv": 0.60},
+                            {"strike": 70000, "iv": 0.62},
+                            {"strike": 75000, "iv": 0.68},
+                        ],
+                    },
+                    {
+                        "expiry": "2026-04-25",
+                        "smile": [
+                            {"strike": 60000, "iv": 0.65},
+                            {"strike": 65000, "iv": 0.58},
+                            {"strike": 67000, "iv": 0.56},
+                            {"strike": 70000, "iv": 0.58},
+                            {"strike": 75000, "iv": 0.63},
+                        ],
+                    },
+                ],
+                "term_structure": [
+                    {"expiry": "2026-03-28", "atm_iv": 0.60},
+                    {"expiry": "2026-04-25", "atm_iv": 0.56},
+                    {"expiry": "2026-06-27", "atm_iv": 0.52},
+                ],
+            },
+            {
+                "id": "vol-eth",
+                "underlying": "ETH",
+                "atm_iv": 0.65,
+                "skew_25d": -0.04,
+                "butterfly_25d": 0.025,
+                "slices": [
+                    {
+                        "expiry": "2026-03-28",
+                        "smile": [
+                            {"strike": 3000, "iv": 0.72},
+                            {"strike": 3300, "iv": 0.66},
+                            {"strike": 3500, "iv": 0.63},
+                            {"strike": 3700, "iv": 0.66},
+                            {"strike": 4000, "iv": 0.72},
+                        ],
+                    },
+                ],
+                "term_structure": [
+                    {"expiry": "2026-03-28", "atm_iv": 0.63},
+                    {"expiry": "2026-04-25", "atm_iv": 0.59},
+                ],
+            },
+        ],
+    )
+
+    # ══════════════════════════════════════════════════════════════════
+    #  FX RATES
+    # ══════════════════════════════════════════════════════════════════
+
+    _seed(
+        "fx_rates",
+        [
+            {"id": "BTC/USD", "pair": "BTC/USD", "rate": 67000.0},
+            {"id": "ETH/USD", "pair": "ETH/USD", "rate": 3500.0},
+            {"id": "SOL/USD", "pair": "SOL/USD", "rate": 145.0},
+            {"id": "USDT/USD", "pair": "USDT/USD", "rate": 1.0001},
+            {"id": "EUR/USD", "pair": "EUR/USD", "rate": 1.08},
+            {"id": "GBP/USD", "pair": "GBP/USD", "rate": 1.27},
+            {"id": "JPY/USD", "pair": "JPY/USD", "rate": 0.0067},
+        ],
+    )
+
+    # ══════════════════════════════════════════════════════════════════
+    #  REGULATORY REPORTS
+    # ══════════════════════════════════════════════════════════════════
+
+    _seed(
+        "regulatory_reports",
+        [
+            {
+                "id": "reg-001",
+                "report_id": "reg-001",
+                "report_type": "MIFID_II_BEST_EXECUTION",
+                "jurisdiction": "EU",
+                "status": "submitted",
+                "filing_date": "2026-03-15",
+                "next_due_date": "2026-04-15",
+                "instruments_covered": ["BTC-USDT", "ETH-USDT"],
+                "summary": "Q1 2026 best execution report",
+                "org_id": _O,
+            },
+            {
+                "id": "reg-002",
+                "report_id": "reg-002",
+                "report_type": "FCA_TRANSACTION",
+                "jurisdiction": "UK",
+                "status": "submitted",
+                "filing_date": "2026-03-14",
+                "next_due_date": "2026-04-14",
+                "instruments_covered": ["AAPL", "QQQ", "ES-FRONT"],
+                "summary": "March 2026 transaction report",
+                "org_id": _O,
+            },
+            {
+                "id": "reg-003",
+                "report_id": "reg-003",
+                "report_type": "EMIR_DERIVATIVE",
+                "jurisdiction": "EU",
+                "status": "pending",
+                "filing_date": "",
+                "next_due_date": "2026-03-31",
+                "instruments_covered": ["BTC-USDT-PERP", "ETH-USDT-PERP"],
+                "summary": "EMIR derivative reporting for perpetual swaps",
+                "org_id": _O,
+            },
+            {
+                "id": "reg-004",
+                "report_id": "reg-004",
+                "report_type": "MIFID_II_BEST_EXECUTION",
+                "jurisdiction": "EU",
+                "status": "overdue",
+                "filing_date": "",
+                "next_due_date": "2026-03-01",
+                "instruments_covered": ["BTC-USDT"],
+                "summary": "February execution report — OVERDUE",
+                "org_id": _A,
+            },
+            {
+                "id": "reg-005",
+                "report_id": "reg-005",
+                "report_type": "FCA_TRANSACTION",
+                "jurisdiction": "UK",
+                "status": "submitted",
+                "filing_date": "2026-03-10",
+                "next_due_date": "2026-04-10",
+                "instruments_covered": ["GLD", "ES-FRONT"],
+                "summary": "Client transaction report for Vertex Partners",
+                "org_id": _V,
+            },
+            {
+                "id": "reg-006",
+                "report_id": "reg-006",
+                "report_type": "EMIR_DERIVATIVE",
+                "jurisdiction": "EU",
+                "status": "submitted",
+                "filing_date": "2026-03-01",
+                "next_due_date": "2026-04-01",
+                "instruments_covered": ["BTC-USD-PERP"],
+                "summary": "Deribit perpetuals EMIR report",
+                "org_id": _O,
+            },
+        ],
+    )
+
+    # ══════════════════════════════════════════════════════════════════
+    #  ORDERS LIVE/BATCH (for live/batch mode support)
+    # ══════════════════════════════════════════════════════════════════
+
+    _seed(
+        "orders_live",
+        [
+            {
+                "order_id": "ord-l-001",
+                "instrument": "BTC-USDT",
+                "venue": "binance",
+                "side": "buy",
+                "quantity": 0.5,
+                "price": 67200.0,
+                "status": "filled",
+                "strategy_id": "strat-002",
+                "org_id": _A,
+                "created_at": "2026-03-22T08:00:00Z",
+            },
+            {
+                "order_id": "ord-l-002",
+                "instrument": "ETH-USDT",
+                "venue": "binance",
+                "side": "sell",
+                "quantity": 5.0,
+                "price": 3480.0,
+                "status": "filled",
+                "strategy_id": "strat-006",
+                "org_id": _O,
+                "created_at": "2026-03-22T08:15:00Z",
+            },
+            {
+                "order_id": "ord-l-003",
+                "instrument": "SOL-USDT",
+                "venue": "binance",
+                "side": "buy",
+                "quantity": 100.0,
+                "price": 145.0,
+                "status": "open",
+                "strategy_id": "strat-006",
+                "org_id": _O,
+                "created_at": "2026-03-22T09:00:00Z",
+            },
+            {
+                "order_id": "ord-l-004",
+                "instrument": "BTC-USDT-PERP",
+                "venue": "binance-futures",
+                "side": "sell",
+                "quantity": 0.2,
+                "price": 67300.0,
+                "status": "partially_filled",
+                "strategy_id": "strat-004",
+                "org_id": _A,
+                "created_at": "2026-03-22T09:30:00Z",
+            },
+        ],
+    )
+
+    _seed(
+        "orders_batch",
+        [
+            {
+                "order_id": "ord-b-001",
+                "instrument": "BTC-USDT",
+                "venue": "binance",
+                "side": "buy",
+                "quantity": 1.0,
+                "price": 66800.0,
+                "status": "filled",
+                "strategy_id": "strat-002",
+                "org_id": _A,
+                "created_at": "2026-03-21T10:00:00Z",
+            },
+            {
+                "order_id": "ord-b-002",
+                "instrument": "ETH-USDT",
+                "venue": "binance",
+                "side": "buy",
+                "quantity": 10.0,
+                "price": 3450.0,
+                "status": "filled",
+                "strategy_id": "strat-006",
+                "org_id": _O,
+                "created_at": "2026-03-21T14:00:00Z",
+            },
+        ],
+    )
+
+    # ══════════════════════════════════════════════════════════════════
+    #  PNL TIME-SERIES — 180 daily points per strategy (50+ strategies)
+    # ══════════════════════════════════════════════════════════════════
+
+    from unified_trading_api.mock_data.seed_timeseries import generate_pnl_timeseries
+
+    _pnl_ts = generate_pnl_timeseries(_strategies)
+    _seed("pnl_timeseries", _pnl_ts)
+    _seed("pnl_timeseries_live", _pnl_ts)
+
+    # Batch PnL = same but with slight reconciliation adjustments (-0.2%)
+    _pnl_ts_batch = [
+        {
+            **pt,
+            "cumulative_pnl": round(
+                float(str(pt["cumulative_pnl"])) * 0.998,
+                2,
+            ),
+        }
+        for pt in _pnl_ts
+    ]
+    _seed("pnl_timeseries_batch", _pnl_ts_batch)
+
+    # ══════════════════════════════════════════════════════════════════
+    #  NEWS — mock news items for Observe > News page
+    # ══════════════════════════════════════════════════════════════════
+
+    _seed(
+        "news",
+        [
+            {
+                "id": "news-001",
+                "title": "BTC breaks $67K resistance level",
+                "source": "CoinDesk",
+                "timestamp": "2026-03-22T08:00:00Z",
+                "category": "crypto",
+                "relevance_score": 0.92,
+                "linked_instruments": ["BTC-USDT"],
+                "org_id": _O,
+            },
+            {
+                "id": "news-002",
+                "title": "SEC approves spot ETH ETF applications",
+                "source": "Bloomberg",
+                "timestamp": "2026-03-22T06:30:00Z",
+                "category": "regulatory",
+                "relevance_score": 0.95,
+                "linked_instruments": ["ETH-USDT"],
+                "org_id": _O,
+            },
+            {
+                "id": "news-003",
+                "title": "Fed signals rate pause through Q2 2026",
+                "source": "Reuters",
+                "timestamp": "2026-03-22T05:00:00Z",
+                "category": "macro",
+                "relevance_score": 0.88,
+                "linked_instruments": ["ES", "ZB", "ZN"],
+                "org_id": _O,
+            },
+            {
+                "id": "news-004",
+                "title": "Uniswap V4 launch drives DeFi TVL surge",
+                "source": "The Block",
+                "timestamp": "2026-03-21T22:00:00Z",
+                "category": "crypto",
+                "relevance_score": 0.82,
+                "linked_instruments": ["USDT-ETH"],
+                "org_id": _O,
+            },
+            {
+                "id": "news-005",
+                "title": "Aave V3 yields spike to 8% on ETH markets",
+                "source": "DeFi Pulse",
+                "timestamp": "2026-03-21T20:00:00Z",
+                "category": "crypto",
+                "relevance_score": 0.78,
+                "linked_instruments": ["aWETH"],
+                "org_id": _O,
+            },
+            {
+                "id": "news-006",
+                "title": "SOL ecosystem gains momentum with Firedancer",
+                "source": "CoinDesk",
+                "timestamp": "2026-03-21T18:00:00Z",
+                "category": "crypto",
+                "relevance_score": 0.75,
+                "linked_instruments": ["SOL-USDT"],
+                "org_id": _O,
+            },
+            {
+                "id": "news-007",
+                "title": "AAPL earnings beat estimates, stock gaps up",
+                "source": "Bloomberg",
+                "timestamp": "2026-03-21T16:00:00Z",
+                "category": "market",
+                "relevance_score": 0.85,
+                "linked_instruments": ["AAPL"],
+                "org_id": _O,
+            },
+            {
+                "id": "news-008",
+                "title": "Hyperliquid surpasses $100B daily volume",
+                "source": "The Block",
+                "timestamp": "2026-03-21T14:00:00Z",
+                "category": "crypto",
+                "relevance_score": 0.72,
+                "linked_instruments": ["ETH"],
+                "org_id": _O,
+            },
+            {
+                "id": "news-009",
+                "title": "Deribit launches weekly BTC options with tighter spreads",
+                "source": "CoinDesk",
+                "timestamp": "2026-03-21T12:00:00Z",
+                "category": "market",
+                "relevance_score": 0.68,
+                "linked_instruments": ["BTC-USDC"],
+                "org_id": _O,
+            },
+            {
+                "id": "news-010",
+                "title": "EU proposes MiCA Phase 2 stablecoin regulations",
+                "source": "Reuters",
+                "timestamp": "2026-03-21T10:00:00Z",
+                "category": "regulatory",
+                "relevance_score": 0.90,
+                "linked_instruments": ["USDT-ETH", "aUSDC"],
+                "org_id": _O,
+            },
+            {
+                "id": "news-011",
+                "title": "NBA playoff odds shift after Celtics injury report",
+                "source": "ESPN",
+                "timestamp": "2026-03-21T08:00:00Z",
+                "category": "sports",
+                "relevance_score": 0.65,
+                "linked_instruments": ["NBA-LAL-BOS"],
+                "org_id": _O,
+            },
+            {
+                "id": "news-012",
+                "title": "Gold ETF GLD sees record inflows amid uncertainty",
+                "source": "Bloomberg",
+                "timestamp": "2026-03-22T07:00:00Z",
+                "category": "market",
+                "relevance_score": 0.80,
+                "linked_instruments": ["GLD"],
+                "org_id": _O,
+            },
+            {
+                "id": "news-013",
+                "title": "VIX drops below 15 as market volatility subsides",
+                "source": "CBOE",
+                "timestamp": "2026-03-22T09:00:00Z",
+                "category": "market",
+                "relevance_score": 0.73,
+                "linked_instruments": ["VIX"],
+                "org_id": _O,
+            },
+            {
+                "id": "news-014",
+                "title": "Polymarket prediction markets see election trading surge",
+                "source": "The Block",
+                "timestamp": "2026-03-21T19:00:00Z",
+                "category": "crypto",
+                "relevance_score": 0.60,
+                "linked_instruments": ["NBA-DAL-MEM-SPREAD-5.5"],
+                "org_id": _O,
+            },
+            {
+                "id": "news-015",
+                "title": "Ethereum gas fees drop to 12-month low",
+                "source": "Etherscan",
+                "timestamp": "2026-03-22T10:00:00Z",
+                "category": "crypto",
+                "relevance_score": 0.70,
+                "linked_instruments": ["ETH-USDT", "aWETH", "stETH"],
+                "org_id": _O,
+            },
+        ],
+    )
+
+    # ══════════════════════════════════════════════════════════════════
+    #  PHASE 8 — risk limits, options, vol, VaR, FX, regulatory, DeFi
+    #  (additional data from seed_phase8.py if available)
+    # ══════════════════════════════════════════════════════════════════
+
+    from unified_trading_api.mock_data.seed_phase8 import generate_phase8_data
+
+    _p8 = generate_phase8_data()
+    for _p8_domain, _p8_records in _p8.items():
+        # Only seed if not already seeded above (avoid duplicates)
+        _list_method = getattr(_store, "list", None)
+        existing: list[dict[str, object]] = _list_method(_p8_domain) if _list_method else []  # pyright: ignore[reportAny]
+        if not existing:
+            _seed(_p8_domain, _p8_records)
+
+    # Run consistency validation (log warnings, don't crash)
+    import logging
+
+    _logger = logging.getLogger(__name__)
+    _errors = validate_consistency(store)
+    if _errors:
+        for _e in _errors:
+            _logger.warning("Seed consistency: %s", _e)

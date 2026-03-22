@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
+
 import pytest
 
 from unified_trading_api.mock_data.personas import ORG_IDS, ORGANIZATIONS, PERSONAS
@@ -32,7 +34,7 @@ def store() -> _InMemoryStore:
 class TestOrgIdCoverage:
     """Every record in every domain must have an org_id field."""
 
-    DOMAINS_REQUIRING_ORG = [
+    DOMAINS_REQUIRING_ORG: ClassVar[list[str]] = [
         "orders",
         "fills",
         "positions",

@@ -19,41 +19,64 @@ router = APIRouter(dependencies=[Depends(verify_api_key)])
 @router.get("/candles")
 async def get_candles(
     request: Request,
-    venue: str = Query(...),
     instrument: str = Query(...),
-    timeframe: str = Query("1m"),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(100, ge=1, le=500),
+    interval: str = Query("1h"),
+    limit: int = Query(200, ge=1, le=500),
+    venue: str = Query(None),
 ) -> dict[str, object]:
     """Get OHLCV candles for an instrument."""
     service = get_service(request)
-    records = service.list("candles")
-    data, pagination = paginate(records, page, page_size)
+    collection = f"candles_{interval}" if interval != "1h" else "candles"
+    records = service.list(collection, filters={"instrument": instrument})
+    if not records:
+        records = service.list("candles", filters={"instrument": instrument})
     return {
-        "venue": venue,
         "instrument": instrument,
-        "timeframe": timeframe,
-        "data": data,
-        "pagination": pagination.model_dump(),
+        "interval": interval,
+        "data": records[:limit],
     }
 
 
 @router.get("/orderbook")
 async def get_orderbook(
     request: Request,
-    venue: str = Query(...),
     instrument: str = Query(...),
-    depth: int = Query(10),
+    depth: int = Query(20, ge=1, le=50),
+    venue: str = Query(None),
 ) -> dict[str, object]:
-    """Get order book snapshot."""
+    """Get order book snapshot — generates dynamic depth in mock mode."""
+    import random as _rng
+
     service = get_service(request)
-    book = service.list("orderbook", filters={"venue": venue, "instrument": instrument})
+
+    # Try to get last price from tickers
+    tickers = service.list("tickers_live", filters={"instrument": instrument})
+    if not tickers:
+        tickers = service.list("tickers", filters={"instrument": instrument})
+
+    mid_price = float(str(tickers[0].get("price", 100.0))) if tickers else 100.0
+
+    spread_pct = 0.0002  # 2 bps
+    half_spread = mid_price * spread_pct
+
+    bids: list[dict[str, float]] = []
+    asks: list[dict[str, float]] = []
+
+    for i in range(depth):
+        offset = half_spread * (1 + i * 0.5)
+        bid_price = mid_price - offset
+        ask_price = mid_price + offset
+        # Decreasing quantity away from mid
+        base_qty = _rng.uniform(0.5, 10.0) / (1 + i * 0.3)
+        bids.append({"price": round(bid_price, 2), "quantity": round(base_qty, 4)})
+        asks.append({"price": round(ask_price, 2), "quantity": round(base_qty, 4)})
+
     return {
-        "venue": venue,
         "instrument": instrument,
-        "depth": depth,
-        "bids": book[:depth],
-        "asks": book[depth:],
+        "mid_price": round(mid_price, 2),
+        "spread": round(half_spread * 2, 4),
+        "bids": bids,
+        "asks": asks,
     }
 
 
@@ -85,3 +108,24 @@ async def get_tickers(
     """Get all tickers for a venue."""
     service = get_service(request)
     return {"venue": venue, "tickers": service.list("tickers")}
+
+
+@router.get("/fx-rates")
+async def get_fx_rates(
+    request: Request,
+) -> dict[str, object]:
+    """Get FX rates for portfolio currency conversion."""
+    service = get_service(request)
+    records = service.list("fx_rates")
+    if records:
+        return {"rates": records}
+    # Fallback static rates
+    return {
+        "rates": [
+            {"id": "fx-btc-usd", "pair": "BTC/USD", "rate": 67000.0},
+            {"id": "fx-eth-usd", "pair": "ETH/USD", "rate": 3500.0},
+            {"id": "fx-usdt-usd", "pair": "USDT/USD", "rate": 1.0001},
+            {"id": "fx-eur-usd", "pair": "EUR/USD", "rate": 1.08},
+            {"id": "fx-gbp-usd", "pair": "GBP/USD", "rate": 1.27},
+        ]
+    }

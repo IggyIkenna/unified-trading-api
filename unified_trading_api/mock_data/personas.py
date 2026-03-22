@@ -39,7 +39,7 @@ ORGANIZATIONS: Final[list[dict[str, object]]] = [
     },
 ]
 
-ORG_IDS: Final[list[str]] = [o["id"] for o in ORGANIZATIONS]  # type: ignore[misc]
+ORG_IDS: Final[list[str]] = [str(o["id"]) for o in ORGANIZATIONS]
 
 # ---------------------------------------------------------------------------
 # Personas (demo login identities)
