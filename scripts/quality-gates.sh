@@ -10,8 +10,8 @@
 SERVICE_NAME="unified-trading-api"
 SOURCE_DIR="unified_trading_api"
 MIN_COVERAGE=70
-RUN_INTEGRATION=false
-PYTEST_WORKERS=${PYTEST_WORKERS:-2}
+RUN_INTEGRATION=true
+PYTEST_WORKERS=${PYTEST_WORKERS:-}  # default: max(1, cpu_count//4) computed by base script
 LOCAL_DEPS=()
 # seed.py (5043L) and seed_all_domains() (4834L) are generated mock data — exempt from size checks
 FUNCTION_SIZE_EXTRA_EXCLUDES=("! -path ./unified_trading_api/mock_data/seed.py" "! -path ./unified_trading_api/mock_data/seed_strategies.py")
@@ -22,13 +22,6 @@ EMPTY_DICT_LIST_EXCLUDE_GLOBS=("!**/mock_data/seed.py" "!**/mock_data/seed_*.py"
 # seed.py/seed_phase8.py defer heavy imports to reduce startup time;
 # auth.py defers jwt import to avoid import cycle
 IMPORT_INSIDE_EXCLUDE_GLOBS=("!**/main.py" "!**/seed.py" "!**/seed_phase8.py" "!**/auth.py" "!**/chat.py")
-# unified_trading_api is a gateway — all intra-package deep imports are intentional
-# Only external unified_* lib deep imports should be flagged
-DEEP_IMPORT_EXCLUDE_GLOBS=("!**/routes/*.py" "!**/services/*.py" "!**/middleware/*.py" "!**/mock_data/*.py" "!**/models/*.py" "!**/main.py")
-# Gateway-local Pydantic models for request validation and standard responses
-PYDANTIC_EXCLUDE_GLOBS=("!**/models/standard.py" "!**/routes/instruments.py")
-# WebSocket and reporting use top-level except Exception as async error boundaries
-BE_EXCLUDE_GLOBS=("**/reporting.py" "**/websocket.py")
 WORKSPACE_ROOT="$(cd "$(git rev-parse --show-toplevel)/.." && pwd)"
 source "${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/base-service.sh"
 

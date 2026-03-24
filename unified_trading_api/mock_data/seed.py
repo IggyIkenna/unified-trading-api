@@ -5031,6 +5031,11 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         # Phase 8 module generates richer data than inline seeds — always use it
         _seed(_p8_domain, _p8_records)
 
+    # Calendar domain (economic results + corporate actions)
+    from unified_trading_api.mock_data.seed_calendar import seed_calendar
+
+    seed_calendar(_store)
+
     # Run consistency validation (log warnings, don't crash)
     import logging
 
