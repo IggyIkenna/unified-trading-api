@@ -47,7 +47,7 @@ class TestUnifiedCloudConfigUsage:
         from unified_trading_api import main
 
         source = inspect.getsource(main)
-        assert "from unified_config_interface import UnifiedCloudConfig" in source
+        assert "from unified_trading_library import UnifiedCloudConfig" in source
 
     def test_auth_imports_unified_cloud_config(self) -> None:
         """auth.py should import UnifiedCloudConfig for credential access."""
@@ -56,7 +56,7 @@ class TestUnifiedCloudConfigUsage:
         from unified_trading_api.middleware import auth
 
         source = inspect.getsource(auth)
-        assert "from unified_config_interface import UnifiedCloudConfig" in source
+        assert "from unified_trading_library import UnifiedCloudConfig" in source
 
     def test_health_imports_unified_cloud_config(self) -> None:
         """health.py should import UnifiedCloudConfig for cloud_provider."""
@@ -65,11 +65,11 @@ class TestUnifiedCloudConfigUsage:
         from unified_trading_api.routes import health
 
         source = inspect.getsource(health)
-        assert "from unified_config_interface import UnifiedCloudConfig" in source
+        assert "from unified_trading_library import UnifiedCloudConfig" in source
 
     def test_auth_module_creates_config_instance(self) -> None:
         """auth.py should have a module-level _auth_cfg instance."""
-        from unified_config_interface import UnifiedCloudConfig
+        from unified_trading_library import UnifiedCloudConfig
 
         from unified_trading_api.middleware import auth
 

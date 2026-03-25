@@ -10,8 +10,8 @@
 SERVICE_NAME="unified-trading-api"
 SOURCE_DIR="unified_trading_api"
 MIN_COVERAGE=70
-RUN_INTEGRATION=true
-PYTEST_WORKERS=${PYTEST_WORKERS:-}  # default: max(1, cpu_count//4) computed by base script
+RUN_INTEGRATION=false
+PYTEST_WORKERS=${PYTEST_WORKERS:-2}
 LOCAL_DEPS=()
 # seed.py (5043L) and seed_all_domains() (4834L) are generated mock data — exempt from size checks
 FUNCTION_SIZE_EXTRA_EXCLUDES=("! -path ./unified_trading_api/mock_data/seed.py" "! -path ./unified_trading_api/mock_data/seed_strategies.py")

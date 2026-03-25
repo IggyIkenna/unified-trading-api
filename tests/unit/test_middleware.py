@@ -23,7 +23,7 @@ class TestVerifyApiKey:
 
     def test_missing_api_key_returns_401(self) -> None:
         """When auth is enabled and no key sent, expect 401."""
-        from unified_events_interface import setup_events
+        from unified_trading_library import setup_events
 
         setup_events("unified-trading-api", "test")
 
@@ -47,7 +47,7 @@ class TestVerifyApiKey:
 
     def test_invalid_api_key_returns_401(self) -> None:
         """When auth is enabled and wrong key sent, expect 401."""
-        from unified_events_interface import setup_events
+        from unified_trading_library import setup_events
 
         setup_events("unified-trading-api", "test")
 
@@ -207,7 +207,7 @@ class TestGetCurrentUser:
 
     def test_no_auth_disabled_no_token_returns_401(self) -> None:
         """No token and auth not disabled returns 401."""
-        from unified_events_interface import setup_events
+        from unified_trading_library import setup_events
 
         setup_events("unified-trading-api", "test")
 

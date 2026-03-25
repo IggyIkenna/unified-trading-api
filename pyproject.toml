@@ -12,7 +12,7 @@ license = {text = "MIT"}
 
 dependencies = [
     # Web framework
-    "fastapi>=0.110.0,<1.0.0",
+    "fastapi<1.0.0,>=0.115.0",
     "uvicorn[standard]>=0.27.0,<1.0.0",
     "gunicorn>=22.0.0,<23.0.0",
     "pydantic>=2.12.5,<3.0.0",
@@ -28,6 +28,8 @@ dependencies = [
     "websockets>=14.0,<15.0",
     # Internal libraries
     "unified-trading-library>=0.1.0,<1.0.0",
+    "unified-internal-contracts>=0.1.0,<1.0.0",
+    "unified-api-contracts>=0.1.0,<1.0.0",
     # Test / QG
     "pytest>=9.0.1,<10.0.0",
     "pytest-cov>=7.0.0,<8.0.0",
@@ -69,6 +71,16 @@ max-complexity = 10
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
+
+
+[tool.uv.sources.unified-api-contracts]
+path = "../unified-api-contracts"
+editable = true
+
+
+[tool.uv.sources.unified-internal-contracts]
+path = "../unified-internal-contracts"
+editable = true
 
 [tool.basedpyright]
 pythonVersion = "3.13"

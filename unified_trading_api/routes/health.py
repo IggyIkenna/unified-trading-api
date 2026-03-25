@@ -9,7 +9,7 @@ from datetime import UTC, datetime
 
 import httpx
 from fastapi import APIRouter, Request
-from unified_config_interface import UnifiedCloudConfig
+from unified_trading_library import UnifiedCloudConfig
 
 from unified_trading_api import __version__ as _api_version
 from unified_trading_api.services.app_state import get_disable_auth, get_mock_mode, get_start_time

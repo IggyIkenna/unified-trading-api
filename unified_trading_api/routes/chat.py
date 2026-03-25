@@ -19,7 +19,7 @@ from enum import StrEnum
 from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
-from unified_config_interface import UnifiedCloudConfig
+from unified_trading_library import UnifiedCloudConfig
 
 from unified_trading_api.middleware.entitlement import (
     OrgType,
