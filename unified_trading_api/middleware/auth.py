@@ -11,8 +11,7 @@ from typing import cast
 
 from fastapi import Depends, HTTPException, Request, Security
 from fastapi.security import APIKeyHeader
-from unified_trading_library import UnifiedCloudConfig
-from unified_trading_library import log_event
+from unified_trading_library import UnifiedCloudConfig, log_event
 
 from unified_trading_api.services.app_state import get_disable_auth, get_mock_mode
 

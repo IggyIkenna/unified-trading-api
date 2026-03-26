@@ -14,7 +14,7 @@ from typing import cast
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel
-from unified_internal_contracts.testing.instrument_generator import InstrumentGenerator
+from unified_api_contracts.internal.testing.instrument_generator import InstrumentGenerator
 
 from unified_trading_api.middleware.auth import verify_api_key
 from unified_trading_api.models.standard import paginate

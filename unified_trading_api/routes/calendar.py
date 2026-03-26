@@ -98,7 +98,9 @@ async def get_corporate_actions(
     event_type: str | None = Query(
         None, description="Filter by event type: dividend | earnings | split"
     ),
-    days_forward: int = Query(30, ge=1, le=365, description="Days forward to include upcoming events"),
+    days_forward: int = Query(
+        30, ge=1, le=365, description="Days forward to include upcoming events"
+    ),
 ) -> dict[str, object]:
     """Get corporate actions calendar — dividends, earnings, splits.
 

@@ -28,7 +28,6 @@ dependencies = [
     "websockets>=14.0,<15.0",
     # Internal libraries
     "unified-trading-library>=0.1.0,<1.0.0",
-    "unified-internal-contracts>=0.1.0,<1.0.0",
     "unified-api-contracts>=0.1.0,<1.0.0",
     # Test / QG
     "pytest>=9.0.1,<10.0.0",
@@ -78,9 +77,6 @@ path = "../unified-api-contracts"
 editable = true
 
 
-[tool.uv.sources.unified-internal-contracts]
-path = "../unified-internal-contracts"
-editable = true
 
 [tool.basedpyright]
 pythonVersion = "3.13"

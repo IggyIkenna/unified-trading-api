@@ -2942,7 +2942,7 @@ wheels = [
 
 [[package]]
 name = "unified-api-contracts"
-version = "0.1.20"
+version = "0.2.0"
 source = { editable = "../unified-api-contracts" }
 dependencies = [
     { name = "bandit" },
@@ -2952,8 +2952,12 @@ dependencies = [
     { name = "httpx" },
     { name = "hypothesis" },
     { name = "ib-insync" },
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "pandas-stubs" },
     { name = "pip-audit" },
     { name = "pre-commit" },
+    { name = "pyarrow" },
     { name = "pydantic" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
@@ -2977,8 +2981,12 @@ requires-dist = [
     { name = "httpx", specifier = ">=0.28.1,<1.0.0" },
     { name = "hypothesis", specifier = ">=6.0.0,<7.0.0" },
     { name = "ib-insync", specifier = ">=0.9.86,<1.0.0" },
+    { name = "numpy", specifier = ">=2.3.0,<2.4.0" },
+    { name = "pandas", specifier = ">=2.3.0,<3.0.0" },
+    { name = "pandas-stubs", specifier = ">=2.2.0,<3.0.0" },
     { name = "pip-audit", specifier = ">=2.7.0,<3.0.0" },
     { name = "pre-commit", specifier = ">=3.0,<4.0.0" },
+    { name = "pyarrow", specifier = ">=23.0.0,<24.0.0" },
     { name = "pydantic", specifier = ">=2.12.5,<3.0.0" },
     { name = "pytest", specifier = ">=9.0.1,<10.0.0" },
     { name = "pytest-asyncio", specifier = ">=0.25.0,<2.0.0" },
@@ -3025,7 +3033,7 @@ dependencies = [
     { name = "pytest-xdist" },
     { name = "redis" },
     { name = "ruff" },
-    { name = "unified-internal-contracts" },
+    { name = "unified-api-contracts" },
     { name = "vcrpy" },
 ]
 
@@ -3058,7 +3066,7 @@ requires-dist = [
     { name = "pytest-xdist", specifier = ">=3.6.0,<4.0.0" },
     { name = "redis", specifier = ">=5.0.0,<6.0.0" },
     { name = "ruff", specifier = "==0.15.0" },
-    { name = "unified-internal-contracts", editable = "../unified-internal-contracts" },
+    { name = "unified-api-contracts", editable = "../unified-api-contracts" },
     { name = "vcrpy", specifier = ">=8.0.0,<9.0.0" },
 ]
 
@@ -3083,9 +3091,9 @@ dependencies = [
     { name = "python-dateutil" },
     { name = "pyyaml" },
     { name = "ruff" },
+    { name = "unified-api-contracts" },
     { name = "unified-cloud-interface" },
     { name = "unified-events-interface" },
-    { name = "unified-internal-contracts" },
 ]
 
 [package.metadata]
@@ -3106,9 +3114,9 @@ requires-dist = [
     { name = "python-dateutil", specifier = ">=2.8.2,<3.0.0" },
     { name = "pyyaml", specifier = ">=6.0.1,<7.0.0" },
     { name = "ruff", specifier = "==0.15.0" },
+    { name = "unified-api-contracts", editable = "../unified-api-contracts" },
     { name = "unified-cloud-interface", editable = "../unified-cloud-interface" },
     { name = "unified-events-interface", editable = "../unified-events-interface" },
-    { name = "unified-internal-contracts", editable = "../unified-internal-contracts" },
 ]
 
 [[package]]
@@ -3145,55 +3153,6 @@ requires-dist = [
 ]
 
 [[package]]
-name = "unified-internal-contracts"
-version = "0.1.2"
-source = { editable = "../unified-internal-contracts" }
-dependencies = [
-    { name = "bandit" },
-    { name = "basedpyright" },
-    { name = "numpy" },
-    { name = "pandas" },
-    { name = "pandas-stubs" },
-    { name = "pip-audit" },
-    { name = "pre-commit" },
-    { name = "pyarrow" },
-    { name = "pydantic" },
-    { name = "pytest" },
-    { name = "pytest-asyncio" },
-    { name = "pytest-cov" },
-    { name = "pytest-socket" },
-    { name = "pytest-timeout" },
-    { name = "pytest-xdist" },
-    { name = "pyyaml" },
-    { name = "ruff" },
-    { name = "unified-api-contracts" },
-    { name = "unified-trading-library" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "bandit", specifier = ">=1.7.0,<2.0.0" },
-    { name = "basedpyright", specifier = "==1.38.2" },
-    { name = "numpy", specifier = ">=2.3.0,<2.4.0" },
-    { name = "pandas", specifier = ">=2.3.0,<3.0.0" },
-    { name = "pandas-stubs", specifier = ">=2.2.0,<3.0.0" },
-    { name = "pip-audit", specifier = ">=2.7.0,<3.0.0" },
-    { name = "pre-commit", specifier = ">=3.0,<4.0.0" },
-    { name = "pyarrow", specifier = ">=23.0.0,<24.0.0" },
-    { name = "pydantic", specifier = ">=2.12.5,<3.0.0" },
-    { name = "pytest", specifier = ">=9.0.1,<10.0.0" },
-    { name = "pytest-asyncio", specifier = ">=0.25.0,<2.0.0" },
-    { name = "pytest-cov", specifier = ">=7.0.0,<8.0.0" },
-    { name = "pytest-socket", specifier = ">=0.7.0,<1.0.0" },
-    { name = "pytest-timeout", specifier = ">=2.4.0,<3.0.0" },
-    { name = "pytest-xdist", specifier = ">=3.6.0,<4.0.0" },
-    { name = "pyyaml", specifier = ">=6.0.1,<7.0.0" },
-    { name = "ruff", specifier = "==0.15.0" },
-    { name = "unified-api-contracts", editable = "../unified-api-contracts" },
-    { name = "unified-trading-library", editable = "../unified-trading-library" },
-]
-
-[[package]]
 name = "unified-trading-api"
 version = "0.1.0"
 source = { editable = "." }
@@ -3218,6 +3177,7 @@ dependencies = [
     { name = "pytest-timeout" },
     { name = "pytest-xdist" },
     { name = "ruff" },
+    { name = "unified-api-contracts" },
     { name = "unified-trading-library" },
     { name = "uvicorn", extra = ["standard"] },
     { name = "websockets" },
@@ -3245,6 +3205,7 @@ requires-dist = [
     { name = "pytest-timeout", specifier = ">=2.4.0,<3.0.0" },
     { name = "pytest-xdist", specifier = ">=3.6.0,<4.0.0" },
     { name = "ruff", specifier = "==0.15.0" },
+    { name = "unified-api-contracts", editable = "../unified-api-contracts" },
     { name = "unified-trading-library", editable = "../unified-trading-library" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.27.0,<1.0.0" },
     { name = "websockets", specifier = ">=14.0,<15.0" },
@@ -3292,7 +3253,6 @@ dependencies = [
     { name = "unified-cloud-interface" },
     { name = "unified-config-interface" },
     { name = "unified-events-interface" },
-    { name = "unified-internal-contracts" },
     { name = "web3" },
 ]
 
@@ -3335,7 +3295,6 @@ requires-dist = [
     { name = "unified-cloud-interface", editable = "../unified-cloud-interface" },
     { name = "unified-config-interface", editable = "../unified-config-interface" },
     { name = "unified-events-interface", editable = "../unified-events-interface" },
-    { name = "unified-internal-contracts", editable = "../unified-internal-contracts" },
     { name = "web3", specifier = ">=6.0.0,<7.0.0" },
 ]
 
