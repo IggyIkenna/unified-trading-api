@@ -1,6 +1,6 @@
 """Tests for event logging patterns in the unified-trading-api.
 
-Verifies that auth middleware uses unified_events_interface.log_event
+Verifies that auth middleware uses unified_trading_library.events_interface.log_event
 for structured event emission (AUTH_FAILURE, AUTH_MISCONFIGURED) and
 that standard Python logging is used throughout the codebase.
 """

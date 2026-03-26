@@ -1,7 +1,7 @@
 """Tests for configuration patterns in the unified-trading-api.
 
 Verifies that the service uses UnifiedCloudConfig from
-unified_config_interface for all config access, and that app_state
+unified_trading_library.config_interface for all config access, and that app_state
 helpers correctly expose config values from app.state.
 """
 
@@ -41,7 +41,7 @@ class TestUnifiedCloudConfigUsage:
     """Verify UnifiedCloudConfig is the config source, not raw os.getenv."""
 
     def test_main_imports_unified_cloud_config(self) -> None:
-        """main.py should import UnifiedCloudConfig from unified_config_interface."""
+        """main.py should import UnifiedCloudConfig from unified_trading_library.config_interface."""
         import inspect
 
         from unified_trading_api import main
