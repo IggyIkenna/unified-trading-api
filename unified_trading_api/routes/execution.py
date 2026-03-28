@@ -63,6 +63,24 @@ async def get_algos(request: Request) -> dict[str, object]:
     return {"algos": service.list("algos")}
 
 
+@router.get("/grid-configs")
+async def get_grid_configs(
+    request: Request,
+    domain: str = Query(None, description="Filter by domain: strategy, execution, ml"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=200),
+) -> dict[str, object]:
+    """Get saved grid config library — named config sets with their fixed + grid params.
+
+    Each grid config is a saved "folder" that references a grid run.
+    Use grid_run_id to find the child backtest results.
+    """
+    service = get_service(request)
+    records = service.list("grid_configs", filters={"domain": domain})
+    data, pagination = paginate(records, page, page_size)
+    return {"data": data, "pagination": pagination.model_dump()}
+
+
 @router.get("/backtests")
 async def get_backtests(
     request: Request,
@@ -151,35 +169,57 @@ async def create_backtest(
 
     domain = str(body.get("domain", "strategy"))
     selected_type = str(body.get("type", "unknown"))
+    config_name = str(body.get("config_name", f"{selected_type} grid"))
     subscriptions = body.get("subscriptions", {})
 
-    # Create parent grid run
+    # Create parent grid run (acts as the "folder" for this named config)
     parent_id = f"grid-{uuid.uuid4().hex[:8]}"
     parent_record = {
         "id": parent_id,
         "type": "grid_search",
+        "config_name": config_name,
         "domain": domain,
         "archetype": selected_type,
         "status": "completed",
         "grid_size": len(combinations),
         "param_names": param_names,
+        "grid_parameters": dict(grid_params),
         "subscriptions": subscriptions,
         "created_at": now,
         "completed_at": now,
         "children": [],
     }
 
+    # Also persist the grid config spec separately for the config library
+    grid_config_record = {
+        "id": f"gc-{uuid.uuid4().hex[:8]}",
+        "grid_run_id": parent_id,
+        "config_name": config_name,
+        "domain": domain,
+        "archetype": selected_type,
+        "fixed_params": {
+            "subscriptions": subscriptions,
+            "type": selected_type,
+        },
+        "grid_parameters": dict(grid_params),
+        "grid_size": len(combinations),
+        "created_at": now,
+    }
+    service.create("grid_configs", grid_config_record)
+
     # Create one backtest per combination
     children: list[dict[str, object]] = []
     for i, combo in enumerate(combinations):
         config_values = dict(zip(param_names, combo))
-        config_name = " | ".join(f"{k}={v}" for k, v in config_values.items())
+        variant_label = " | ".join(f"{k}={v}" for k, v in config_values.items())
 
         child: dict[str, object] = {
             "id": f"bt-{uuid.uuid4().hex[:8]}",
             "parent_id": parent_id,
+            "parent_config_name": config_name,
             "config_index": i,
-            "config_name": config_name,
+            "config_name": f"{config_name} #{i + 1}",
+            "variant_label": variant_label,
             "archetype": selected_type,
             "domain": domain,
             "status": "completed",
