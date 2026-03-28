@@ -156,18 +156,61 @@ async def get_regulatory_reports(
 async def generate_report(
     request: Request,
 ) -> dict[str, object]:
-    """Generate a report (mock: creates record, real: proxies to client-reporting-api)."""
+    """Generate a report + auto-create invoice if applicable.
+
+    Mock mode: creates report record, optionally creates invoice
+    and settlement records as side effects.
+    """
+    import random
+    import uuid
+
     service = get_service(request)
     body: dict[str, object] = await request.json()  # pyright: ignore[reportAny]
+    now = datetime.now(UTC).isoformat()
+    report_id = f"RPT-{uuid.uuid4().hex[:8].upper()}"
+    report_type = str(body.get("type", "pnl"))
+    client_name = str(body.get("client", "All Clients"))
+
     report = service.create(
         "generated_reports",
         {
-            **body,
+            "id": report_id,
+            "name": str(body.get("name", f"{report_type.upper()} Report")),
+            "type": report_type,
+            "client": client_name,
+            "format": str(body.get("format", "PDF")),
             "status": "ready",
-            "generated_at": datetime.now(UTC).isoformat(),
+            "generated_at": now,
+            **body,
         },
     )
-    return {"status": "ready", "report": report}
+
+    # Auto-generate invoice for fee-related reports
+    invoice = None
+    if report_type in ("fees", "pnl", "nav", "performance"):
+        invoice_id = f"INV-{uuid.uuid4().hex[:8].upper()}"
+        amount = round(random.uniform(500, 25000), 2)
+        invoice = service.create(
+            "invoices",
+            {
+                "id": invoice_id,
+                "report_id": report_id,
+                "client": client_name,
+                "type": f"{report_type}_fee",
+                "amount": amount,
+                "currency": "USD",
+                "status": "pending",
+                "issued_at": now,
+                "due_date": datetime(2026, 4, 30, tzinfo=UTC).isoformat(),
+                "line_items": [
+                    {"description": f"Management fee — {client_name}", "amount": round(amount * 0.6, 2)},
+                    {"description": f"Performance fee — {client_name}", "amount": round(amount * 0.3, 2)},
+                    {"description": "Admin & custody", "amount": round(amount * 0.1, 2)},
+                ],
+            },
+        )
+
+    return {"status": "ready", "report": report, "invoice": invoice}
 
 
 @router.get("/download/{report_id}")

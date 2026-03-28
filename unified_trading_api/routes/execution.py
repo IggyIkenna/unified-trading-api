@@ -298,10 +298,84 @@ async def create_order(
     request: Request,
     body: dict[str, object],
 ) -> dict[str, object]:
-    """Place a new order (mock: persists to store, real: routes to execution-service)."""
+    """Place a new order + auto-create/update position + fill record.
+
+    Mock mode: creates order, fill, and position records so GET endpoints
+    return realistic data after trades are placed.
+    """
+    import random
+    import uuid
+    from datetime import UTC, datetime
+
     service = get_service(request)
-    order = service.create("orders_live", body)
-    return {"data": order, "status": "created"}
+    now = datetime.now(UTC).isoformat()
+
+    instrument = str(body.get("instrument", "BTC-USDT"))
+    side = str(body.get("side", "buy")).upper()
+    qty = float(body.get("quantity", 0) or 0)
+    price = float(body.get("price", 0) or 0)
+    venue = str(body.get("venue", "Binance"))
+    strategy_id = str(body.get("strategy_id", "manual"))
+
+    order_id = f"ORD-{uuid.uuid4().hex[:8].upper()}"
+    order = {
+        "id": order_id,
+        "order_id": order_id,
+        "instrument": instrument,
+        "side": side,
+        "type": str(body.get("order_type", "limit")),
+        "quantity": qty,
+        "price": price,
+        "filled": qty,
+        "status": "FILLED",
+        "venue": venue,
+        "strategy_id": strategy_id,
+        "strategy_name": strategy_id,
+        "created_at": now,
+        **{k: v for k, v in body.items() if k not in ("instrument", "side", "quantity", "price", "venue", "strategy_id")},
+    }
+    service.create("orders_live", order)
+
+    # Auto-create fill record
+    fill_id = f"FILL-{uuid.uuid4().hex[:8].upper()}"
+    fill = {
+        "id": fill_id,
+        "order_id": order_id,
+        "instrument": instrument,
+        "side": side,
+        "quantity": qty,
+        "price": price,
+        "fees": round(qty * price * 0.001, 2),
+        "venue": venue,
+        "filled_at": now,
+    }
+    service.create("fills_live", fill)
+
+    # Auto-create/update position
+    entry_price = price if price > 0 else random.uniform(50, 70000)
+    current_price = entry_price * (1 + random.uniform(-0.02, 0.03))
+    pnl_mult = 1 if side == "BUY" else -1
+    unrealised = round((current_price - entry_price) * qty * pnl_mult, 2)
+    position = {
+        "id": f"POS-{uuid.uuid4().hex[:8].upper()}",
+        "instrument": instrument,
+        "venue": venue,
+        "side": "LONG" if side == "BUY" else "SHORT",
+        "quantity": qty,
+        "entry_price": round(entry_price, 2),
+        "current_price": round(current_price, 2),
+        "pnl": unrealised,
+        "pnl_pct": round((current_price - entry_price) / entry_price * 100, 2) if entry_price > 0 else 0,
+        "unrealized_pnl": unrealised,
+        "margin": round(qty * entry_price * 0.1, 2),
+        "leverage": 10,
+        "strategy_id": strategy_id,
+        "strategy_name": strategy_id,
+        "updated_at": now,
+    }
+    service.create("positions_live", position)
+
+    return {"data": order, "fill": fill, "position": position, "status": "filled"}
 
 
 # ─── Sports Betting ──────────────────────────────────────────────────────────
@@ -328,14 +402,45 @@ async def place_sports_bet(
     import uuid
     from datetime import UTC, datetime
 
+    now = datetime.now(UTC).isoformat()
+    stake = float(body.get("stake", 0) or 0)
+    odds = float(body.get("odds", 1) or 1)
+    bookmaker = str(body.get("bookmaker", "betfair_exchange"))
+    fixture_id = str(body.get("fixture_id", ""))
+    market = str(body.get("market", "FT Result"))
+    outcome = str(body.get("outcome", ""))
+
+    bet_id = f"BET-{uuid.uuid4().hex[:8].upper()}"
     bet = {
-        "id": f"BET-{uuid.uuid4().hex[:8].upper()}",
+        "id": bet_id,
         "status": "PLACED",
-        "placed_at": datetime.now(UTC).isoformat(),
+        "placed_at": now,
+        "potential_return": round(stake * odds, 2),
         **body,
     }
     record = service.create("sports_bets", bet)
-    return {"data": record, "status": "placed"}
+
+    # Auto-create a sports position
+    position = {
+        "id": f"POS-{uuid.uuid4().hex[:8].upper()}",
+        "instrument": f"SPORTS:{fixture_id}:{market}",
+        "venue": bookmaker,
+        "side": "LONG",
+        "quantity": stake,
+        "entry_price": odds,
+        "current_price": odds,
+        "pnl": 0,
+        "pnl_pct": 0,
+        "unrealized_pnl": 0,
+        "margin": stake,
+        "leverage": 1,
+        "strategy_id": "sports-manual",
+        "strategy_name": f"Sports: {outcome}",
+        "updated_at": now,
+    }
+    service.create("positions_live", position)
+
+    return {"data": record, "position": position, "status": "placed"}
 
 
 @router.get("/sports/bets")
@@ -365,3 +470,75 @@ async def cancel_sports_bet(
     bet["status"] = "CANCELLED"  # pyright: ignore[reportIndexIssue]
     service.update("sports_bets", bet_id, bet)
     return {"data": bet, "status": "cancelled"}
+
+
+# ─── DeFi Operations ─────────────────────────────────────────────────────────
+
+
+@router.post("/defi/execute")
+async def execute_defi_operation(
+    request: Request,
+    body: dict[str, object],
+) -> dict[str, object]:
+    """Execute a DeFi operation (stake, lend, swap, borrow, flash_loan).
+
+    Creates the operation record + corresponding position.
+    """
+    import random
+    import uuid
+    from datetime import UTC, datetime
+
+    service = get_service(request)
+    now = datetime.now(UTC).isoformat()
+
+    op_type = str(body.get("operation", "swap")).upper()
+    protocol = str(body.get("protocol", "Aave"))
+    chain = str(body.get("chain", "Ethereum"))
+    token = str(body.get("token", "WETH"))
+    amount = float(body.get("amount", 0) or 0)
+    apy = float(body.get("apy", 0) or 0)
+
+    op_id = f"DEFI-{uuid.uuid4().hex[:8].upper()}"
+    operation = {
+        "id": op_id,
+        "type": op_type,
+        "protocol": protocol,
+        "chain": chain,
+        "token": token,
+        "amount": amount,
+        "status": "CONFIRMED",
+        "tx_hash": f"0x{uuid.uuid4().hex}",
+        "gas_used": random.randint(50000, 300000),
+        "gas_price_gwei": round(random.uniform(5, 50), 1),
+        "executed_at": now,
+        **{k: v for k, v in body.items() if k not in ("operation", "protocol", "chain", "token", "amount")},
+    }
+    service.create("defi_operations", operation)
+
+    # Map DeFi operation to position
+    venue = f"{protocol.upper()}-{chain.upper()}"
+    instrument = f"{token}:{op_type}:{protocol}"
+    price_map: dict[str, float] = {"WETH": 3420, "ETH": 3420, "USDC": 1, "USDT": 1, "DAI": 1, "WBTC": 67000, "stETH": 3400}
+    token_price = price_map.get(token.upper(), 100)
+
+    position = {
+        "id": f"POS-{uuid.uuid4().hex[:8].upper()}",
+        "instrument": instrument,
+        "venue": venue,
+        "side": "LONG",
+        "quantity": amount,
+        "entry_price": token_price,
+        "current_price": token_price,
+        "pnl": 0,
+        "pnl_pct": 0,
+        "unrealized_pnl": 0,
+        "margin": round(amount * token_price, 2),
+        "leverage": 1,
+        "strategy_id": f"defi-{op_type.lower()}",
+        "strategy_name": f"{op_type}: {token} on {protocol}",
+        "updated_at": now,
+        "health_factor": round(random.uniform(1.2, 2.5), 2) if op_type in ("LEND", "BORROW") else None,
+    }
+    service.create("positions_live", position)
+
+    return {"data": operation, "position": position, "status": "confirmed"}
