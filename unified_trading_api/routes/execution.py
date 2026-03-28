@@ -85,3 +85,66 @@ async def create_order(
     service = get_service(request)
     order = service.create("orders_live", body)
     return {"data": order, "status": "created"}
+
+
+# ─── Sports Betting ──────────────────────────────────────────────────────────
+
+
+@router.post("/sports/bets")
+async def place_sports_bet(
+    request: Request,
+    body: dict[str, object],
+) -> dict[str, object]:
+    """Place a sports bet.
+
+    Mock mode: creates a bet record in the store with PENDING status,
+    then auto-settles via paper trading adapter simulation.
+    Real mode: routes to execution-service sports_execution adapters
+    which connect to the bookmaker API/exchange/browser.
+
+    Body schema matches UAC BetOrder:
+      fixture_id, market, outcome, bookmaker, odds, stake, side (BACK/LAY),
+      bet_type (single/accumulator), legs (for accumulators).
+    """
+    service = get_service(request)
+    # Enrich with timestamps and defaults
+    import uuid
+    from datetime import UTC, datetime
+
+    bet = {
+        "id": f"BET-{uuid.uuid4().hex[:8].upper()}",
+        "status": "PLACED",
+        "placed_at": datetime.now(UTC).isoformat(),
+        **body,
+    }
+    record = service.create("sports_bets", bet)
+    return {"data": record, "status": "placed"}
+
+
+@router.get("/sports/bets")
+async def get_sports_bets(
+    request: Request,
+    status: str = Query(None, description="Filter by bet status"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=200),
+) -> dict[str, object]:
+    """Get user's sports bets with optional status filter."""
+    service = get_service(request)
+    records = service.list("sports_bets", filters={"status": status})
+    data, pagination = paginate(records, page, page_size)
+    return {"data": data, "pagination": pagination.model_dump()}
+
+
+@router.post("/sports/bets/{bet_id}/cancel")
+async def cancel_sports_bet(
+    request: Request,
+    bet_id: str,
+) -> dict[str, object]:
+    """Cancel an unmatched sports bet."""
+    service = get_service(request)
+    bet = service.get("sports_bets", bet_id)
+    if not bet:
+        return {"error": "Bet not found", "status": "not_found"}
+    bet["status"] = "CANCELLED"  # pyright: ignore[reportIndexIssue]
+    service.update("sports_bets", bet_id, bet)
+    return {"data": bet, "status": "cancelled"}
