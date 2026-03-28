@@ -396,9 +396,14 @@ class TestExecutionRoutes:
         assert resp.status_code == 200
 
     def test_create_order(self, app_client: TestClient) -> None:
-        resp = app_client.post("/execution/orders", json={"symbol": "BTC-PERP", "side": "BUY"})
+        resp = app_client.post(
+            "/execution/orders",
+            json={"instrument": "BTC-PERP", "side": "BUY", "quantity": 1, "price": 67000},
+        )
         assert resp.status_code == 200
-        assert resp.json()["status"] == "created"
+        assert resp.json()["status"] == "filled"
+        assert "position" in resp.json()
+        assert resp.json()["position"]["instrument"] == "BTC-PERP"
 
 
 # ---------------------------------------------------------------------------

@@ -332,7 +332,11 @@ async def create_order(
         "strategy_id": strategy_id,
         "strategy_name": strategy_id,
         "created_at": now,
-        **{k: v for k, v in body.items() if k not in ("instrument", "side", "quantity", "price", "venue", "strategy_id")},
+        **{
+            k: v
+            for k, v in body.items()
+            if k not in ("instrument", "side", "quantity", "price", "venue", "strategy_id")
+        },
     }
     service.create("orders_live", order)
 
@@ -365,7 +369,9 @@ async def create_order(
         "entry_price": round(entry_price, 2),
         "current_price": round(current_price, 2),
         "pnl": unrealised,
-        "pnl_pct": round((current_price - entry_price) / entry_price * 100, 2) if entry_price > 0 else 0,
+        "pnl_pct": round((current_price - entry_price) / entry_price * 100, 2)
+        if entry_price > 0
+        else 0,
         "unrealized_pnl": unrealised,
         "margin": round(qty * entry_price * 0.1, 2),
         "leverage": 10,
@@ -496,7 +502,6 @@ async def execute_defi_operation(
     chain = str(body.get("chain", "Ethereum"))
     token = str(body.get("token", "WETH"))
     amount = float(body.get("amount", 0) or 0)
-    apy = float(body.get("apy", 0) or 0)
 
     op_id = f"DEFI-{uuid.uuid4().hex[:8].upper()}"
     operation = {
@@ -511,14 +516,26 @@ async def execute_defi_operation(
         "gas_used": random.randint(50000, 300000),
         "gas_price_gwei": round(random.uniform(5, 50), 1),
         "executed_at": now,
-        **{k: v for k, v in body.items() if k not in ("operation", "protocol", "chain", "token", "amount")},
+        **{
+            k: v
+            for k, v in body.items()
+            if k not in ("operation", "protocol", "chain", "token", "amount")
+        },
     }
     service.create("defi_operations", operation)
 
     # Map DeFi operation to position
     venue = f"{protocol.upper()}-{chain.upper()}"
     instrument = f"{token}:{op_type}:{protocol}"
-    price_map: dict[str, float] = {"WETH": 3420, "ETH": 3420, "USDC": 1, "USDT": 1, "DAI": 1, "WBTC": 67000, "stETH": 3400}
+    price_map: dict[str, float] = {
+        "WETH": 3420,
+        "ETH": 3420,
+        "USDC": 1,
+        "USDT": 1,
+        "DAI": 1,
+        "WBTC": 67000,
+        "stETH": 3400,
+    }
     token_price = price_map.get(token.upper(), 100)
 
     position = {
@@ -537,7 +554,9 @@ async def execute_defi_operation(
         "strategy_id": f"defi-{op_type.lower()}",
         "strategy_name": f"{op_type}: {token} on {protocol}",
         "updated_at": now,
-        "health_factor": round(random.uniform(1.2, 2.5), 2) if op_type in ("LEND", "BORROW") else None,
+        "health_factor": round(random.uniform(1.2, 2.5), 2)
+        if op_type in ("LEND", "BORROW")
+        else None,
     }
     service.create("positions_live", position)
 
