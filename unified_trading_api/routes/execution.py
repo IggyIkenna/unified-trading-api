@@ -210,7 +210,7 @@ async def create_backtest(
     # Create one backtest per combination
     children: list[dict[str, object]] = []
     for i, combo in enumerate(combinations):
-        config_values = dict(zip(param_names, combo))
+        config_values = dict(zip(param_names, combo, strict=True))
         variant_label = " | ".join(f"{k}={v}" for k, v in config_values.items())
 
         child: dict[str, object] = {
