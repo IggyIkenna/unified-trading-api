@@ -203,8 +203,14 @@ async def generate_report(
                 "issued_at": now,
                 "due_date": datetime(2026, 4, 30, tzinfo=UTC).isoformat(),
                 "line_items": [
-                    {"description": f"Management fee — {client_name}", "amount": round(amount * 0.6, 2)},
-                    {"description": f"Performance fee — {client_name}", "amount": round(amount * 0.3, 2)},
+                    {
+                        "description": f"Management fee — {client_name}",
+                        "amount": round(amount * 0.6, 2),
+                    },
+                    {
+                        "description": f"Performance fee — {client_name}",
+                        "amount": round(amount * 0.3, 2),
+                    },
                     {"description": "Admin & custody", "amount": round(amount * 0.1, 2)},
                 ],
             },

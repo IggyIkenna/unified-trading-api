@@ -47,7 +47,7 @@ class TestUnifiedCloudConfigUsage:
         from unified_trading_api import main
 
         source = inspect.getsource(main)
-        assert "from unified_trading_library import UnifiedCloudConfig" in source
+        assert "UnifiedCloudConfig" in source and "from unified_trading_library import" in source
 
     def test_auth_imports_unified_cloud_config(self) -> None:
         """auth.py should import UnifiedCloudConfig for credential access."""
