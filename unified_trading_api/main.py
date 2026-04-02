@@ -22,6 +22,7 @@ from unified_trading_api.routes import (
     alerts,
     audit,
     calendar,
+    catalogue,
     chat,
     compliance,
     config,
@@ -153,6 +154,9 @@ def create_app() -> FastAPI:
     app.include_router(users.router, prefix="/users", tags=["users"])
     app.include_router(compliance.router, prefix="/compliance", tags=["compliance"])
     app.include_router(derivatives.router, prefix="/derivatives", tags=["derivatives"])
+
+    # Permission catalogue (admin UI — browse all permissions)
+    app.include_router(catalogue.router, prefix="/catalogue", tags=["catalogue"])
 
     # Calendar (economic results + corporate actions)
     app.include_router(calendar.router, prefix="/calendar", tags=["calendar"])
