@@ -17,7 +17,7 @@ from pydantic import BaseModel
 from unified_api_contracts.internal.testing.instrument_generator import InstrumentGenerator
 
 from unified_trading_api.middleware.auth import verify_api_key
-from unified_trading_api.models.standard import paginate
+from unified_trading_api.models.standard import paginated_response, single_response
 from unified_trading_api.services.app_state import get_mock_mode
 from unified_trading_api.services.factory import get_service
 
@@ -35,8 +35,7 @@ async def get_instruments(
     """Get instruments list."""
     service = get_service(request)
     records = service.list("instruments", filters={"venue": venue, "asset_class": asset_class})
-    data, pagination = paginate(records, page, page_size)
-    return {"data": data, "pagination": pagination.model_dump()}
+    return paginated_response(records, page, page_size)
 
 
 @router.get("/catalogue")
@@ -45,16 +44,38 @@ async def get_catalogue(
 ) -> dict[str, object]:
     """Get instrument catalogue with metadata."""
     service = get_service(request)
-    return {"catalogue": service.list("instrument_catalogue")}
+    return single_response(service.list("instrument_catalogue"))
 
 
 @router.get("/registry")
 async def get_registry(
     request: Request,
+    venue: str = Query(None, description="Filter by venue (e.g. binance, deribit)"),
+    category: str = Query(None, description="Filter by category: cefi, defi, tradfi, sports"),
+    instrument_type: str = Query(
+        None, description="Filter by type: spot, future, option, perp, lp_pool"
+    ),
+    status: str = Query(None, description="Filter by status: active, delisted, expired"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=200),
 ) -> dict[str, object]:
-    """Get instrument registry — canonical mapping across venues."""
+    """Get instrument registry — canonical mapping across venues.
+
+    Supports filtering by venue, category, instrument_type, and status.
+    Response includes trading_hours, tick_size, lot_size, fee_structure,
+    and available_since where available.
+    """
     service = get_service(request)
-    return {"registry": service.list("instrument_registry")}
+    records = service.list(
+        "instrument_registry",
+        filters={
+            "venue": venue,
+            "category": category,
+            "instrument_type": instrument_type,
+            "status": status,
+        },
+    )
+    return paginated_response(records, page, page_size)
 
 
 # ---------------------------------------------------------------------------
@@ -138,7 +159,7 @@ async def create_mock_instrument(
         kwargs["pool_address"] = body.pool_address
 
     inst = gen.create_instrument(**kwargs)
-    return {"status": "created", "instrument_key": inst.instrument_key}
+    return single_response({"instrument_key": inst.instrument_key, "status": "created"})
 
 
 @router.delete("/mock/{key:path}")
@@ -153,7 +174,7 @@ async def delete_mock_instrument(
     _require_mock_mode(request)
     gen = _get_generator(request)
     count = gen.delete_instrument(key)
-    return {"status": "deleted", "pattern": key, "count": count}
+    return single_response({"pattern": key, "count": count, "status": "deleted"})
 
 
 @router.post("/mock/expire/{key:path}")
@@ -168,4 +189,4 @@ async def expire_mock_instrument(
     _require_mock_mode(request)
     gen = _get_generator(request)
     count = gen.expire_instrument(key)
-    return {"status": "expired", "pattern": key, "count": count}
+    return single_response({"pattern": key, "count": count, "status": "expired"})

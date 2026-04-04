@@ -5,6 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Query, Request
 
 from unified_trading_api.middleware.auth import verify_api_key
+from unified_trading_api.models.standard import single_response
 from unified_trading_api.services.factory import get_service
 
 router = APIRouter(dependencies=[Depends(verify_api_key)])
@@ -23,7 +24,7 @@ async def get_options_chain(
         "options_chain",
         filters={"underlying": underlying, "venue": venue},
     )
-    return {"underlying": underlying, "venue": venue, "chain": records}
+    return single_response(records, underlying=underlying, venue=venue)
 
 
 @router.get("/vol-surface")
@@ -36,7 +37,7 @@ async def get_vol_surface(
     service = get_service(request)
     records = service.list("vol_surfaces", filters={"underlying": underlying})
     surface = records[0] if records else {}
-    return {"underlying": underlying, "surface": surface}
+    return single_response(surface, underlying=underlying)
 
 
 @router.get("/portfolio-greeks")
@@ -47,13 +48,13 @@ async def get_portfolio_greeks(
     service = get_service(request)
     records = service.list("portfolio_greeks")
     if records:
-        return {"greeks": records[0]}
-    return {
-        "greeks": {
+        return single_response(records[0])
+    return single_response(
+        {
             "delta": 0.0,
             "gamma": 0.0,
             "theta": 0.0,
             "vega": 0.0,
             "rho": 0.0,
         }
-    }
+    )

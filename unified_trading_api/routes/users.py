@@ -5,7 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Query, Request
 
 from unified_trading_api.middleware.auth import verify_api_key
-from unified_trading_api.models.standard import paginate
+from unified_trading_api.models.standard import paginated_response, single_response
 from unified_trading_api.services.factory import get_service
 
 router = APIRouter(dependencies=[Depends(verify_api_key)])
@@ -17,7 +17,7 @@ async def get_organizations(
 ) -> dict[str, object]:
     """Get organizations."""
     service = get_service(request)
-    return {"organizations": service.list("user_organizations")}
+    return single_response(service.list("user_organizations"))
 
 
 @router.get("/members")
@@ -30,8 +30,7 @@ async def get_members(
     """Get organization members."""
     service = get_service(request)
     records = service.list("members", filters={"organization_id": organization_id})
-    data, pagination = paginate(records, page, page_size)
-    return {"data": data, "pagination": pagination.model_dump()}
+    return paginated_response(records, page, page_size)
 
 
 @router.get("/subscriptions")
@@ -40,4 +39,4 @@ async def get_subscriptions(
 ) -> dict[str, object]:
     """Get subscription plans and status."""
     service = get_service(request)
-    return {"subscriptions": service.list("subscriptions")}
+    return single_response(service.list("subscriptions"))

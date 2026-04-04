@@ -5,7 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Query, Request
 
 from unified_trading_api.middleware.auth import verify_api_key
-from unified_trading_api.models.standard import paginate
+from unified_trading_api.models.standard import paginated_response, single_response
 from unified_trading_api.services.factory import get_service
 
 router = APIRouter(dependencies=[Depends(verify_api_key)])
@@ -21,12 +21,14 @@ async def get_upload_url(
     service = get_service(request)
     # Upload URL generation — service provides mock or real signed URL
     _ = service.list("documents")  # ensure service is wired
-    return {
-        "upload_url": f"https://mock-storage.example.com/upload/{filename}",
-        "filename": filename,
-        "content_type": content_type,
-        "expires_in": 3600,
-    }
+    return single_response(
+        {
+            "upload_url": f"https://mock-storage.example.com/upload/{filename}",
+            "filename": filename,
+            "content_type": content_type,
+            "expires_in": 3600,
+        }
+    )
 
 
 @router.get("/download-url")
@@ -38,11 +40,13 @@ async def get_download_url(
     service = get_service(request)
     doc = service.get("documents", document_id)
     if doc:
-        return {
-            "download_url": f"https://mock-storage.example.com/download/{document_id}",
-            "document": doc,
-            "expires_in": 3600,
-        }
+        return single_response(
+            {
+                "download_url": f"https://mock-storage.example.com/download/{document_id}",
+                "document": doc,
+                "expires_in": 3600,
+            }
+        )
     return {
         "error": {
             "code": "NOT_FOUND",
@@ -62,8 +66,7 @@ async def list_documents(
     """List uploaded documents."""
     service = get_service(request)
     records = service.list("documents", filters={"category": category})
-    data, pagination = paginate(records, page, page_size)
-    return {"data": data, "pagination": pagination.model_dump()}
+    return paginated_response(records, page, page_size)
 
 
 @router.delete("/{document_id}")
@@ -75,7 +78,7 @@ async def delete_document(
     service = get_service(request)
     deleted = service.delete("documents", document_id)
     if deleted:
-        return {"status": "deleted", "document_id": document_id}
+        return single_response({"document_id": document_id, "status": "deleted"})
     return {
         "error": {
             "code": "NOT_FOUND",

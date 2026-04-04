@@ -7,7 +7,7 @@ import random as _rng
 from fastapi import APIRouter, Depends, Query, Request
 
 from unified_trading_api.middleware.auth import verify_api_key
-from unified_trading_api.models.standard import paginate
+from unified_trading_api.models.standard import paginated_response, single_response
 from unified_trading_api.services.factory import get_service
 
 router = APIRouter(dependencies=[Depends(verify_api_key)])
@@ -32,11 +32,7 @@ async def get_candles(
     records = service.list(collection, filters={"instrument": instrument})
     if not records:
         records = service.list("candles", filters={"instrument": instrument})
-    return {
-        "instrument": instrument,
-        "interval": interval,
-        "data": records[:limit],
-    }
+    return single_response(records[:limit], instrument=instrument, interval=interval)
 
 
 @router.get("/orderbook")
@@ -72,13 +68,15 @@ async def get_orderbook(
         bids.append({"price": round(bid_price, 2), "quantity": round(base_qty, 4)})
         asks.append({"price": round(ask_price, 2), "quantity": round(base_qty, 4)})
 
-    return {
-        "instrument": instrument,
-        "mid_price": round(mid_price, 2),
-        "spread": round(half_spread * 2, 4),
-        "bids": bids,
-        "asks": asks,
-    }
+    return single_response(
+        {
+            "mid_price": round(mid_price, 2),
+            "spread": round(half_spread * 2, 4),
+            "bids": bids,
+            "asks": asks,
+        },
+        instrument=instrument,
+    )
 
 
 @router.get("/trades")
@@ -92,13 +90,7 @@ async def get_trades(
     """Get recent trades."""
     service = get_service(request)
     records = service.list("trades")
-    data, pagination = paginate(records, page, page_size)
-    return {
-        "venue": venue,
-        "instrument": instrument,
-        "data": data,
-        "pagination": pagination.model_dump(),
-    }
+    return paginated_response(records, page, page_size, venue=venue, instrument=instrument)
 
 
 @router.get("/tickers")
@@ -108,7 +100,7 @@ async def get_tickers(
 ) -> dict[str, object]:
     """Get all tickers for a venue."""
     service = get_service(request)
-    return {"venue": venue, "tickers": service.list("tickers")}
+    return single_response(service.list("tickers"), venue=venue)
 
 
 @router.get("/fx-rates")
@@ -119,14 +111,14 @@ async def get_fx_rates(
     service = get_service(request)
     records = service.list("fx_rates")
     if records:
-        return {"rates": records}
+        return single_response(records)
     # Fallback static rates
-    return {
-        "rates": [
+    return single_response(
+        [
             {"id": "fx-btc-usd", "pair": "BTC/USD", "rate": 67000.0},
             {"id": "fx-eth-usd", "pair": "ETH/USD", "rate": 3500.0},
             {"id": "fx-usdt-usd", "pair": "USDT/USD", "rate": 1.0001},
             {"id": "fx-eur-usd", "pair": "EUR/USD", "rate": 1.08},
             {"id": "fx-gbp-usd", "pair": "GBP/USD", "rate": 1.27},
         ]
-    }
+    )

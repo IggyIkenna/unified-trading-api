@@ -5,7 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Query, Request
 
 from unified_trading_api.middleware.auth import verify_api_key
-from unified_trading_api.models.standard import paginate
+from unified_trading_api.models.standard import paginated_response, single_response
 from unified_trading_api.services.factory import get_service
 
 router = APIRouter(dependencies=[Depends(verify_api_key)])
@@ -25,8 +25,7 @@ async def get_orders(
     service = get_service(request)
     collection = f"orders_{mode}"
     records = service.list(collection, filters={"venue": venue, "status": status})
-    data, pagination = paginate(records, page, page_size)
-    return {"data": data, "pagination": pagination.model_dump(), "mode": mode, "as_of": as_of}
+    return paginated_response(records, page, page_size, mode=mode, as_of=as_of)
 
 
 @router.get("/fills")
@@ -45,22 +44,21 @@ async def get_fills(
     records = service.list(collection, filters={"venue": venue, "order_id": order_id})
     if not records:
         records = service.list("fills", filters={"venue": venue, "order_id": order_id})
-    data, pagination = paginate(records, page, page_size)
-    return {"data": data, "pagination": pagination.model_dump(), "mode": mode, "as_of": as_of}
+    return paginated_response(records, page, page_size, mode=mode, as_of=as_of)
 
 
 @router.get("/venues")
 async def get_venues(request: Request) -> dict[str, object]:
     """Get configured execution venues."""
     service = get_service(request)
-    return {"venues": service.list("execution_venues")}
+    return single_response(service.list("execution_venues"))
 
 
 @router.get("/algos")
 async def get_algos(request: Request) -> dict[str, object]:
     """Get available execution algorithms."""
     service = get_service(request)
-    return {"algos": service.list("algos")}
+    return single_response(service.list("algos"))
 
 
 @router.get("/grid-configs")
@@ -77,8 +75,7 @@ async def get_grid_configs(
     """
     service = get_service(request)
     records = service.list("grid_configs", filters={"domain": domain})
-    data, pagination = paginate(records, page, page_size)
-    return {"data": data, "pagination": pagination.model_dump()}
+    return paginated_response(records, page, page_size)
 
 
 @router.get("/backtests")
@@ -90,8 +87,7 @@ async def get_backtests(
     """Get backtest runs."""
     service = get_service(request)
     records = service.list("backtests")
-    data, pagination = paginate(records, page, page_size)
-    return {"data": data, "pagination": pagination.model_dump()}
+    return paginated_response(records, page, page_size)
 
 
 @router.post("/backtests")
@@ -129,7 +125,7 @@ async def create_backtest(
             "metrics": _generate_mock_metrics(),
         }
         created = service.create("backtests", record)
-        return {"data": created, "status": "created"}
+        return single_response({"backtest": created, "status": "created"})
 
     # ── Grid expansion ──────────────────────────────────────────────────────
     #
@@ -238,11 +234,13 @@ async def create_backtest(
     parent_record["best_return"] = max((c["metrics"]["totalReturn"] for c in children), default=0)  # pyright: ignore[reportIndexIssue]
     created_parent = service.create("backtests", parent_record)
 
-    return {
-        "data": created_parent,
-        "children_count": len(children),
-        "status": "completed",
-    }
+    return single_response(
+        {
+            "backtest": created_parent,
+            "children_count": len(children),
+            "status": "completed",
+        }
+    )
 
 
 def _generate_mock_metrics() -> dict[str, object]:
@@ -381,7 +379,63 @@ async def create_order(
     }
     service.create("positions_live", position)
 
-    return {"data": order, "fill": fill, "position": position, "status": "filled"}
+    return single_response({"order": order, "fill": fill, "position": position, "status": "filled"})
+
+
+@router.put("/orders/{order_id}/cancel")
+async def cancel_order(
+    request: Request,
+    order_id: str,
+) -> dict[str, object]:
+    """Cancel an open order.
+
+    Mock mode: marks the order as cancelled in the store.
+    Real mode: routes to execution-service /manual/cancel.
+    """
+    service = get_service(request)
+    order = service.get("orders_live", order_id)
+    if not order:
+        return {"error": "Order not found", "status": "not_found"}
+    order["status"] = "cancelled"  # pyright: ignore[reportIndexIssue]
+    service.update("orders_live", order_id, order)
+    return single_response({"order_id": order_id, "status": "cancelled"})
+
+
+@router.put("/orders/{order_id}/amend")
+async def amend_order(
+    request: Request,
+    order_id: str,
+    body: dict[str, object],
+) -> dict[str, object]:
+    """Amend quantity and/or price on an open order.
+
+    Mock mode: updates the order fields in the store.
+    Real mode: routes to execution-service /manual/amend.
+
+    Body: {quantity?: number, price?: number}
+    """
+    service = get_service(request)
+    order = service.get("orders_live", order_id)
+    if not order:
+        return {"error": "Order not found", "status": "not_found"}
+
+    quantity = body.get("quantity")
+    price = body.get("price")
+
+    if quantity is not None:
+        order["quantity"] = quantity  # pyright: ignore[reportIndexIssue]
+    if price is not None:
+        order["price"] = price  # pyright: ignore[reportIndexIssue]
+
+    service.update("orders_live", order_id, order)
+    return single_response(
+        {
+            "order_id": order_id,
+            "status": "amended",
+            "quantity": quantity,
+            "price": price,
+        }
+    )
 
 
 # ─── Sports Betting ──────────────────────────────────────────────────────────
@@ -446,7 +500,7 @@ async def place_sports_bet(
     }
     service.create("positions_live", position)
 
-    return {"data": record, "position": position, "status": "placed"}
+    return single_response({"bet": record, "position": position, "status": "placed"})
 
 
 @router.get("/sports/bets")
@@ -459,11 +513,10 @@ async def get_sports_bets(
     """Get user's sports bets with optional status filter."""
     service = get_service(request)
     records = service.list("sports_bets", filters={"status": status})
-    data, pagination = paginate(records, page, page_size)
-    return {"data": data, "pagination": pagination.model_dump()}
+    return paginated_response(records, page, page_size)
 
 
-@router.post("/sports/bets/{bet_id}/cancel")
+@router.delete("/sports/bets/{bet_id}/cancel")
 async def cancel_sports_bet(
     request: Request,
     bet_id: str,
@@ -475,7 +528,7 @@ async def cancel_sports_bet(
         return {"error": "Bet not found", "status": "not_found"}
     bet["status"] = "CANCELLED"  # pyright: ignore[reportIndexIssue]
     service.update("sports_bets", bet_id, bet)
-    return {"data": bet, "status": "cancelled"}
+    return single_response({"bet": bet, "status": "cancelled"})
 
 
 # ─── DeFi Operations ─────────────────────────────────────────────────────────
@@ -560,4 +613,4 @@ async def execute_defi_operation(
     }
     service.create("positions_live", position)
 
-    return {"data": operation, "position": position, "status": "confirmed"}
+    return single_response({"execution": operation, "position": position, "status": "confirmed"})

@@ -17,6 +17,7 @@ from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel
 
 from unified_trading_api.middleware.auth import verify_api_key
+from unified_trading_api.models.standard import single_response
 from unified_trading_api.services.factory import get_service
 
 router = APIRouter(dependencies=[Depends(verify_api_key)])
@@ -82,11 +83,11 @@ async def get_economic_results(
         allowed = {t.strip().upper() for t in event_types.split(",")}
         records = [r for r in records if str(r.get("event_type", "")).upper() in allowed]
 
-    return {
-        "data": records,
-        "count": len(records),
-        "filters": {"days_back": days_back, "event_types": event_types},
-    }
+    return single_response(
+        records,
+        count=len(records),
+        filters={"days_back": days_back, "event_types": event_types},
+    )
 
 
 @router.get("/corporate-actions")
@@ -122,8 +123,8 @@ async def get_corporate_actions(
     if event_type:
         records = [r for r in records if r.get("event_type") == event_type.lower()]
 
-    return {
-        "data": records,
-        "count": len(records),
-        "filters": {"tickers": tickers, "event_type": event_type, "days_forward": days_forward},
-    }
+    return single_response(
+        records,
+        count=len(records),
+        filters={"tickers": tickers, "event_type": event_type, "days_forward": days_forward},
+    )

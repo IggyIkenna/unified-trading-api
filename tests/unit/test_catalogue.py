@@ -13,7 +13,7 @@ class TestCatalogueData:
 
     def test_all_eight_domains_present(self) -> None:
         domain_values = {d.domain for d in PERMISSION_CATALOGUE.domains}
-        expected = {d for d in PermissionDomain}
+        expected = set(PermissionDomain)
         assert domain_values == expected, f"Missing domains: {expected - domain_values}"
 
     def test_total_permissions_positive(self) -> None:

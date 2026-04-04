@@ -39,3 +39,60 @@ def paginate(
         page_size=page_size,
         has_next=(offset + page_size) < total,
     )
+
+
+def paginated_response(
+    records: Sequence[object],
+    page: int = 1,
+    page_size: int = 50,
+    mode: str = "live",
+    as_of: str | None = None,
+    **extra: object,
+) -> dict[str, object]:
+    """Standard paginated response envelope.
+
+    Returns::
+
+        {
+            "data": [...],
+            "pagination": {"page": 1, "page_size": 50, "total": N, "has_next": bool},
+            "mode": "live",
+            "as_of": null,
+            ...extra
+        }
+    """
+    data, pagination = paginate(records, page, page_size)
+    result: dict[str, object] = {
+        "data": data,
+        "pagination": pagination.model_dump(),
+        "mode": mode,
+        "as_of": as_of,
+    }
+    result.update(extra)
+    return result
+
+
+def single_response(
+    data: object,
+    mode: str = "live",
+    as_of: str | None = None,
+    **extra: object,
+) -> dict[str, object]:
+    """Standard single-object response envelope.
+
+    Returns::
+
+        {
+            "data": {object or list},
+            "mode": "live",
+            "as_of": null,
+            ...extra
+        }
+    """
+    result: dict[str, object] = {
+        "data": data,
+        "mode": mode,
+        "as_of": as_of,
+    }
+    result.update(extra)
+    return result

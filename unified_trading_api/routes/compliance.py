@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 from fastapi import APIRouter, Depends, Request
 
 from unified_trading_api.middleware.auth import verify_api_key
+from unified_trading_api.models.standard import single_response
 from unified_trading_api.services.factory import get_service
 
 router = APIRouter(dependencies=[Depends(verify_api_key)])
@@ -126,13 +127,15 @@ async def pre_trade_check(
 
     approved = all(c["status"] == "pass" for c in checks)
 
-    return {
-        "approved": approved,
-        "instrument": instrument,
-        "side": side,
-        "quantity": quantity,
-        "price": price,
-        "strategy_id": strategy_id,
-        "checks": checks,
-        "checked_at": datetime.now(UTC).isoformat(),
-    }
+    return single_response(
+        {
+            "approved": approved,
+            "instrument": instrument,
+            "side": side,
+            "quantity": quantity,
+            "price": price,
+            "strategy_id": strategy_id,
+            "checks": checks,
+            "checked_at": datetime.now(UTC).isoformat(),
+        }
+    )

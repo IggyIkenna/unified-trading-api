@@ -15,7 +15,7 @@ from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import FileResponse, JSONResponse
 
 from unified_trading_api.middleware.auth import verify_api_key
-from unified_trading_api.models.standard import paginate
+from unified_trading_api.models.standard import paginated_response, single_response
 from unified_trading_api.services.factory import get_service
 
 router = APIRouter(dependencies=[Depends(verify_api_key)])
@@ -106,8 +106,7 @@ async def get_reports(
         return proxied
     service = get_service(request)
     records = service.list("reports", filters={"report_type": report_type})
-    data, pagination = paginate(records, page, page_size)
-    return {"data": data, "pagination": pagination.model_dump()}
+    return paginated_response(records, page, page_size)
 
 
 @router.get("/settlements")
@@ -120,8 +119,7 @@ async def get_settlements(
     """Get settlement reports."""
     service = get_service(request)
     records = service.list("reporting_settlements", filters={"status": status})
-    data, pagination = paginate(records, page, page_size)
-    return {"data": data, "pagination": pagination.model_dump()}
+    return paginated_response(records, page, page_size)
 
 
 @router.get("/reconciliation")
@@ -134,8 +132,7 @@ async def get_reconciliation(
     """Get reconciliation results."""
     service = get_service(request)
     records = service.list("reconciliation", filters={"date": date})
-    data, pagination = paginate(records, page, page_size)
-    return {"data": data, "pagination": pagination.model_dump()}
+    return paginated_response(records, page, page_size)
 
 
 @router.get("/regulatory")
@@ -148,8 +145,7 @@ async def get_regulatory_reports(
     """Get regulatory report records (MiFID II, FCA, EMIR)."""
     service = get_service(request)
     records = service.list("regulatory_reports", filters={"report_type": report_type})
-    data, pagination = paginate(records, page, page_size)
-    return {"data": data, "pagination": pagination.model_dump()}
+    return paginated_response(records, page, page_size)
 
 
 @router.post("/generate")
@@ -216,7 +212,7 @@ async def generate_report(
             },
         )
 
-    return {"status": "ready", "report": report, "invoice": invoice}
+    return single_response({"report": report, "invoice": invoice, "status": "ready"})
 
 
 @router.get("/download/{report_id}")
@@ -240,10 +236,12 @@ async def download_report(
             media_type="application/pdf",
             filename=f"{report_id}.pdf",
         )
-    return {
-        "report": report,
-        "download_url": f"https://mock-reports.example.com/{report_id}.pdf",
-    }
+    return single_response(
+        {
+            "report": report,
+            "download_url": f"https://mock-reports.example.com/{report_id}.pdf",
+        }
+    )
 
 
 @router.post("/schedules")
@@ -254,7 +252,7 @@ async def create_report_schedule(
     service = get_service(request)
     body: dict[str, object] = await request.json()  # pyright: ignore[reportAny]
     record = service.create("scheduled_reports", body)
-    return {"status": "created", "schedule": record}
+    return single_response({"schedule": record, "status": "created"})
 
 
 @router.get("/schedules")
@@ -263,7 +261,7 @@ async def get_report_schedules(
 ) -> dict[str, object]:
     """Get scheduled report configurations."""
     service = get_service(request)
-    return {"schedules": service.list("scheduled_reports")}
+    return single_response(service.list("scheduled_reports"))
 
 
 @router.get("/pnl-attribution")
@@ -274,7 +272,7 @@ async def get_pnl_attribution(
     """Get PnL attribution breakdown by strategy/venue/asset class."""
     service = get_service(request)
     records = service.list("pnl_attribution", filters={"period": period})
-    return {"period": period, "attribution": records}
+    return single_response(records, period=period)
 
 
 @router.get("/executive-summary")
@@ -285,7 +283,7 @@ async def get_executive_summary(
     """Get executive summary for reporting dashboard."""
     service = get_service(request)
     records = service.list("executive_summary", filters={"period": period})
-    return {"period": period, "summary": records[0] if records else {}}
+    return single_response(records[0] if records else {}, period=period)
 
 
 @router.get("/invoices")
@@ -298,5 +296,4 @@ async def get_invoices(
     """Get invoice list."""
     service = get_service(request)
     records = service.list("invoices", filters={"status": status})
-    data, pagination = paginate(records, page, page_size)
-    return {"data": data, "pagination": pagination.model_dump()}
+    return paginated_response(records, page, page_size)

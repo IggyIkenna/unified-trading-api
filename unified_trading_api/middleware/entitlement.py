@@ -8,19 +8,12 @@ In mock mode (DISABLE_AUTH=true), all requests are treated as internal.
 from __future__ import annotations
 
 import logging
-from enum import StrEnum
 from typing import cast
 
 from fastapi import Request
+from unified_api_contracts.internal.schemas.rbac import OrgType
 
 logger = logging.getLogger(__name__)
-
-
-class OrgType(StrEnum):
-    """Organization type determining entitlement scope."""
-
-    INTERNAL = "internal"
-    EXTERNAL = "external"
 
 
 class EntitlementContext:

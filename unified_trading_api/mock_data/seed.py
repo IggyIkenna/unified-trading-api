@@ -13,7 +13,7 @@ from typing import Final, Protocol
 # Callable type for store.list() used in validation helpers
 type _ListFn = Callable[[str], list[dict[str, object]]]
 
-SEED_VERSION: Final[str] = "4.1.0"
+SEED_VERSION: Final[str] = "4.2.0"
 
 
 class _Seedable(Protocol):
@@ -88,6 +88,8 @@ _ID_FIELD_MAP: dict[str, str] = {
     "orders_batch": "order_id",
     "tickers_live": "instrument",
     "regime": "id",
+    "exposure_types": "id",
+    "defi_health": "id",
 }
 
 
@@ -4456,6 +4458,104 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
                 "multiplier": 1.0,
                 "signals": {"volatility": 0.15, "correlation": 0.35, "drawdown_velocity": 0.02},
                 "timestamp": "2026-03-22T00:00:00Z",
+            },
+        ],
+    )
+
+    # ══════════════════════════════════════════════════════════════════
+    #  EXPOSURE TYPES (for risk/exposure-types endpoint)
+    # ══════════════════════════════════════════════════════════════════
+
+    _seed(
+        "exposure_types",
+        [
+            {
+                "id": "gross",
+                "name": "Gross Exposure",
+                "description": "Sum of absolute position values",
+                "aggregation": "sum_abs",
+            },
+            {
+                "id": "net",
+                "name": "Net Exposure",
+                "description": "Long exposure minus short exposure",
+                "aggregation": "sum_signed",
+            },
+            {
+                "id": "delta",
+                "name": "Delta Exposure",
+                "description": "Portfolio delta in base currency",
+                "aggregation": "sum_signed",
+            },
+            {
+                "id": "vega",
+                "name": "Vega Exposure",
+                "description": "Portfolio vega — sensitivity to implied vol",
+                "aggregation": "sum_signed",
+            },
+            {
+                "id": "gamma",
+                "name": "Gamma Exposure",
+                "description": "Portfolio gamma — convexity of delta",
+                "aggregation": "sum_signed",
+            },
+            {
+                "id": "concentration",
+                "name": "Concentration",
+                "description": "Largest single-name as pct of gross",
+                "aggregation": "max_pct",
+            },
+        ],
+    )
+
+    # ══════════════════════════════════════════════════════════════════
+    #  DEFI HEALTH (for risk/defi-health endpoint)
+    # ══════════════════════════════════════════════════════════════════
+
+    _seed(
+        "defi_health",
+        [
+            {
+                "id": "defi-health-aave-eth",
+                "protocol": "aave_v3",
+                "chain": "ethereum",
+                "health_factor": 1.85,
+                "ltv_current": 0.54,
+                "ltv_max": 0.825,
+                "liquidation_threshold": 0.86,
+                "total_collateral_usd": 2_450_000.0,
+                "total_debt_usd": 1_323_000.0,
+                "distance_to_liquidation_pct": 37.0,
+                "status": "healthy",
+                "org_id": _O,
+            },
+            {
+                "id": "defi-health-aave-arb",
+                "protocol": "aave_v3",
+                "chain": "arbitrum",
+                "health_factor": 2.12,
+                "ltv_current": 0.47,
+                "ltv_max": 0.825,
+                "liquidation_threshold": 0.86,
+                "total_collateral_usd": 890_000.0,
+                "total_debt_usd": 418_300.0,
+                "distance_to_liquidation_pct": 45.3,
+                "status": "healthy",
+                "org_id": _O,
+            },
+            {
+                "id": "defi-health-compound-eth",
+                "protocol": "compound_v3",
+                "chain": "ethereum",
+                "health_factor": 1.42,
+                "ltv_current": 0.70,
+                "ltv_max": 0.83,
+                "liquidation_threshold": 0.85,
+                "total_collateral_usd": 1_100_000.0,
+                "total_debt_usd": 770_000.0,
+                "distance_to_liquidation_pct": 17.6,
+                "status": "warning",
+                "org_id": _A,
             },
         ],
     )

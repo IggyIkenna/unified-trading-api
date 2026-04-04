@@ -5,7 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Query, Request
 
 from unified_trading_api.middleware.auth import verify_api_key
-from unified_trading_api.models.standard import paginate
+from unified_trading_api.models.standard import paginated_response, single_response
 from unified_trading_api.services.factory import get_service
 
 router = APIRouter(dependencies=[Depends(verify_api_key)])
@@ -17,7 +17,7 @@ async def get_services(
 ) -> dict[str, object]:
     """Get registered services and their status."""
     svc = get_service(request)
-    return {"services": svc.list("deployment_services")}
+    return single_response(svc.list("deployment_services"))
 
 
 @router.get("/deployments")
@@ -30,8 +30,7 @@ async def get_deployments(
     """Get deployment history."""
     svc = get_service(request)
     records = svc.list("deployments", filters={"service": service})
-    data, pagination = paginate(records, page, page_size)
-    return {"data": data, "pagination": pagination.model_dump()}
+    return paginated_response(records, page, page_size)
 
 
 @router.get("/builds")
@@ -44,5 +43,4 @@ async def get_builds(
     """Get build history."""
     svc = get_service(request)
     records = svc.list("builds", filters={"service": service})
-    data, pagination = paginate(records, page, page_size)
-    return {"data": data, "pagination": pagination.model_dump()}
+    return paginated_response(records, page, page_size)

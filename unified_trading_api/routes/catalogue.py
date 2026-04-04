@@ -11,9 +11,6 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 from unified_trading_api.middleware.auth import verify_api_key
 from unified_trading_api.models.permission_catalogue import (
-    CataloguePermission,
-    CatalogueTree,
-    DomainNode,
     PermissionDomain,
 )
 from unified_trading_api.models.permission_catalogue_data import PERMISSION_CATALOGUE
@@ -35,13 +32,15 @@ async def list_domains() -> dict[str, object]:
     summaries: list[dict[str, object]] = []
     for domain_node in PERMISSION_CATALOGUE.domains:
         perm_count = sum(len(cat.permissions) for cat in domain_node.categories)
-        summaries.append({
-            "domain": domain_node.domain.value,
-            "label": domain_node.label,
-            "description": domain_node.description,
-            "category_count": len(domain_node.categories),
-            "permission_count": perm_count,
-        })
+        summaries.append(
+            {
+                "domain": domain_node.domain.value,
+                "label": domain_node.label,
+                "description": domain_node.description,
+                "category_count": len(domain_node.categories),
+                "permission_count": perm_count,
+            }
+        )
     return {"data": summaries, "mode": "catalogue"}
 
 
@@ -51,12 +50,12 @@ async def get_domain(domain: str) -> dict[str, object]:
     # Validate domain value
     try:
         domain_enum = PermissionDomain(domain)
-    except ValueError:
+    except ValueError as err:
         valid = [d.value for d in PermissionDomain]
         raise HTTPException(
             status_code=404,
             detail=f"Domain '{domain}' not found. Valid domains: {valid}",
-        )
+        ) from err
 
     for domain_node in PERMISSION_CATALOGUE.domains:
         if domain_node.domain == domain_enum:
@@ -67,7 +66,9 @@ async def get_domain(domain: str) -> dict[str, object]:
 
 @router.get("/search")
 async def search_permissions(
-    q: str = Query(..., min_length=1, description="Search query (case-insensitive substring match)"),
+    q: str = Query(
+        ..., min_length=1, description="Search query (case-insensitive substring match)"
+    ),
 ) -> dict[str, object]:
     """Search permissions by key, label, or description."""
     query_lower = q.lower()
@@ -81,11 +82,13 @@ async def search_permissions(
                     or query_lower in perm.label.lower()
                     or query_lower in perm.description.lower()
                 ):
-                    results.append({
-                        **perm.model_dump(),
-                        "domain_label": domain_node.label,
-                        "category_label": cat.label,
-                    })
+                    results.append(
+                        {
+                            **perm.model_dump(),
+                            "domain_label": domain_node.label,
+                            "category_label": cat.label,
+                        }
+                    )
 
     return {
         "data": results,

@@ -2,11 +2,17 @@
 
 from __future__ import annotations
 
+from datetime import date
+
 from fastapi import APIRouter, Depends, Query, Request
 
 from unified_trading_api.middleware.auth import verify_api_key
-from unified_trading_api.models.standard import paginate
+from unified_trading_api.models.standard import paginated_response, single_response
 from unified_trading_api.services.factory import get_service
+from unified_trading_api.services.period_aggregation import (
+    compute_multi_period_summary,
+    compute_period_changes,
+)
 
 router = APIRouter(dependencies=[Depends(verify_api_key)])
 
@@ -28,14 +34,7 @@ async def get_pnl(
     service = get_service(request)
     collection = f"pnl_{mode}"
     records = service.list(collection, filters={"venue": venue})
-    data, pagination = paginate(records, page, page_size)
-    return {
-        "period": period,
-        "data": data,
-        "pagination": pagination.model_dump(),
-        "mode": mode,
-        "as_of": as_of,
-    }
+    return paginated_response(records, page, page_size, mode=mode, as_of=as_of, period=period)
 
 
 @router.get("/timeseries")
@@ -53,16 +52,16 @@ async def get_timeseries(
     service = get_service(request)
     collection = f"pnl_timeseries_{mode}"
     records = service.list(collection)
-    data, pagination = paginate(records, page, page_size)
-    return {
-        "metric": metric,
-        "period": period,
-        "granularity": granularity,
-        "data": data,
-        "pagination": pagination.model_dump(),
-        "mode": mode,
-        "as_of": as_of,
-    }
+    return paginated_response(
+        records,
+        page,
+        page_size,
+        mode=mode,
+        as_of=as_of,
+        metric=metric,
+        period=period,
+        granularity=granularity,
+    )
 
 
 @router.get("/performance")
@@ -72,7 +71,7 @@ async def get_performance(
 ) -> dict[str, object]:
     """Get performance metrics."""
     service = get_service(request)
-    return {"period": period, "performance": service.list("performance")}
+    return single_response(service.list("performance"), period=period)
 
 
 @router.get("/organizations")
@@ -81,7 +80,7 @@ async def get_organizations(
 ) -> dict[str, object]:
     """Get analytics organizations."""
     service = get_service(request)
-    return {"organizations": service.list("analytics_organizations")}
+    return single_response(service.list("analytics_organizations"))
 
 
 @router.get("/settlements")
@@ -94,8 +93,7 @@ async def get_settlements(
     """Get settlement records."""
     service = get_service(request)
     records = service.list("settlements", filters={"status": status})
-    data, pagination = paginate(records, page, page_size)
-    return {"data": data, "pagination": pagination.model_dump()}
+    return paginated_response(records, page, page_size)
 
 
 @router.get("/instruments")
@@ -106,7 +104,7 @@ async def get_instruments(
     """Get analytics instrument list."""
     service = get_service(request)
     records = service.list("analytics_instruments", filters={"asset_class": asset_class})
-    return {"instruments": records}
+    return single_response(records)
 
 
 # -- POST endpoints ---------------------------------------------------------
@@ -120,7 +118,7 @@ async def create_pnl_snapshot(
     service = get_service(request)
     body: dict[str, object] = await request.json()  # pyright: ignore[reportAny]
     record = service.create("pnl", body)
-    return {"status": "created", "record": record}
+    return single_response({"record": record, "status": "created"})
 
 
 @router.post("/timeseries")
@@ -131,7 +129,7 @@ async def create_timeseries_entry(
     service = get_service(request)
     body: dict[str, object] = await request.json()  # pyright: ignore[reportAny]
     record = service.create("analytics_timeseries", body)
-    return {"status": "created", "record": record}
+    return single_response({"record": record, "status": "created"})
 
 
 @router.post("/performance")
@@ -142,7 +140,7 @@ async def create_performance_snapshot(
     service = get_service(request)
     body: dict[str, object] = await request.json()  # pyright: ignore[reportAny]
     record = service.create("performance", body)
-    return {"status": "created", "record": record}
+    return single_response({"record": record, "status": "created"})
 
 
 @router.post("/settlements")
@@ -153,7 +151,80 @@ async def create_settlement(
     service = get_service(request)
     body: dict[str, object] = await request.json()  # pyright: ignore[reportAny]
     record = service.create("settlements", body)
-    return {"status": "created", "record": record}
+    return single_response({"record": record, "status": "created"})
+
+
+# -- Period aggregation endpoints --------------------------------------------
+
+
+@router.get("/period-changes")
+async def get_period_changes(
+    request: Request,
+    mode: str = Query("live", pattern="^(live|batch)$"),
+    period: str = Query("1d", description="1d, wtd, mtd, qtd, ytd, 7d, 30d, 90d, 365d"),
+    metric: str = Query("pnl", description="pnl, equity, risk, exposure"),
+    as_of: str = Query(None, description="Reference date (YYYY-MM-DD UTC). Defaults to today."),
+) -> dict[str, object]:
+    """Compute period-over-period changes for a metric from daily snapshots.
+
+    Returns absolute and percentage changes between period start and the as_of date.
+    All dates are UTC midnight boundaries.
+    """
+    service = get_service(request)
+    collection = f"pnl_timeseries_{mode}"
+    snapshots: list[dict[str, object]] = service.list(collection)
+
+    ref_date = date.fromisoformat(as_of) if as_of else None
+
+    # Metric → numeric fields mapping
+    field_map: dict[str, list[str]] = {
+        "pnl": ["total_pnl", "realized_pnl", "unrealized_pnl", "funding_pnl"],
+        "equity": ["account_equity", "total_position_value", "cash_balance"],
+        "risk": ["leverage", "concentration", "drawdown", "health_factor"],
+        "exposure": ["gross_exposure", "net_exposure", "long_exposure", "short_exposure"],
+    }
+    fields = field_map.get(metric, field_map["pnl"])
+
+    result = compute_period_changes(
+        snapshots,
+        period,
+        fields,
+        as_of=ref_date,
+    )
+    return single_response(result, mode=mode, metric=metric)
+
+
+@router.get("/period-summary")
+async def get_period_summary(
+    request: Request,
+    mode: str = Query("live", pattern="^(live|batch)$"),
+    metric: str = Query("pnl"),
+    as_of: str = Query(None, description="Reference date (YYYY-MM-DD UTC). Defaults to today."),
+) -> dict[str, object]:
+    """Compute changes across all standard periods (1d, wtd, mtd, qtd, ytd).
+
+    Returns a dict of period → changes for the UI dashboard cards.
+    """
+    service = get_service(request)
+    collection = f"pnl_timeseries_{mode}"
+    snapshots: list[dict[str, object]] = service.list(collection)
+
+    ref_date = date.fromisoformat(as_of) if as_of else None
+
+    field_map: dict[str, list[str]] = {
+        "pnl": ["total_pnl", "realized_pnl", "unrealized_pnl", "funding_pnl"],
+        "equity": ["account_equity", "total_position_value", "cash_balance"],
+        "risk": ["leverage", "concentration", "drawdown", "health_factor"],
+        "exposure": ["gross_exposure", "net_exposure", "long_exposure", "short_exposure"],
+    }
+    fields = field_map.get(metric, field_map["pnl"])
+
+    summary = compute_multi_period_summary(
+        snapshots,
+        fields,
+        as_of=ref_date,
+    )
+    return single_response({"periods": summary}, mode=mode, metric=metric)
 
 
 # -- Strategy endpoints -----------------------------------------------------
@@ -170,8 +241,7 @@ async def get_strategies(
     """Get all strategy configs with filtering."""
     service = get_service(request)
     records = service.list("strategies", filters={"asset_class": asset_class, "status": status})
-    data, pagination = paginate(records, page, page_size)
-    return {"data": data, "pagination": pagination.model_dump()}
+    return paginated_response(records, page, page_size)
 
 
 @router.get("/strategies/{strategy_id}")
@@ -184,7 +254,7 @@ async def get_strategy_detail(
     strategy = service.get("strategies", strategy_id)
     if not strategy:
         return {"error": {"code": "NOT_FOUND", "message": f"Strategy {strategy_id} not found"}}
-    return {"strategy": strategy}
+    return single_response(strategy)
 
 
 @router.post("/strategies/{strategy_id}/promote")
@@ -196,7 +266,7 @@ async def promote_strategy(
     service = get_service(request)
     updated = service.update("strategies", strategy_id, {"status": "live"})
     if updated:
-        return {"status": "promoted", "strategy": updated}
+        return single_response({"strategy": updated, "status": "promoted"})
     return {"error": {"code": "NOT_FOUND", "message": f"Strategy {strategy_id} not found"}}
 
 
@@ -209,7 +279,7 @@ async def reject_strategy(
     service = get_service(request)
     updated = service.update("strategies", strategy_id, {"status": "rejected"})
     if updated:
-        return {"status": "rejected", "strategy": updated}
+        return single_response({"strategy": updated, "status": "rejected"})
     return {"error": {"code": "NOT_FOUND", "message": f"Strategy {strategy_id} not found"}}
 
 
@@ -224,8 +294,56 @@ async def scale_strategy(
     scale_factor = float(str(body.get("scale_factor", 1.0)))
     updated = service.update("strategies", strategy_id, {"position_scale": scale_factor})
     if updated:
-        return {"status": "scaled", "scale_factor": scale_factor, "strategy": updated}
+        return single_response(
+            {"strategy": updated, "status": "scaled", "scale_factor": scale_factor}
+        )
     return {"error": {"code": "NOT_FOUND", "message": f"Strategy {strategy_id} not found"}}
+
+
+@router.get("/live-batch-delta")
+async def get_live_batch_delta(
+    request: Request,
+    metric: str = Query("pnl", description="pnl, equity, exposure"),
+    as_of: str = Query(None, description="Reference date (YYYY-MM-DD UTC). Defaults to today."),
+) -> dict[str, object]:
+    """Reconciliation view comparing live vs batch values for a metric.
+
+    Returns per-field deltas (live_value, batch_value, absolute_diff, pct_diff)
+    so ops can spot divergence between real-time and T+1 numbers.
+    """
+    service = get_service(request)
+    live_records: list[dict[str, object]] = service.list("pnl_timeseries_live")
+    batch_records: list[dict[str, object]] = service.list("pnl_timeseries_batch")
+
+    field_map: dict[str, list[str]] = {
+        "pnl": ["total_pnl", "realized_pnl", "unrealized_pnl", "funding_pnl"],
+        "equity": ["account_equity", "total_position_value", "cash_balance"],
+        "exposure": ["gross_exposure", "net_exposure", "long_exposure", "short_exposure"],
+    }
+    fields = field_map.get(metric, field_map["pnl"])
+
+    # Build last-snapshot comparison
+    deltas: list[dict[str, object]] = []
+    live_last = live_records[-1] if live_records else {}
+    batch_last = batch_records[-1] if batch_records else {}
+    for field in fields:
+        live_val = float(live_last.get(field, 0) or 0)
+        batch_val = float(batch_last.get(field, 0) or 0)
+        abs_diff = round(live_val - batch_val, 4)
+        pct_diff = round(abs_diff / batch_val * 100, 4) if batch_val else 0.0
+        deltas.append(
+            {
+                "field": field,
+                "live_value": live_val,
+                "batch_value": batch_val,
+                "absolute_diff": abs_diff,
+                "pct_diff": pct_diff,
+            }
+        )
+
+    return single_response(
+        {"deltas": deltas, "metric": metric, "as_of": as_of},
+    )
 
 
 @router.get("/strategy-configs")
@@ -234,4 +352,4 @@ async def get_strategy_configs(
 ) -> dict[str, object]:
     """Get all strategy configs for UI consumption."""
     service = get_service(request)
-    return {"configs": service.list("strategies")}
+    return single_response(service.list("strategies"))

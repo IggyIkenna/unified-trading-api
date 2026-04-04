@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 from fastapi import APIRouter, Depends, Query, Request
 
 from unified_trading_api.middleware.auth import verify_api_key
-from unified_trading_api.models.standard import paginate
+from unified_trading_api.models.standard import paginated_response, single_response
 from unified_trading_api.services.factory import get_service
 
 router = APIRouter(dependencies=[Depends(verify_api_key)])
@@ -36,8 +36,7 @@ async def get_alerts(
     if acknowledged is not None:
         filters["acknowledged"] = acknowledged
     records = service.list(collection, filters=filters)
-    data, pagination = paginate(records, page, page_size)
-    return {"mode": mode, "data": data, "pagination": pagination.model_dump(), "as_of": as_of}
+    return paginated_response(records, page, page_size, mode=mode, as_of=as_of)
 
 
 @router.get("/summary")
@@ -46,7 +45,7 @@ async def get_alert_summary(
 ) -> dict[str, object]:
     """Get alert summary counts by severity."""
     service = get_service(request)
-    return {"summary": service.list("alert_summary")}
+    return single_response(service.list("alert_summary"))
 
 
 @router.post("/{alert_id}/acknowledge")
@@ -66,7 +65,7 @@ async def acknowledge_alert(
         },
     )
     if updated:
-        return {"status": "acknowledged", "alert": updated}
+        return single_response({"alert": updated, "status": "acknowledged"})
     return {
         "error": {
             "code": "NOT_FOUND",
@@ -104,7 +103,7 @@ async def escalate_alert(
             "escalated_at": datetime.now(UTC).isoformat(),
         },
     )
-    return {"status": "escalated", "alert": updated}
+    return single_response({"alert": updated, "status": "escalated"})
 
 
 @router.get("/active")
@@ -122,8 +121,7 @@ async def get_active_alerts(
     records = service.list(collection, filters={"severity": severity})
     if acknowledged is not None:
         records = [r for r in records if r.get("acknowledged") == acknowledged]
-    data, pagination = paginate(records, page, page_size)
-    return {"data": data, "pagination": pagination, "mode": mode}
+    return paginated_response(records, page, page_size, mode=mode)
 
 
 @router.post("/{alert_id}/resolve")
@@ -142,7 +140,7 @@ async def resolve_alert(
         },
     )
     if updated:
-        return {"status": "resolved", "alert": updated}
+        return single_response({"alert": updated, "status": "resolved"})
     return {
         "error": {
             "code": "NOT_FOUND",
