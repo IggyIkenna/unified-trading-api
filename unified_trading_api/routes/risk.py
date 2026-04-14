@@ -27,7 +27,9 @@ async def get_risk_exposure(
     """Get risk exposure. mode=live for real-time, mode=batch for T+1."""
     service = get_service(request)
     collection = f"risk_{mode}"
-    records = service.list(collection, filters={"strategy_id": strategy_id, "category": category})
+    records = service.list(
+        collection, filters={"strategy_id": strategy_id, "category": category, "as_of": as_of}
+    )
     return single_response(records, mode=mode, as_of=as_of)
 
 
@@ -50,13 +52,17 @@ async def get_var(
     request: Request,
     confidence: float = Query(0.99),
     horizon: str = Query("1d"),
+    mode: str = Query("live", pattern="^(live|batch)$"),
+    as_of: str = Query(None, description="T+1 reconciliation date for batch mode"),
 ) -> dict[str, object]:
     """Get Value-at-Risk calculations."""
     service = get_service(request)
     return single_response(
-        service.list("var"),
+        service.list("var", filters={"as_of": as_of}),
         confidence=confidence,
         horizon=horizon,
+        mode=mode,
+        as_of=as_of,
     )
 
 
@@ -64,22 +70,28 @@ async def get_var(
 async def get_greeks(
     request: Request,
     instrument: str = Query(None),
+    mode: str = Query("live", pattern="^(live|batch)$"),
+    as_of: str = Query(None, description="T+1 reconciliation date for batch mode"),
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=200),
 ) -> dict[str, object]:
     """Get portfolio greeks."""
     service = get_service(request)
-    records = service.list("greeks", filters={"instrument": instrument})
-    return paginated_response(records, page, page_size)
+    records = service.list("greeks", filters={"instrument": instrument, "as_of": as_of})
+    return paginated_response(records, page, page_size, mode=mode, as_of=as_of)
 
 
 @router.get("/stress")
 async def get_stress_tests(
     request: Request,
+    mode: str = Query("live", pattern="^(live|batch)$"),
+    as_of: str = Query(None, description="T+1 reconciliation date for batch mode"),
 ) -> dict[str, object]:
     """Get stress test results."""
     service = get_service(request)
-    return single_response(service.list("stress_tests"))
+    return single_response(
+        service.list("stress_tests", filters={"as_of": as_of}), mode=mode, as_of=as_of
+    )
 
 
 @router.post("/circuit-breaker")

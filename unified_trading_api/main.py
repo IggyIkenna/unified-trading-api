@@ -90,10 +90,12 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         app.state.service = MockDomainService(store)
         app.state.mock_store = store
     else:
-        logger.info("Starting in REAL mode -- wiring LiveDomainService stubs")
-        from unified_trading_api.services.live_service import LiveDomainService
+        logger.info("Starting in REAL mode -- wiring GcsDomainService (GCS reader)")
+        from unified_trading_api.services.live_service import GcsDomainService
 
-        app.state.service = LiveDomainService()
+        app.state.service = GcsDomainService(
+            project_id=cloud_config.gcp_project_id,
+        )
 
     yield
 

@@ -147,7 +147,7 @@ class TestMLRoutes:
     def test_create_training_job(self, app_client: TestClient) -> None:
         resp = app_client.post("/ml/training-jobs", json={"model": "alpha", "epochs": 100})
         assert resp.status_code == 200
-        assert resp.json()["status"] == "created"
+        assert resp.json()["data"]["status"] == "created"
 
     def test_get_validation_results(
         self, app_client: TestClient, mock_service: InMemoryService
@@ -162,7 +162,7 @@ class TestMLRoutes:
         mock_service.seed("model_versions", [{"id": "mv1", "status": "staging"}])
         resp = app_client.post("/ml/models/mv1/promote")
         assert resp.status_code == 200
-        assert resp.json()["status"] == "promoted"
+        assert resp.json()["data"]["status"] == "promoted"
 
     def test_promote_model_not_found(self, app_client: TestClient) -> None:
         resp = app_client.post("/ml/models/nonexistent/promote")

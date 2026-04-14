@@ -29,7 +29,9 @@ async def get_active_positions(
     """Get currently active positions with live/batch mode."""
     service = get_service(request)
     collection = f"positions_{mode}"
-    records = service.list(collection, filters={"venue": venue, "strategy_id": strategy_id})
+    records = service.list(
+        collection, filters={"venue": venue, "strategy_id": strategy_id, "as_of": as_of}
+    )
     return paginated_response(records, page, page_size, mode=mode, as_of=as_of)
 
 

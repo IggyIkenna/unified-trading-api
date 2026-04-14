@@ -32,7 +32,11 @@ async def get_alerts(
     """Get alerts list. mode=live for current, mode=batch for T+1 reconciled."""
     service = get_service(request)
     collection = f"alerts_{mode}"
-    filters: dict[str, str | int | float | bool | None] = {"severity": severity, "status": status}
+    filters: dict[str, str | int | float | bool | None] = {
+        "severity": severity,
+        "status": status,
+        "as_of": as_of,
+    }
     if acknowledged is not None:
         filters["acknowledged"] = acknowledged
     records = service.list(collection, filters=filters)

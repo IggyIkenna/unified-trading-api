@@ -24,7 +24,7 @@ async def get_orders(
     """Get orders with live/batch mode support."""
     service = get_service(request)
     collection = f"orders_{mode}"
-    records = service.list(collection, filters={"venue": venue, "status": status})
+    records = service.list(collection, filters={"venue": venue, "status": status, "as_of": as_of})
     return paginated_response(records, page, page_size, mode=mode, as_of=as_of)
 
 
@@ -41,7 +41,9 @@ async def get_fills(
     """Get trade fills with live/batch mode support."""
     service = get_service(request)
     collection = f"fills_{mode}"
-    records = service.list(collection, filters={"venue": venue, "order_id": order_id})
+    records = service.list(
+        collection, filters={"venue": venue, "order_id": order_id, "as_of": as_of}
+    )
     if not records:
         records = service.list("fills", filters={"venue": venue, "order_id": order_id})
     return paginated_response(records, page, page_size, mode=mode, as_of=as_of)

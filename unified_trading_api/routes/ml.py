@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, Query, Request
 from unified_trading_api.middleware.auth import verify_api_key
 from unified_trading_api.models.standard import paginated_response, single_response
 from unified_trading_api.services.factory import get_service
+from unified_trading_library.feature_service_base import FeatureGroupRegistry
 
 router = APIRouter(dependencies=[Depends(verify_api_key)])
 
@@ -265,6 +266,98 @@ async def get_ml_config(
             },
         }
     )
+
+
+# ---------------------------------------------------------------------------
+# Grid config CRUD — manages TrainingGridConfig objects
+# ---------------------------------------------------------------------------
+
+
+@router.get("/grid-configs")
+async def list_grid_configs(
+    request: Request,
+    category: str = Query(None, description="Filter by category: CEFI, TRADFI, SPORTS"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=200),
+) -> dict[str, object]:
+    """List saved ML training grid configurations."""
+    service = get_service(request)
+    records = service.list("ml_grid_configs", filters={"category": category})
+    return paginated_response(records, page, page_size)
+
+
+@router.get("/grid-configs/{config_name}")
+async def get_grid_config(
+    request: Request,
+    config_name: str,
+) -> dict[str, object]:
+    """Get a specific grid config by name."""
+    service = get_service(request)
+    record = service.get("ml_grid_configs", config_name)
+    if record:
+        return single_response(record)
+    return {"error": {"code": "NOT_FOUND", "message": f"Config '{config_name}' not found"}}
+
+
+@router.post("/grid-configs")
+async def create_grid_config(
+    request: Request,
+) -> dict[str, object]:
+    """Create a new grid configuration.
+
+    Body must include ``name`` and at least one of ``instruments`` (CEFI/TRADFI)
+    or ``sports_families`` (SPORTS).  Feature groups default to all available
+    for the category when omitted.
+    """
+    service = get_service(request)
+    body: dict[str, object] = await request.json()  # pyright: ignore[reportAny]
+    if "created_at" not in body:
+        body["created_at"] = datetime.now(UTC).isoformat()
+    record = service.create("ml_grid_configs", body)
+    return single_response({"config": record, "status": "created"})
+
+
+@router.put("/grid-configs/{config_name}")
+async def update_grid_config(
+    request: Request,
+    config_name: str,
+) -> dict[str, object]:
+    """Update an existing grid configuration."""
+    service = get_service(request)
+    body: dict[str, object] = await request.json()  # pyright: ignore[reportAny]
+    body["updated_at"] = datetime.now(UTC).isoformat()
+    updated = service.update("ml_grid_configs", config_name, body)
+    if updated:
+        return single_response({"config": updated, "status": "updated"})
+    return {"error": {"code": "NOT_FOUND", "message": f"Config '{config_name}' not found"}}
+
+
+@router.delete("/grid-configs/{config_name}")
+async def delete_grid_config(
+    request: Request,
+    config_name: str,
+) -> dict[str, object]:
+    """Delete a grid configuration."""
+    service = get_service(request)
+    deleted = service.delete("ml_grid_configs", config_name)
+    if deleted:
+        return single_response({"name": config_name, "status": "deleted"})
+    return {"error": {"code": "NOT_FOUND", "message": f"Config '{config_name}' not found"}}
+
+
+@router.get("/feature-groups")
+async def get_available_feature_groups(
+    request: Request,
+    category: str = Query("CEFI", description="Category: CEFI, TRADFI, SPORTS, DEFI"),
+) -> dict[str, object]:
+    """Get available feature groups for a category.
+
+    Returns the list of feature group names that can be used in grid configs.
+    Groups are sourced from the FeatureGroupRegistry (SSOT in UTL).
+    """
+    upper = category.upper()
+    groups = FeatureGroupRegistry.groups_for_domain(upper)
+    return single_response({"category": upper, "feature_groups": groups})
 
 
 @router.post("/models/{model_id}/promote")

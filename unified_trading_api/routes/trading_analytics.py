@@ -33,7 +33,7 @@ async def get_pnl(
     """Get PnL breakdown with live/batch mode support."""
     service = get_service(request)
     collection = f"pnl_{mode}"
-    records = service.list(collection, filters={"venue": venue})
+    records = service.list(collection, filters={"venue": venue, "as_of": as_of})
     return paginated_response(records, page, page_size, mode=mode, as_of=as_of, period=period)
 
 
@@ -51,7 +51,7 @@ async def get_timeseries(
     """Get analytics timeseries data with live/batch mode support."""
     service = get_service(request)
     collection = f"pnl_timeseries_{mode}"
-    records = service.list(collection)
+    records = service.list(collection, filters={"as_of": as_of})
     return paginated_response(
         records,
         page,

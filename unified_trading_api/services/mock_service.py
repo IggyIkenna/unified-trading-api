@@ -49,11 +49,13 @@ class MockDomainService:
         records = self._apply_org_scope(records)
         if not filters:
             return records
+        # Control keys passed by routes but not present on records
+        _skip_keys = frozenset({"as_of"})
         result: list[dict[str, object]] = []
         for record in records:
             match = True
             for key, value in filters.items():
-                if value is None:
+                if value is None or key in _skip_keys:
                     continue
                 if record.get(key) != value:
                     match = False
