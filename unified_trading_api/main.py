@@ -24,11 +24,17 @@ from unified_trading_api.routes import (
     calendar,
     catalogue,
     chat,
+    commodity,
     compliance,
     config,
+    defi_basis,
+    defi_lending,
+    defi_liquidation,
+    defi_lp,
     deployment,
     derivatives,
     documents,
+    events,
     execution,
     health,
     instruments,
@@ -38,6 +44,7 @@ from unified_trading_api.routes import (
     reporting,
     risk,
     service_status,
+    sports,
     trading_analytics,
     users,
     websocket,
@@ -155,7 +162,18 @@ def create_app() -> FastAPI:
     )
     app.include_router(users.router, prefix="/users", tags=["users"])
     app.include_router(compliance.router, prefix="/compliance", tags=["compliance"])
+    app.include_router(defi_basis.router, prefix="/defi/basis", tags=["defi-basis"])
+    app.include_router(defi_lending.router, prefix="/defi/lending", tags=["defi-lending"])
+    app.include_router(
+        defi_liquidation.router,
+        prefix="/defi/liquidation",
+        tags=["defi-liquidation"],
+    )
+    app.include_router(defi_lp.router, prefix="/defi/lp", tags=["defi-lp"])
     app.include_router(derivatives.router, prefix="/derivatives", tags=["derivatives"])
+
+    # Commodity regime trading
+    app.include_router(commodity.router, prefix="/commodity", tags=["commodity"])
 
     # Permission catalogue (admin UI — browse all permissions)
     app.include_router(catalogue.router, prefix="/catalogue", tags=["catalogue"])
@@ -163,8 +181,14 @@ def create_app() -> FastAPI:
     # Calendar (economic results + corporate actions)
     app.include_router(calendar.router, prefix="/calendar", tags=["calendar"])
 
+    # Events (economic calendar, ML predictions, news feed, event positions)
+    app.include_router(events.router, prefix="/events", tags=["events"])
+
     # Help chatbot (public endpoint, tier-gated by auth context)
     app.include_router(chat.router, prefix="/chat", tags=["chat"])
+
+    # Sports fixtures (live scores, odds, leagues)
+    app.include_router(sports.router, tags=["sports"])
 
     # WebSocket (unauthenticated connect, auth on subscribe)
     app.include_router(websocket.router, tags=["websocket"])

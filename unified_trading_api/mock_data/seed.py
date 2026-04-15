@@ -5136,6 +5136,11 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
 
     seed_calendar(_store)
 
+    # Events domain (calendar, predictions, news, positions)
+    from unified_trading_api.mock_data.seed_events import seed_events
+
+    seed_events(_store)
+
     # Run consistency validation (log warnings, don't crash)
     import logging
 
