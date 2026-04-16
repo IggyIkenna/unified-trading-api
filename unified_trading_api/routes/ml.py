@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, Query, Request
-from unified_trading_library.feature_service_base import FeatureGroupRegistry
+from unified_trading_library import FeatureGroupRegistry
 
 from unified_trading_api.middleware.auth import verify_api_key
 from unified_trading_api.models.standard import paginated_response, single_response
@@ -358,6 +358,312 @@ async def get_available_feature_groups(
     upper = category.upper()
     groups = FeatureGroupRegistry.groups_for_domain(upper)
     return single_response({"category": upper, "feature_groups": groups})
+
+
+# ---------------------------------------------------------------------------
+# Training run detail, cancel, queue
+# ---------------------------------------------------------------------------
+
+
+@router.get("/training-runs/{run_id}")
+async def get_training_run_detail(
+    request: Request,
+    run_id: str,
+) -> dict[str, object]:
+    """Get a specific training run by ID — status, metrics, config."""
+    service = get_service(request)
+    record = service.get("training_runs", run_id)
+    if record:
+        return single_response(record)
+    return single_response(
+        {
+            "id": run_id,
+            "status": "completed",
+            "category": "CEFI",
+            "instrument_id": "BINANCE-FUTURES:PERPETUAL:BTC-USDT",
+            "timeframe": "1m",
+            "target_type": "swing_high",
+            "started_at": "2026-04-16T13:00:00Z",
+            "completed_at": "2026-04-16T13:49:38Z",
+            "metrics": {
+                "accuracy": 0.647,
+                "precision_macro": 0.512,
+                "recall_macro": 0.489,
+                "f1_macro": 0.499,
+                "num_samples": 42006,
+                "num_features": 58,
+            },
+            "config": {
+                "walk_forward_folds": 2,
+                "lookback_window": 5,
+                "early_stopping_rounds": 50,
+            },
+        }
+    )
+
+
+@router.post("/training-runs/{run_id}/cancel")
+async def cancel_training_run(
+    request: Request,
+    run_id: str,
+) -> dict[str, object]:
+    """Cancel a running training job."""
+    service = get_service(request)
+    updated = service.update("training_runs", run_id, {"status": "cancelled"})
+    if updated:
+        return single_response({"id": run_id, "status": "cancelled"})
+    return single_response({"id": run_id, "status": "cancelled", "message": "mock cancellation"})
+
+
+@router.get("/training/queue")
+async def get_training_queue(
+    request: Request,
+) -> dict[str, object]:
+    """Get training job queue — queued, running, recently completed."""
+    service = get_service(request)
+    records = service.list("training_runs", filters={"status": "queued"})
+    if records:
+        return single_response(records)
+    return single_response(
+        {
+            "queued": [],
+            "running": [],
+            "recently_completed": [
+                {
+                    "id": "run-20260416-134938",
+                    "category": "CEFI",
+                    "instrument": "BTC-USDT",
+                    "status": "completed",
+                    "started_at": "2026-04-16T13:00:00Z",
+                    "completed_at": "2026-04-16T13:49:38Z",
+                    "accuracy": 0.647,
+                },
+            ],
+        }
+    )
+
+
+# ---------------------------------------------------------------------------
+# Pipeline status, alerts
+# ---------------------------------------------------------------------------
+
+
+@router.get("/pipeline/status")
+async def get_pipeline_status(
+    request: Request,
+) -> dict[str, object]:
+    """Get ML pipeline KPIs — models in production, training stats, feature freshness."""
+    service = get_service(request)
+    records = service.list("ml_pipeline_status")
+    if records:
+        return single_response(records[0] if len(records) == 1 else records)
+    return single_response(
+        {
+            "models_in_production": 3,
+            "models_staging": 2,
+            "models_training": 0,
+            "total_training_runs": 47,
+            "last_training_run": "2026-04-16T13:49:38Z",
+            "next_scheduled": "2026-04-17T04:00:00Z",
+            "feature_freshness": {
+                "technical_indicators": "2026-04-16T23:59:00Z",
+                "market_structure": "2026-04-16T23:59:00Z",
+                "swing_outcome_targets": "2026-04-16T23:59:00Z",
+            },
+            "categories": {
+                "CEFI": {"models": 2, "last_run": "2026-04-16T13:49:38Z"},
+                "TRADFI": {"models": 1, "last_run": "2026-04-15T04:12:00Z"},
+                "SPORTS": {"models": 0, "last_run": None},
+                "DEFI": {"models": 0, "last_run": None},
+            },
+        }
+    )
+
+
+@router.get("/alerts")
+async def get_ml_alerts(
+    request: Request,
+    severity: str = Query(None, description="Filter by severity: info, warning, critical"),
+) -> dict[str, object]:
+    """Get active ML alerts — model drift, training failures, stale predictions."""
+    service = get_service(request)
+    records = service.list("ml_alerts", filters={"severity": severity})
+    if records:
+        return single_response(records)
+    return single_response(
+        [
+            {
+                "id": "alert-drift-001",
+                "type": "model_drift",
+                "severity": "warning",
+                "model_id": "crypto-alpha-signal-v2",
+                "message": "Feature drift score 0.078 exceeds warning threshold 0.05",
+                "created_at": "2026-04-16T10:00:00Z",
+                "acknowledged": False,
+            },
+            {
+                "id": "alert-stale-001",
+                "type": "stale_predictions",
+                "severity": "info",
+                "model_id": "sports-match-outcome-v3",
+                "message": "No predictions generated in last 24h (off-season)",
+                "created_at": "2026-04-16T06:00:00Z",
+                "acknowledged": True,
+            },
+        ]
+    )
+
+
+# ---------------------------------------------------------------------------
+# Run analysis, comparison, registry
+# ---------------------------------------------------------------------------
+
+
+@router.get("/analysis/runs/{run_id}")
+async def get_run_analysis_bundle(
+    request: Request,
+    run_id: str,
+) -> dict[str, object]:
+    """Get analysis bundle for a training run — metrics, SHAP, hyperparams, config."""
+    service = get_service(request)
+    record = service.get("training_runs", run_id)
+    if record:
+        return single_response(record)
+    return single_response(
+        {
+            "run_id": run_id,
+            "metrics": {
+                "accuracy": 0.647,
+                "precision_macro": 0.512,
+                "recall_macro": 0.489,
+                "f1_macro": 0.499,
+                "average_precision": 0.423,
+            },
+            "shap_summary": {
+                "top_features": [
+                    {"name": "rsi_14", "importance": 0.0842},
+                    {"name": "macd_histogram", "importance": 0.0713},
+                    {"name": "bb_position_20", "importance": 0.0654},
+                    {"name": "atr_14", "importance": 0.0598},
+                    {"name": "stoch_k_14", "importance": 0.0521},
+                ],
+                "plot_urls": [],
+            },
+            "hyperparameters": {
+                "num_leaves": 31,
+                "max_depth": -1,
+                "learning_rate": 0.05,
+                "feature_fraction": 0.7,
+                "min_child_samples": 20,
+            },
+            "config": {
+                "category": "CEFI",
+                "instrument_id": "BINANCE-FUTURES:PERPETUAL:BTC-USDT",
+                "timeframe": "1m",
+                "target_type": "swing_high",
+                "walk_forward_folds": 2,
+                "num_features": 58,
+                "num_samples": 42006,
+            },
+            "walk_forward_results": [
+                {"fold": 1, "train_rows": 28004, "test_rows": 14002, "accuracy": 0.639},
+                {"fold": 2, "train_rows": 33605, "test_rows": 8401, "accuracy": 0.655},
+            ],
+        }
+    )
+
+
+@router.post("/analysis/compare")
+async def compare_runs(
+    request: Request,
+) -> dict[str, object]:
+    """Compare 2-4 training runs side by side — metrics deltas."""
+    body: dict[str, object] = await request.json()  # pyright: ignore[reportAny]
+    raw_ids: object = body.get("run_ids", [])
+    run_ids: list[str] = (
+        [str(r) for r in list(raw_ids)]  # pyright: ignore[reportUnknownArgumentType,reportUnknownVariableType]
+        if isinstance(raw_ids, list)
+        else []
+    )
+    if len(run_ids) < 2:
+        return {"error": {"code": "INVALID_INPUT", "message": "Need at least 2 run_ids"}}
+
+    service = get_service(request)
+    runs: list[dict[str, object]] = []
+    for rid in run_ids[:4]:
+        record = service.get("training_runs", str(rid))
+        if record:
+            runs.append({"run_id": str(rid), **record})
+        else:
+            runs.append(
+                {
+                    "run_id": str(rid),
+                    "accuracy": 0.60 + len(runs) * 0.02,
+                    "f1_macro": 0.45 + len(runs) * 0.015,
+                    "num_features": 58,
+                }
+            )
+    return single_response({"runs": runs, "count": len(runs)})
+
+
+@router.get("/registry/models")
+async def get_registry_models(
+    request: Request,
+    status: str = Query(None, description="Filter: staging, production, archived"),
+    family: str = Query(None, description="Filter by model family"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=200),
+) -> dict[str, object]:
+    """List models from the model registry.
+
+    In real mode reads from ml-models-store GCS model_registry/.
+    """
+    service = get_service(request)
+    records = service.list("model_versions", filters={"status": status, "family": family})
+    if records:
+        return paginated_response(records, page, page_size)
+    mock_models: list[dict[str, object]] = [
+        {
+            "model_id": "CEFI_BTC_swing-high_LIGHTGBM_1m_V20260416134938",
+            "family": "swing_high",
+            "version": "V20260416134938",
+            "category": "CEFI",
+            "instrument": "BTC-USDT",
+            "timeframe": "1m",
+            "training_period": "2026-04",
+            "status": "staging",
+            "accuracy": 0.647,
+            "f1_macro": 0.499,
+            "created_at": "2026-04-16T13:49:38Z",
+        },
+        {
+            "model_id": "CEFI_ETH_swing-high_LIGHTGBM_1m_V20260415120000",
+            "family": "swing_high",
+            "version": "V20260415120000",
+            "category": "CEFI",
+            "instrument": "ETH-USDT",
+            "timeframe": "1m",
+            "training_period": "2026-04",
+            "status": "production",
+            "accuracy": 0.662,
+            "f1_macro": 0.523,
+            "created_at": "2026-04-15T12:00:00Z",
+        },
+        {
+            "model_id": "TRADFI_SPY_swing-high_LIGHTGBM_5m_V20260414080000",
+            "family": "swing_high",
+            "version": "V20260414080000",
+            "category": "TRADFI",
+            "instrument": "SPY-USD",
+            "timeframe": "5m",
+            "training_period": "2026-04",
+            "status": "production",
+            "accuracy": 0.614,
+            "f1_macro": 0.471,
+            "created_at": "2026-04-14T08:00:00Z",
+        },
+    ]
+    return paginated_response(mock_models, page, page_size)
 
 
 @router.post("/models/{model_id}/promote")
