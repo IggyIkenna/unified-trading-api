@@ -5,11 +5,11 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, Query, Request
+from unified_trading_library.feature_service_base import FeatureGroupRegistry
 
 from unified_trading_api.middleware.auth import verify_api_key
 from unified_trading_api.models.standard import paginated_response, single_response
 from unified_trading_api.services.factory import get_service
-from unified_trading_library.feature_service_base import FeatureGroupRegistry
 
 router = APIRouter(dependencies=[Depends(verify_api_key)])
 

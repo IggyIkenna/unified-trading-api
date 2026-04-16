@@ -22,7 +22,6 @@ from unified_trading_api.middleware.auth import verify_api_key
 from unified_trading_api.models.standard import single_response
 from unified_trading_api.services.factory import get_service
 
-
 router = APIRouter(dependencies=[Depends(verify_api_key)])
 
 
@@ -107,9 +106,7 @@ class EventPositionItem(BaseModel):  # CORRECT-LOCAL: API response model
 @router.get("/calendar")
 async def get_events_calendar(
     request: Request,
-    impact: str | None = Query(
-        None, description="Filter by impact level: HIGH | MEDIUM | LOW"
-    ),
+    impact: str | None = Query(None, description="Filter by impact level: HIGH | MEDIUM | LOW"),
     region: str | None = Query(None, description="Filter by region: US | EU | JP"),
 ) -> dict[str, object]:
     """Get upcoming economic events for the calendar view.
@@ -156,11 +153,7 @@ async def get_event_predictions(
         records = [r for r in records if r.get("event_id") == event_id]
 
     if instrument:
-        records = [
-            r
-            for r in records
-            if str(r.get("instrument", "")).upper() == instrument.upper()
-        ]
+        records = [r for r in records if str(r.get("instrument", "")).upper() == instrument.upper()]
 
     return single_response(
         records,
@@ -191,14 +184,10 @@ async def get_events_news(
     records: list[dict[str, object]] = service.list("events_news")
 
     if sentiment:
-        records = [
-            r for r in records if str(r.get("sentiment", "")).lower() == sentiment.lower()
-        ]
+        records = [r for r in records if str(r.get("sentiment", "")).lower() == sentiment.lower()]
 
     if category:
-        records = [
-            r for r in records if str(r.get("category", "")).lower() == category.lower()
-        ]
+        records = [r for r in records if str(r.get("category", "")).lower() == category.lower()]
 
     records = records[:limit]
 
@@ -212,9 +201,7 @@ async def get_events_news(
 @router.get("/positions")
 async def get_event_positions(
     request: Request,
-    phase: str | None = Query(
-        None, description="Filter by phase: PRE_EVENT | POST_EVENT"
-    ),
+    phase: str | None = Query(None, description="Filter by phase: PRE_EVENT | POST_EVENT"),
     event_id: str | None = Query(None, description="Filter positions by event ID"),
 ) -> dict[str, object]:
     """Get active positions taken based on event signals.

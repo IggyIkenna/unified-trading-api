@@ -360,3 +360,101 @@ async def _mock_data_generator(websocket: WebSocket, channels: set[str]) -> None
                     },
                 }
             )
+
+        # Sports live fixture updates
+        if "sports-live" in channels:
+            # Generate synthetic live fixture updates
+            # Use a subset of sports instruments to simulate live matches
+            sports_fixtures = [
+                {
+                    "fixture_id": "SF-1001",
+                    "league_id": "EPL",
+                    "home_team": "Arsenal",
+                    "away_team": "Chelsea",
+                    "home_short": "ARS",
+                    "away_short": "CHE",
+                },
+                {
+                    "fixture_id": "SF-1002",
+                    "league_id": "EPL",
+                    "home_team": "Man City",
+                    "away_team": "Liverpool",
+                    "home_short": "MCI",
+                    "away_short": "LIV",
+                },
+                {
+                    "fixture_id": "SF-1003",
+                    "league_id": "LA_LIGA",
+                    "home_team": "Barcelona",
+                    "away_team": "Real Madrid",
+                    "home_short": "BAR",
+                    "away_short": "RMA",
+                },
+                {
+                    "fixture_id": "SF-1004",
+                    "league_id": "SERIE_A",
+                    "home_team": "AC Milan",
+                    "away_team": "Juventus",
+                    "home_short": "MIL",
+                    "away_short": "JUV",
+                },
+            ]
+            if tick_count % 2 == 0:  # Every other tick
+                fixture = random.choice(sports_fixtures)  # nosec B311
+                fid = str(fixture["fixture_id"])
+                # Simulate match minute progression
+                match_minute = (tick_count * 3) % 90 + 1
+                status = "HT" if 45 < match_minute < 50 else ("2H" if match_minute > 49 else "1H")
+                home_goals = random.randint(0, 3)  # nosec B311
+                away_goals = random.randint(0, 2)  # nosec B311
+                # Brownian motion odds
+                base_home = 1.8 + random.gauss(0, 0.1)  # nosec B311
+                base_draw = 3.2 + random.gauss(0, 0.15)  # nosec B311
+                base_away = 4.5 + random.gauss(0, 0.2)  # nosec B311
+
+                await websocket.send_json(
+                    {
+                        "channel": "sports-live",
+                        "type": "fixture-update",
+                        "data": {
+                            "fixture_id": fid,
+                            "league_id": str(fixture["league_id"]),
+                            "status": status,
+                            "minute": match_minute,
+                            "score": {"home": home_goals, "away": away_goals},
+                            "home_team": str(fixture["home_team"]),
+                            "away_team": str(fixture["away_team"]),
+                            "home_short": str(fixture["home_short"]),
+                            "away_short": str(fixture["away_short"]),
+                            "odds": {
+                                "FT Result": {
+                                    "betfair_exchange": {
+                                        "home": round(max(base_home, 1.01), 2),
+                                        "draw": round(max(base_draw, 1.01), 2),
+                                        "away": round(max(base_away, 1.01), 2),
+                                    },
+                                    "pinnacle": {
+                                        "home": round(max(base_home + 0.02, 1.01), 2),
+                                        "draw": round(max(base_draw - 0.05, 1.01), 2),
+                                        "away": round(max(base_away + 0.1, 1.01), 2),
+                                    },
+                                },
+                            },
+                            "stats": {
+                                "home": {
+                                    "possession": 50 + random.randint(-15, 15),  # nosec B311
+                                    "shots": random.randint(3, 15),  # nosec B311
+                                    "shots_on_target": random.randint(1, 7),  # nosec B311
+                                    "corners": random.randint(1, 8),  # nosec B311
+                                },
+                                "away": {
+                                    "possession": 50 + random.randint(-15, 15),  # nosec B311
+                                    "shots": random.randint(2, 12),  # nosec B311
+                                    "shots_on_target": random.randint(0, 5),  # nosec B311
+                                    "corners": random.randint(0, 6),  # nosec B311
+                                },
+                            },
+                            "timestamp": ts,
+                        },
+                    }
+                )
