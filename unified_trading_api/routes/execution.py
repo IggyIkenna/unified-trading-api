@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 
 from fastapi import APIRouter, Depends, Query, Request
 
@@ -21,6 +22,10 @@ async def get_orders(
     mode: str = Query("live", pattern="^(live|batch)$"),
     venue: str = Query(None),
     status: str = Query(None),
+    client_id: str = Query(None, description="Filter by client ID"),
+    category: str = Query(None, description="Filter by category (CEFI, DEFI, TRADFI, SPORTS)"),
+    strategy_family: str = Query(None, description="Filter by strategy family"),
+    account_id: str = Query(None, description="Filter by account ID"),
     as_of: str = Query(None, description="T+1 reconciliation date for batch mode"),
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=200),
@@ -28,7 +33,18 @@ async def get_orders(
     """Get orders with live/batch mode support."""
     service = get_service(request)
     collection = f"orders_{mode}"
-    records = service.list(collection, filters={"venue": venue, "status": status, "as_of": as_of})
+    records = service.list(
+        collection,
+        filters={
+            "venue": venue,
+            "status": status,
+            "client_id": client_id,
+            "category": category,
+            "strategy_family": strategy_family,
+            "account_id": account_id,
+            "as_of": as_of,
+        },
+    )
     return paginated_response(records, page, page_size, mode=mode, as_of=as_of)
 
 
@@ -38,6 +54,10 @@ async def get_fills(
     mode: str = Query("live", pattern="^(live|batch)$"),
     venue: str = Query(None),
     order_id: str = Query(None),
+    client_id: str = Query(None, description="Filter by client ID"),
+    category: str = Query(None, description="Filter by category (CEFI, DEFI, TRADFI, SPORTS)"),
+    strategy_family: str = Query(None, description="Filter by strategy family"),
+    account_id: str = Query(None, description="Filter by account ID"),
     as_of: str = Query(None, description="T+1 reconciliation date for batch mode"),
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=200),
@@ -45,11 +65,28 @@ async def get_fills(
     """Get trade fills with live/batch mode support."""
     service = get_service(request)
     collection = f"fills_{mode}"
-    records = service.list(
-        collection, filters={"venue": venue, "order_id": order_id, "as_of": as_of}
-    )
+    fill_filters: dict[str, str | int | float | bool | None] = {
+        "venue": venue,
+        "order_id": order_id,
+        "client_id": client_id,
+        "category": category,
+        "strategy_family": strategy_family,
+        "account_id": account_id,
+        "as_of": as_of,
+    }
+    records = service.list(collection, filters=fill_filters)
     if not records:
-        records = service.list("fills", filters={"venue": venue, "order_id": order_id})
+        records = service.list(
+            "fills",
+            filters={
+                "venue": venue,
+                "order_id": order_id,
+                "client_id": client_id,
+                "category": category,
+                "strategy_family": strategy_family,
+                "account_id": account_id,
+            },
+        )
     return paginated_response(records, page, page_size, mode=mode, as_of=as_of)
 
 
@@ -607,7 +644,7 @@ async def place_sports_bet(
     if not mock_mode_val:
         import httpx
 
-        exec_url: str = getattr(request.app.state, "execution_service_url", "http://localhost:8010")  # pyright: ignore[reportAny]
+        exec_url: str = getattr(request.app.state, "execution_service_url", os.environ.get("LIVE_SERVICE_EXECUTION_URL", "http://localhost:8018"))  # pyright: ignore[reportAny]
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 resp = await client.post(

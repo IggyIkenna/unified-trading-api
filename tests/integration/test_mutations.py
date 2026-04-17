@@ -40,9 +40,10 @@ class TestExecutionMutations:
         )
         assert r.status_code == 200
         body = r.json()
-        assert body["status"] == "created"
         assert "data" in body
-        assert body["data"]["venue"] == "binance"
+        inner = body["data"]
+        assert inner["status"] == "filled"
+        assert inner["order"]["venue"] == "binance"
 
     def test_created_order_appears_in_list(self, client: TestClient) -> None:
         # Create

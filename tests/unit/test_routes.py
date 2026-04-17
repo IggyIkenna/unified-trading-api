@@ -48,7 +48,7 @@ class TestAlertRoutes:
         mock_service.seed("alert_summary", [{"critical": 2, "high": 5}])
         resp = app_client.get("/alerts/summary")
         assert resp.status_code == 200
-        assert "summary" in resp.json()
+        assert "data" in resp.json()
 
     def test_acknowledge_alert_found(
         self, app_client: TestClient, mock_service: InMemoryService
@@ -61,7 +61,7 @@ class TestAlertRoutes:
         )
         resp = app_client.post("/alerts/a1/acknowledge")
         assert resp.status_code == 200
-        data = resp.json()
+        data = resp.json()["data"]
         assert data["status"] == "acknowledged"
         assert "alert" in data
 
@@ -82,7 +82,7 @@ class TestAlertRoutes:
         )
         resp = app_client.post("/alerts/a1/escalate")
         assert resp.status_code == 200
-        data = resp.json()
+        data = resp.json()["data"]
         assert data["status"] == "escalated"
 
     def test_escalate_alert_not_found(self, app_client: TestClient) -> None:
@@ -125,7 +125,7 @@ class TestAlertRoutes:
         )
         resp = app_client.post("/alerts/a1/resolve")
         assert resp.status_code == 200
-        assert resp.json()["status"] == "resolved"
+        assert resp.json()["data"]["status"] == "resolved"
 
     def test_resolve_alert_not_found(self, app_client: TestClient) -> None:
         resp = app_client.post("/alerts/nonexistent/resolve")
@@ -168,13 +168,13 @@ class TestInstrumentRoutes:
         mock_service.seed("instrument_catalogue", [{"id": "cat1"}])
         resp = app_client.get("/instruments/catalogue")
         assert resp.status_code == 200
-        assert "catalogue" in resp.json()
+        assert "data" in resp.json()
 
     def test_get_registry(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("instrument_registry", [{"id": "reg1"}])
         resp = app_client.get("/instruments/registry")
         assert resp.status_code == 200
-        assert "registry" in resp.json()
+        assert "data" in resp.json()
 
     def test_mock_mode_guard(self, app_client: TestClient) -> None:
         """Mock CRUD endpoints should work in mock mode."""
@@ -186,10 +186,11 @@ class TestInstrumentRoutes:
                 "symbol": "TEST-PERP",
                 "base_asset": "TEST",
                 "quote_asset": "USD",
+                "asset_class": "crypto",
             },
         )
         assert resp.status_code == 200
-        assert resp.json()["status"] == "created"
+        assert resp.json()["data"]["status"] == "created"
 
     def test_mock_mode_guard_non_mock(self) -> None:
         """Mock endpoints should return 403 when not in mock mode."""
@@ -244,7 +245,7 @@ class TestTradingAnalyticsRoutes:
         mock_service.seed("performance", [{"id": "perf1", "sharpe": 2.1}])
         resp = app_client.get("/analytics/performance")
         assert resp.status_code == 200
-        assert "performance" in resp.json()
+        assert "data" in resp.json()
 
     def test_get_organizations(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("analytics_organizations", [{"id": "org1"}])
@@ -266,22 +267,22 @@ class TestTradingAnalyticsRoutes:
     def test_create_pnl_snapshot(self, app_client: TestClient) -> None:
         resp = app_client.post("/analytics/pnl", json={"strategy": "alpha"})
         assert resp.status_code == 200
-        assert resp.json()["status"] == "created"
+        assert resp.json()["data"]["status"] == "created"
 
     def test_create_timeseries_entry(self, app_client: TestClient) -> None:
         resp = app_client.post("/analytics/timeseries", json={"value": 42})
         assert resp.status_code == 200
-        assert resp.json()["status"] == "created"
+        assert resp.json()["data"]["status"] == "created"
 
     def test_create_performance_snapshot(self, app_client: TestClient) -> None:
         resp = app_client.post("/analytics/performance", json={"sharpe": 1.5})
         assert resp.status_code == 200
-        assert resp.json()["status"] == "created"
+        assert resp.json()["data"]["status"] == "created"
 
     def test_create_settlement(self, app_client: TestClient) -> None:
         resp = app_client.post("/analytics/settlements", json={"venue": "binance"})
         assert resp.status_code == 200
-        assert resp.json()["status"] == "created"
+        assert resp.json()["data"]["status"] == "created"
 
     def test_get_strategies(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
@@ -299,7 +300,8 @@ class TestTradingAnalyticsRoutes:
         mock_service.seed("strategies", [{"id": "s1", "name": "Alpha"}])
         resp = app_client.get("/analytics/strategies/s1")
         assert resp.status_code == 200
-        assert "strategy" in resp.json()
+        assert "data" in resp.json()
+        assert resp.json()["data"]["name"] == "Alpha"
 
     def test_get_strategy_detail_not_found(self, app_client: TestClient) -> None:
         resp = app_client.get("/analytics/strategies/nonexistent")
@@ -312,7 +314,7 @@ class TestTradingAnalyticsRoutes:
         mock_service.seed("strategies", [{"id": "s1", "status": "staging"}])
         resp = app_client.post("/analytics/strategies/s1/promote")
         assert resp.status_code == 200
-        assert resp.json()["status"] == "promoted"
+        assert resp.json()["data"]["status"] == "promoted"
 
     def test_promote_strategy_not_found(self, app_client: TestClient) -> None:
         resp = app_client.post("/analytics/strategies/nonexistent/promote")
@@ -325,7 +327,7 @@ class TestTradingAnalyticsRoutes:
         mock_service.seed("strategies", [{"id": "s1", "status": "staging"}])
         resp = app_client.post("/analytics/strategies/s1/reject")
         assert resp.status_code == 200
-        assert resp.json()["status"] == "rejected"
+        assert resp.json()["data"]["status"] == "rejected"
 
     def test_reject_strategy_not_found(self, app_client: TestClient) -> None:
         resp = app_client.post("/analytics/strategies/nonexistent/reject")
@@ -336,8 +338,8 @@ class TestTradingAnalyticsRoutes:
         mock_service.seed("strategies", [{"id": "s1", "status": "live"}])
         resp = app_client.post("/analytics/strategies/s1/scale", json={"scale_factor": 1.5})
         assert resp.status_code == 200
-        assert resp.json()["status"] == "scaled"
-        assert resp.json()["scale_factor"] == 1.5
+        assert resp.json()["data"]["status"] == "scaled"
+        assert resp.json()["data"]["scale_factor"] == 1.5
 
     def test_scale_strategy_not_found(self, app_client: TestClient) -> None:
         resp = app_client.post(
@@ -352,7 +354,7 @@ class TestTradingAnalyticsRoutes:
         mock_service.seed("strategies", [{"id": "s1"}])
         resp = app_client.get("/analytics/strategy-configs")
         assert resp.status_code == 200
-        assert "configs" in resp.json()
+        assert "data" in resp.json()
 
 
 # ---------------------------------------------------------------------------
@@ -401,9 +403,10 @@ class TestExecutionRoutes:
             json={"instrument": "BTC-PERP", "side": "BUY", "quantity": 1, "price": 67000},
         )
         assert resp.status_code == 200
-        assert resp.json()["status"] == "filled"
-        assert "position" in resp.json()
-        assert resp.json()["position"]["instrument"] == "BTC-PERP"
+        data = resp.json()["data"]
+        assert data["status"] == "filled"
+        assert "position" in data
+        assert data["position"]["instrument"] == "BTC-PERP"
 
 
 # ---------------------------------------------------------------------------
@@ -457,7 +460,7 @@ class TestMarketDataRoutes:
         mock_service.seed("tickers_live", [{"id": "t1", "instrument": "BTC-PERP", "price": 67000}])
         resp = app_client.get("/market-data/orderbook?instrument=BTC-PERP&depth=5")
         assert resp.status_code == 200
-        data = resp.json()
+        data = resp.json()["data"]
         assert "bids" in data
         assert "asks" in data
 
@@ -465,7 +468,7 @@ class TestMarketDataRoutes:
         """Orderbook falls back to 100.0 mid price when no tickers."""
         resp = app_client.get("/market-data/orderbook?instrument=UNKNOWN&depth=5")
         assert resp.status_code == 200
-        data = resp.json()
+        data = resp.json()["data"]
         assert data["mid_price"] == 100.0
 
     def test_get_trades(self, app_client: TestClient, mock_service: InMemoryService) -> None:
@@ -489,7 +492,7 @@ class TestMarketDataRoutes:
         """When no fx_rates seeded, returns static fallback."""
         resp = app_client.get("/market-data/fx-rates")
         assert resp.status_code == 200
-        rates = resp.json()["rates"]
+        rates = resp.json()["data"]
         assert len(rates) == 5
 
 
@@ -534,7 +537,7 @@ class TestRiskRoutes:
             "/risk/circuit-breaker", json={"strategy_id": "s1", "action": "trip"}
         )
         assert resp.status_code == 200
-        assert resp.json()["status"] == "ok"
+        assert resp.json()["data"]["status"] == "ok"
 
     def test_circuit_breaker_reset(
         self, app_client: TestClient, mock_service: InMemoryService
@@ -556,7 +559,7 @@ class TestRiskRoutes:
         mock_service.seed("strategies", [{"id": "s1", "status": "live"}])
         resp = app_client.post("/risk/kill-switch", json={"scope": "strategy", "target_id": "s1"})
         assert resp.status_code == 200
-        assert resp.json()["status"] == "ok"
+        assert resp.json()["data"]["status"] == "ok"
 
     def test_kill_switch_strategy_not_found(self, app_client: TestClient) -> None:
         resp = app_client.post(
@@ -577,7 +580,7 @@ class TestRiskRoutes:
         )
         resp = app_client.post("/risk/kill-switch", json={"scope": "global"})
         assert resp.status_code == 200
-        assert resp.json()["strategies_halted"] == 2
+        assert resp.json()["data"]["strategies_halted"] == 2
 
     def test_kill_switch_venue(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
@@ -617,12 +620,12 @@ class TestRiskRoutes:
         mock_service.seed("regime", [{"id": "r1", "regime": "high_vol", "multiplier": 1.5}])
         resp = app_client.get("/risk/regime")
         assert resp.status_code == 200
-        assert resp.json()["regime"] == "high_vol"
+        assert resp.json()["data"]["regime"] == "high_vol"
 
     def test_get_regime_fallback(self, app_client: TestClient) -> None:
         resp = app_client.get("/risk/regime")
         assert resp.status_code == 200
-        assert resp.json()["regime"] == "normal"
+        assert resp.json()["data"]["regime"] == "normal"
 
 
 # Remaining test classes (TestReportingRoutes through TestAdminRoutes) are in

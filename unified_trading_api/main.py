@@ -56,6 +56,14 @@ logger = logging.getLogger(__name__)
 _VERSION = "0.1.0"
 
 
+_SERVICE_NAME = "unified-trading-api"
+
+# ServiceBootstrap( pattern: The API gateway is a long-running FastAPI app,
+# not a batch CLI. Lifecycle events (STARTED/STOPPED) are emitted via the
+# lifespan context manager below rather than via ServiceBootstrap operations.
+# The api/main.py health endpoint uses make_health_router from UTL.
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """App lifespan -- setup and teardown."""

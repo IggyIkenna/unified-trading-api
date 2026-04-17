@@ -47,7 +47,15 @@ class InMemoryService:
                 result.append(record)
         return result
 
-    def get(self, collection: str, record_id: str) -> dict[str, object] | None:
+    def get(
+        self,
+        collection: str,
+        record_id: str | None = None,
+        filters: dict[str, object] | None = None,
+    ) -> dict[str, object] | None:
+        if filters:
+            records = self.list(collection, filters)
+            return records[0] if records else None
         for record in self._data.get(collection, []):
             if record.get("id") == record_id:
                 return dict(record)

@@ -10,6 +10,8 @@ Seeded into collections:
 
 from __future__ import annotations
 
+from typing import Protocol
+
 
 def generate_events_calendar() -> list[dict[str, object]]:
     """10 upcoming economic events across US, EU, JP."""
@@ -565,7 +567,6 @@ def generate_events_positions() -> list[dict[str, object]]:
 
 def seed_events(store: object) -> None:
     """Seed events domain into MockStateStore."""
-    from typing import Protocol
 
     class _Seedable(Protocol):
         def seed(self, collection: str, items: list[dict[str, object]]) -> None: ...

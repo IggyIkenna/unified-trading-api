@@ -1,56 +1,64 @@
-"""Tests for services: LiveDomainService, MockDomainService, factory."""
+"""Tests for services: GcsDomainService (LiveDomainService alias), MockDomainService, factory."""
 
 from __future__ import annotations
 
-import pytest
+from unittest.mock import patch
 
 # ---------------------------------------------------------------------------
-# LiveDomainService
+# LiveDomainService (GcsDomainService alias)
 # ---------------------------------------------------------------------------
 
 
 class TestLiveDomainService:
-    """All methods except reset raise NotImplementedError."""
+    """GcsDomainService returns empty results for unknown/static collections."""
 
-    def test_list_raises(self) -> None:
+    def test_list_returns_empty(self) -> None:
         from unified_trading_api.services.live_service import LiveDomainService
 
-        svc = LiveDomainService()
-        with pytest.raises(NotImplementedError, match="Live mode not wired"):
-            svc.list("orders")
+        with patch("unified_trading_api.services.live_service.get_storage_client"):
+            svc = LiveDomainService(project_id="test-project")
+        result = svc.list("orders")
+        assert result == []
 
-    def test_get_raises(self) -> None:
+    def test_get_returns_none(self) -> None:
         from unified_trading_api.services.live_service import LiveDomainService
 
-        svc = LiveDomainService()
-        with pytest.raises(NotImplementedError, match="Live mode not wired"):
-            svc.get("orders", "o1")
+        with patch("unified_trading_api.services.live_service.get_storage_client"):
+            svc = LiveDomainService(project_id="test-project")
+        result = svc.get("orders", "o1")
+        assert result is None
 
-    def test_create_raises(self) -> None:
+    def test_create_returns_data(self) -> None:
         from unified_trading_api.services.live_service import LiveDomainService
 
-        svc = LiveDomainService()
-        with pytest.raises(NotImplementedError, match="Live mode not wired"):
-            svc.create("orders", {"side": "BUY"})
+        with patch("unified_trading_api.services.live_service.get_storage_client"):
+            svc = LiveDomainService(project_id="test-project")
+        data: dict[str, object] = {"side": "BUY"}
+        result = svc.create("orders", data)
+        assert result == data
 
-    def test_update_raises(self) -> None:
+    def test_update_returns_data(self) -> None:
         from unified_trading_api.services.live_service import LiveDomainService
 
-        svc = LiveDomainService()
-        with pytest.raises(NotImplementedError, match="Live mode not wired"):
-            svc.update("orders", "o1", {"status": "filled"})
+        with patch("unified_trading_api.services.live_service.get_storage_client"):
+            svc = LiveDomainService(project_id="test-project")
+        data: dict[str, object] = {"status": "filled"}
+        result = svc.update("orders", "o1", data)
+        assert result == data
 
-    def test_delete_raises(self) -> None:
+    def test_delete_returns_false(self) -> None:
         from unified_trading_api.services.live_service import LiveDomainService
 
-        svc = LiveDomainService()
-        with pytest.raises(NotImplementedError, match="Live mode not wired"):
-            svc.delete("orders", "o1")
+        with patch("unified_trading_api.services.live_service.get_storage_client"):
+            svc = LiveDomainService(project_id="test-project")
+        result = svc.delete("orders", "o1")
+        assert result is False
 
     def test_reset_is_noop(self) -> None:
         from unified_trading_api.services.live_service import LiveDomainService
 
-        svc = LiveDomainService()
+        with patch("unified_trading_api.services.live_service.get_storage_client"):
+            svc = LiveDomainService(project_id="test-project")
         svc.reset()  # Should not raise
 
 

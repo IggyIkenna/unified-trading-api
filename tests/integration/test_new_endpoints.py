@@ -38,7 +38,7 @@ class TestStrategyEndpoints:
     def test_get_strategy_configs(self, client: TestClient) -> None:
         r = client.get("/analytics/strategy-configs")
         assert r.status_code == 200
-        assert "configs" in r.json()
+        assert "data" in r.json()
 
     def test_get_strategy_detail_not_found(self, client: TestClient) -> None:
         r = client.get("/analytics/strategies/nonexistent-id")
@@ -68,28 +68,28 @@ class TestRiskAnalytics:
     def test_var_summary(self, client: TestClient) -> None:
         r = client.get("/risk/var-summary")
         assert r.status_code == 200
-        assert "var_summary" in r.json()
+        assert "data" in r.json()
 
     def test_stress_test(self, client: TestClient) -> None:
         r = client.get("/risk/stress-test?scenario=GFC_2008")
         assert r.status_code == 200
-        assert "stress_test" in r.json()
+        assert "data" in r.json()
 
     def test_correlation_matrix(self, client: TestClient) -> None:
         r = client.get("/risk/correlation-matrix")
         assert r.status_code == 200
-        assert "correlation_matrix" in r.json()
+        assert "data" in r.json()
 
     def test_regime(self, client: TestClient) -> None:
         r = client.get("/risk/regime")
         assert r.status_code == 200
-        body = r.json()
+        body = r.json()["data"]
         assert "regime" in body or "multiplier" in body
 
     def test_risk_exposure(self, client: TestClient) -> None:
         r = client.get("/risk/exposure")
         assert r.status_code == 200
-        assert "exposure" in r.json()
+        assert "data" in r.json()
 
 
 class TestComplianceEndpoints:
@@ -105,7 +105,7 @@ class TestComplianceEndpoints:
             },
         )
         assert r.status_code == 200
-        body = r.json()
+        body = r.json()["data"]
         assert "approved" in body
         assert "checks" in body
         assert len(body["checks"]) >= 5
@@ -115,17 +115,17 @@ class TestDerivativesEndpoints:
     def test_options_chain(self, client: TestClient) -> None:
         r = client.get("/derivatives/options-chain?underlying=BTC&venue=deribit")
         assert r.status_code == 200
-        assert "chain" in r.json()
+        assert "data" in r.json()
 
     def test_vol_surface(self, client: TestClient) -> None:
         r = client.get("/derivatives/vol-surface?underlying=BTC")
         assert r.status_code == 200
-        assert "surface" in r.json()
+        assert "data" in r.json()
 
     def test_portfolio_greeks(self, client: TestClient) -> None:
         r = client.get("/derivatives/portfolio-greeks")
         assert r.status_code == 200
-        assert "greeks" in r.json()
+        assert "data" in r.json()
 
 
 class TestLiveBatchMode:
@@ -154,7 +154,7 @@ class TestMarketDataEnhancements:
     def test_fx_rates(self, client: TestClient) -> None:
         r = client.get("/market-data/fx-rates")
         assert r.status_code == 200
-        assert "rates" in r.json()
+        assert "data" in r.json()
 
     def test_orderbook(self, client: TestClient) -> None:
         r = client.get("/market-data/orderbook?venue=binance&instrument=BTC-USDT")
@@ -172,7 +172,7 @@ class TestReportingEnhancements:
             json={"type": "pnl", "format": "pdf"},
         )
         assert r.status_code == 200
-        assert r.json()["status"] == "ready"
+        assert r.json()["data"]["status"] == "ready"
 
     def test_schedules_crud(self, client: TestClient) -> None:
         # Create
@@ -184,7 +184,7 @@ class TestReportingEnhancements:
         # List
         r2 = client.get("/reporting/schedules")
         assert r2.status_code == 200
-        assert "schedules" in r2.json()
+        assert "data" in r2.json()
 
     def test_pnl_attribution(self, client: TestClient) -> None:
         r = client.get("/reporting/pnl-attribution")

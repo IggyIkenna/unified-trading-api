@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import date
 
 from fastapi import APIRouter, Depends, Query, Request
+from unified_api_contracts.strategy import STRATEGY_REGISTRY
 
 from unified_trading_api.middleware.auth import verify_api_key
 from unified_trading_api.models.standard import paginated_response, single_response
@@ -363,12 +364,27 @@ async def get_strategy_catalog(
     request: Request,
     domain: str = Query(None, description="Filter by domain: defi, cefi, tradfi, sports"),
 ) -> dict[str, object]:
-    """Return the full strategy catalog with families, IDs, and parameter schemas.
+    """Return the full strategy catalog from UAC StrategyRegistry (SSOT).
 
     This powers the UI strategy family browser — traders can see every available
     strategy type, its domain, family, and configurable parameters at a glance.
+    Data sourced from the UAC StrategyRegistry singleton.
     """
+    registry_data = STRATEGY_REGISTRY.to_dict()
+    raw_strategies: list[dict[str, object]] = registry_data.get("strategies", [])  # type: ignore[assignment]
     catalog: list[dict[str, object]] = [
+        {
+            "id": s["strategy_id"],
+            "domain": str(s["category"]).lower(),
+            "family": str(s["family"]).lower().replace("_", "-"),
+            "label": s["name"],
+            "params": [],
+        }
+        for s in raw_strategies
+    ]
+    # Also include supplementary entries for strategies not yet in the UAC registry
+    _registry_ids = {s["id"] for s in catalog}
+    _supplementary: list[dict[str, object]] = [
         {
             "id": "AAVE_LENDING",
             "domain": "defi",
@@ -825,6 +841,9 @@ async def get_strategy_catalog(
             "params": ["spread_pct", "max_exposure"],
         },
     ]
+    for legacy in _supplementary:
+        if legacy["id"] not in _registry_ids:
+            catalog.append(legacy)
 
     if domain:
         catalog = [s for s in catalog if s["domain"] == domain.lower()]

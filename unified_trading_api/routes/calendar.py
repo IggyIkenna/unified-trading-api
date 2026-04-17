@@ -14,44 +14,12 @@ Live mode: reads from GCS parquet output of features-calendar-service (deferred)
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Query, Request
-from pydantic import BaseModel
 
 from unified_trading_api.middleware.auth import verify_api_key
 from unified_trading_api.models.standard import single_response
 from unified_trading_api.services.factory import get_service
 
 router = APIRouter(dependencies=[Depends(verify_api_key)])
-
-
-# ---------------------------------------------------------------------------
-# Response models
-# ---------------------------------------------------------------------------
-
-
-class EconomicResultItem(BaseModel):
-    """Single macro economic event with actual and previous values."""
-
-    id: str = ""
-    event_type: str  # NFP | CPI | FOMC | GDP | CLAIMS | PCE
-    release_date: str  # ISO date YYYY-MM-DD
-    release_time_utc: str  # HH:MM e.g. "13:30"
-    actual_value: float | None = None
-    previous_value: float | None = None
-    unit: str = ""
-    status: str  # "released" | "upcoming"
-
-
-class CorporateActionItem(BaseModel):
-    """Single corporate action event."""
-
-    id: str = ""
-    ticker: str
-    event_type: str  # "dividend" | "earnings" | "split"
-    event_date: str  # ISO date YYYY-MM-DD
-    amount: float | None = None  # dividend cash amount per share
-    actual_eps: float | None = None
-    estimated_eps: float | None = None
-    status: str  # "confirmed" | "upcoming"
 
 
 # ---------------------------------------------------------------------------

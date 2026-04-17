@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from fastapi.testclient import TestClient
 
-from tests.unit.conftest import InMemoryService
-
 
 class TestDefiLendingRates:
     def test_get_rates_returns_200(self, app_client: TestClient) -> None:

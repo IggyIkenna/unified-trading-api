@@ -68,12 +68,12 @@ class TestExecutionRoutes:
     def test_get_venues(self, client: TestClient) -> None:
         r = client.get("/execution/venues")
         assert r.status_code == 200
-        assert "venues" in r.json()
+        assert "data" in r.json()
 
     def test_get_algos(self, client: TestClient) -> None:
         r = client.get("/execution/algos")
         assert r.status_code == 200
-        assert "algos" in r.json()
+        assert "data" in r.json()
 
     def test_create_order(self, client: TestClient) -> None:
         r = client.post(
@@ -88,7 +88,7 @@ class TestExecutionRoutes:
             },
         )
         assert r.status_code == 200
-        assert r.json()["status"] == "created"
+        assert r.json()["data"]["status"] == "filled"
 
 
 class TestPositionRoutes:

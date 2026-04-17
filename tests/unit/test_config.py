@@ -169,25 +169,25 @@ class TestConfigRoute:
     """Test the /config endpoints return data from the service."""
 
     def test_system_config_returns_200(self, mock_client: TestClient) -> None:
-        """GET /config/system should return 200 with config key."""
+        """GET /config/system should return 200 with data key."""
         response = mock_client.get("/config/system")
         assert response.status_code == 200
         data = response.json()
-        assert "config" in data
+        assert "data" in data
 
     def test_venue_config_returns_200(self, mock_client: TestClient) -> None:
-        """GET /config/venues should return 200 with venues key."""
+        """GET /config/venues should return 200 with data key."""
         response = mock_client.get("/config/venues")
         assert response.status_code == 200
         data = response.json()
-        assert "venues" in data
+        assert "data" in data
 
     def test_feature_flags_returns_200(self, mock_client: TestClient) -> None:
-        """GET /config/feature-flags should return 200 with feature_flags key."""
+        """GET /config/feature-flags should return 200 with data key."""
         response = mock_client.get("/config/feature-flags")
         assert response.status_code == 200
         data = response.json()
-        assert "feature_flags" in data
+        assert "data" in data
 
 
 class TestEntitlementConfig:

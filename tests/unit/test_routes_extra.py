@@ -43,7 +43,7 @@ class TestReportingRoutes:
     def test_generate_report(self, app_client: TestClient) -> None:
         resp = app_client.post("/reporting/generate", json={"report_type": "pnl"})
         assert resp.status_code == 200
-        assert resp.json()["status"] == "ready"
+        assert resp.json()["data"]["status"] == "ready"
 
     def test_download_report_not_found(self, app_client: TestClient) -> None:
         resp = app_client.get("/reporting/download/nonexistent")
@@ -60,7 +60,7 @@ class TestReportingRoutes:
     def test_create_schedule(self, app_client: TestClient) -> None:
         resp = app_client.post("/reporting/schedules", json={"frequency": "daily"})
         assert resp.status_code == 200
-        assert resp.json()["status"] == "created"
+        assert resp.json()["data"]["status"] == "created"
 
     def test_get_schedules(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("scheduled_reports", [{"id": "sched1"}])
@@ -84,7 +84,7 @@ class TestReportingRoutes:
     def test_get_executive_summary_empty(self, app_client: TestClient) -> None:
         resp = app_client.get("/reporting/executive-summary")
         assert resp.status_code == 200
-        assert resp.json()["summary"] == {}
+        assert resp.json()["data"] == {}
 
     def test_get_invoices(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("invoices", [{"id": "inv1"}])
@@ -184,7 +184,7 @@ class TestConfigRoutes:
     def test_get_system_config_empty(self, app_client: TestClient) -> None:
         resp = app_client.get("/config/system")
         assert resp.status_code == 200
-        assert resp.json()["config"] == {}
+        assert resp.json()["data"] == {}
 
     def test_update_system_config_create(self, app_client: TestClient) -> None:
         resp = app_client.put("/config/system", json={"theme": "dark"})
@@ -266,7 +266,7 @@ class TestDocumentRoutes:
     def test_get_upload_url(self, app_client: TestClient) -> None:
         resp = app_client.get("/documents/upload-url?filename=report.pdf")
         assert resp.status_code == 200
-        assert "upload_url" in resp.json()
+        assert "upload_url" in resp.json()["data"]
 
     def test_get_download_url_found(
         self, app_client: TestClient, mock_service: InMemoryService
@@ -274,7 +274,7 @@ class TestDocumentRoutes:
         mock_service.seed("documents", [{"id": "doc1", "name": "report.pdf"}])
         resp = app_client.get("/documents/download-url?document_id=doc1")
         assert resp.status_code == 200
-        assert "download_url" in resp.json()
+        assert "download_url" in resp.json()["data"]
 
     def test_get_download_url_not_found(self, app_client: TestClient) -> None:
         resp = app_client.get("/documents/download-url?document_id=nonexistent")
@@ -292,7 +292,7 @@ class TestDocumentRoutes:
         mock_service.seed("documents", [{"id": "doc1"}])
         resp = app_client.delete("/documents/doc1")
         assert resp.status_code == 200
-        assert resp.json()["status"] == "deleted"
+        assert resp.json()["data"]["status"] == "deleted"
 
     def test_delete_document_not_found(self, app_client: TestClient) -> None:
         resp = app_client.delete("/documents/nonexistent")
@@ -326,7 +326,7 @@ class TestDerivativesRoutes:
     def test_get_portfolio_greeks_empty(self, app_client: TestClient) -> None:
         resp = app_client.get("/derivatives/portfolio-greeks")
         assert resp.status_code == 200
-        greeks = resp.json()["greeks"]
+        greeks = resp.json()["data"]
         assert greeks["delta"] == 0.0
 
 
@@ -355,7 +355,7 @@ class TestComplianceRoutes:
             },
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = resp.json()["data"]
         assert "approved" in data
         assert "checks" in data
         assert len(data["checks"]) == 6

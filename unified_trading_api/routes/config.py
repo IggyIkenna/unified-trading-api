@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 from fastapi import APIRouter, Depends, Query, Request
 
 from unified_trading_api.middleware.auth import verify_api_key
@@ -159,8 +161,6 @@ async def reload_config(
     In mock mode: clears cached config and returns success.
     In real mode: would trigger config reloader on each service via Pub/Sub.
     """
-    from datetime import UTC, datetime
-
     service = get_service(request)
     # In mock mode we just acknowledge the reload
     collections = ["system_config", "config_venues", "feature_flags", "mandates", "fee_schedules"]

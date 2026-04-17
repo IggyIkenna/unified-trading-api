@@ -7,6 +7,7 @@ In real mode: proxies to client-reporting-api (port 8014).
 from __future__ import annotations
 
 import logging
+import os
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -25,7 +26,7 @@ health_router = APIRouter()
 
 logger = logging.getLogger(__name__)
 
-_CLIENT_REPORTING_URL = "http://localhost:8014"
+_CLIENT_REPORTING_URL = os.environ.get("LIVE_SERVICE_REPORTING_URL", "http://localhost:8014")
 
 
 @health_router.get("/health")

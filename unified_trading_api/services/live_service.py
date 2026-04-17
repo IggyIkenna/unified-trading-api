@@ -17,8 +17,7 @@ import logging
 from datetime import UTC, datetime
 
 import pandas as pd
-from unified_trading_library.cloud_interface import get_storage_client
-from unified_trading_library.config_interface import build_bucket
+from unified_trading_library import build_bucket, get_storage_client
 
 logger = logging.getLogger(__name__)
 
