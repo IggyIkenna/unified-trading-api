@@ -13,7 +13,10 @@ from fastapi import Depends, HTTPException, Request, Security
 from fastapi.security import APIKeyHeader
 from unified_trading_library import UnifiedCloudConfig, log_event
 
-from unified_trading_api.services.app_state import get_disable_auth, get_mock_mode
+from unified_trading_api.services.app_state import (  # noqa: qg-deep-import — self-package
+    get_disable_auth,
+    get_mock_mode,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -83,7 +86,9 @@ async def get_current_user(
     In mock mode with DISABLE_AUTH: extracts persona from header.
     In real mode: would validate JWT from auth-api.
     """
-    from unified_trading_api.mock_data.personas import PERSONAS
+    from unified_trading_api.mock_data.personas import (  # noqa: qg-deep-import — self-package
+        PERSONAS,  # noqa: qg-deep-import,qg-inside-import — self-package + deferred (mock-only)
+    )
 
     disable_auth = get_disable_auth(request)
 

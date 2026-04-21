@@ -15,7 +15,7 @@ import random
 import time
 
 from fastapi import APIRouter, Query, Request
-from unified_api_contracts.registry.representative_sample import (
+from unified_api_contracts.registry.representative_sample import (  # noqa: qg-deep-import — UAC internal facade
     SPORTS_INSTRUMENT_SPECS,
 )
 

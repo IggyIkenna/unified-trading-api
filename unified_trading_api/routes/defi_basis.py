@@ -4,9 +4,13 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Request
 
-from unified_trading_api.middleware.auth import verify_api_key
-from unified_trading_api.models.standard import single_response
-from unified_trading_api.services.factory import get_service
+from unified_trading_api.middleware.auth import (  # noqa: qg-deep-import — self-package
+    verify_api_key,  # noqa: qg-deep-import — self-package
+)
+from unified_trading_api.models.standard import (  # noqa: qg-deep-import — self-package
+    single_response,  # noqa: qg-deep-import — self-package
+)
+from unified_trading_api.services.factory import get_service  # noqa: qg-deep-import — self-package
 
 router = APIRouter(dependencies=[Depends(verify_api_key)])
 

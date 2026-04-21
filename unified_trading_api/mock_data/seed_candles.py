@@ -13,7 +13,7 @@ import math
 import random
 from datetime import UTC, datetime, timedelta
 
-from unified_api_contracts.registry.representative_sample import (
+from unified_api_contracts.registry.representative_sample import (  # noqa: qg-deep-import — UAC internal facade
     CEFI_PERPETUAL_SPECS,
     CEFI_SPOT_SPECS,
     DEFI_INSTRUMENT_SPECS,

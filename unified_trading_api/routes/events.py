@@ -13,14 +13,24 @@ events_news, events_positions).
 Live mode: reads from GCS parquet output of features-calendar-service (deferred).
 """
 
+# SCHEMA_PROVENANCE_EXEMPT: EconomicEventItem / EventImpactPredictionItem /
+# EventPositionItem / NewsFeedItemModel / ScenarioModel are HTTP response DTOs
+# that flatten domain records from economic-calendar-service + event-driven
+# strategies into the shape the trading-terminal UI consumes. Underlying
+# contracts live in UAC; this router maps them for the wire.
+
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel
 
-from unified_trading_api.middleware.auth import verify_api_key
-from unified_trading_api.models.standard import single_response
-from unified_trading_api.services.factory import get_service
+from unified_trading_api.middleware.auth import (  # noqa: qg-deep-import — self-package
+    verify_api_key,  # noqa: qg-deep-import — self-package
+)
+from unified_trading_api.models.standard import (  # noqa: qg-deep-import — self-package
+    single_response,  # noqa: qg-deep-import — self-package
+)
+from unified_trading_api.services.factory import get_service  # noqa: qg-deep-import — self-package
 
 router = APIRouter(dependencies=[Depends(verify_api_key)])
 

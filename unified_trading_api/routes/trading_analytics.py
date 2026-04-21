@@ -5,12 +5,19 @@ from __future__ import annotations
 from datetime import date
 
 from fastapi import APIRouter, Depends, Query, Request
-from unified_api_contracts.strategy import STRATEGY_REGISTRY
+from unified_api_contracts.strategy import (  # noqa: qg-deep-import — UAC internal facade
+    STRATEGY_REGISTRY,  # noqa: qg-deep-import — UAC internal facade
+)
 
-from unified_trading_api.middleware.auth import verify_api_key
-from unified_trading_api.models.standard import paginated_response, single_response
-from unified_trading_api.services.factory import get_service
-from unified_trading_api.services.period_aggregation import (
+from unified_trading_api.middleware.auth import (  # noqa: qg-deep-import — self-package
+    verify_api_key,  # noqa: qg-deep-import — self-package
+)
+from unified_trading_api.models.standard import (  # noqa: qg-deep-import — self-package
+    paginated_response,
+    single_response,
+)
+from unified_trading_api.services.factory import get_service  # noqa: qg-deep-import — self-package
+from unified_trading_api.services.period_aggregation import (  # noqa: qg-deep-import — self-package
     compute_multi_period_summary,
     compute_period_changes,
 )

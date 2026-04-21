@@ -1,5 +1,9 @@
 """DeFi Lending domain -- protocol APY comparison, arb positions, rate impact simulation."""
 
+# SCHEMA_PROVENANCE_EXEMPT: SimulateRateImpactRequest is the HTTP request body
+# for this router's simulation endpoint; protocol / rate / APY shapes live in
+# UAC defi schemas.
+
 from __future__ import annotations
 
 import logging
@@ -7,8 +11,13 @@ import logging
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
 
-from unified_trading_api.middleware.auth import verify_api_key
-from unified_trading_api.models.standard import paginated_response, single_response
+from unified_trading_api.middleware.auth import (  # noqa: qg-deep-import — self-package
+    verify_api_key,  # noqa: qg-deep-import — self-package
+)
+from unified_trading_api.models.standard import (  # noqa: qg-deep-import — self-package
+    paginated_response,
+    single_response,
+)
 
 logger = logging.getLogger(__name__)
 

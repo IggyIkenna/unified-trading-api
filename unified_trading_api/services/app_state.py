@@ -13,7 +13,7 @@ from typing import cast
 from fastapi import Request
 from starlette.websockets import WebSocket
 
-from unified_trading_api.services.base import DomainService
+from unified_trading_api.services.base import DomainService  # noqa: qg-deep-import — self-package
 
 
 def get_mock_mode(request: Request) -> bool:

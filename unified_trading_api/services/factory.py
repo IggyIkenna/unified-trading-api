@@ -8,9 +8,11 @@ from __future__ import annotations
 
 from fastapi import Request
 
-from unified_trading_api.mock_data.personas import PERSONAS
-from unified_trading_api.services.app_state import get_service_from_state
-from unified_trading_api.services.base import DomainService
+from unified_trading_api.mock_data.personas import PERSONAS  # noqa: qg-deep-import — self-package
+from unified_trading_api.services.app_state import (  # noqa: qg-deep-import — self-package
+    get_service_from_state,
+)
+from unified_trading_api.services.base import DomainService  # noqa: qg-deep-import — self-package
 
 
 def get_service(request: Request) -> DomainService:

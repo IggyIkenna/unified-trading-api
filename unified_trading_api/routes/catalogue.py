@@ -9,11 +9,15 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from unified_trading_api.middleware.auth import verify_api_key
-from unified_trading_api.models.permission_catalogue import (
+from unified_trading_api.middleware.auth import (  # noqa: qg-deep-import — self-package
+    verify_api_key,  # noqa: qg-deep-import — self-package
+)
+from unified_trading_api.models.permission_catalogue import (  # noqa: qg-deep-import — self-package
     PermissionDomain,
 )
-from unified_trading_api.models.permission_catalogue_data import PERMISSION_CATALOGUE
+from unified_trading_api.models.permission_catalogue_data import (  # noqa: qg-deep-import — self-package
+    PERMISSION_CATALOGUE,  # noqa: qg-deep-import — self-package
+)
 
 logger = logging.getLogger(__name__)
 

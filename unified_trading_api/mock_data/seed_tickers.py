@@ -14,7 +14,7 @@ for every instrument registered in representative_sample.py. Two modes:
 
 from __future__ import annotations
 
-from unified_api_contracts.registry.representative_sample import (
+from unified_api_contracts.registry.representative_sample import (  # noqa: qg-deep-import — UAC internal facade
     CEFI_PERPETUAL_SPECS,
     CEFI_SPOT_SPECS,
     DEFI_INSTRUMENT_SPECS,

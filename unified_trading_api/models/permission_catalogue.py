@@ -5,6 +5,11 @@ The RBAC SSOT (roles, entitlements, tiers) lives in UAC rbac.py.
 This module defines the *catalogue browser* response shapes only.
 """
 
+# SCHEMA_PROVENANCE_EXEMPT: CataloguePermission / CatalogueTree / DomainNode /
+# PermissionCategory are the catalogue-browser HTTP response shape. The RBAC
+# SSOT (Role / Entitlement / Tier) lives in UAC; this module just wraps it for
+# the admin UI's tree view and is not imported by other services.
+
 from __future__ import annotations
 
 from enum import StrEnum

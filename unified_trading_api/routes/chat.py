@@ -8,6 +8,10 @@ Uses Anthropic Claude API with SSE streaming. Falls back to echo responses
 in mock mode when no API key is configured.
 """
 
+# SCHEMA_PROVENANCE_EXEMPT: ChatMessage / ChatRequest are the HTTP request body
+# for this gateway's chat endpoint. Not a cross-service domain contract — just
+# the shape the UI sends to the chatbot.
+
 from __future__ import annotations
 
 import json
@@ -21,11 +25,13 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from unified_trading_library import UnifiedCloudConfig
 
-from unified_trading_api.middleware.entitlement import (
+from unified_trading_api.middleware.entitlement import (  # noqa: qg-deep-import — self-package
     OrgType,
     get_entitlement_context,
 )
-from unified_trading_api.services.app_state import get_disable_auth
+from unified_trading_api.services.app_state import (  # noqa: qg-deep-import — self-package
+    get_disable_auth,  # noqa: qg-deep-import — self-package
+)
 
 logger = logging.getLogger(__name__)
 

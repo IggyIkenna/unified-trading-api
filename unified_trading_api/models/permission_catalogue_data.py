@@ -6,9 +6,9 @@ Venue names and entitlements are sourced from UAC where available.
 
 from __future__ import annotations
 
-from unified_api_contracts.internal.schemas.rbac import Entitlement
+from unified_api_contracts.internal import Entitlement  # noqa: qg-deep-import — UAC internal facade
 
-from unified_trading_api.models.permission_catalogue import (
+from unified_trading_api.models.permission_catalogue import (  # noqa: qg-deep-import — self-package
     CataloguePermission,
     CatalogueTree,
     DomainNode,

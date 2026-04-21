@@ -3,13 +3,20 @@
 from __future__ import annotations
 
 import logging
-import os
 
 from fastapi import APIRouter, Depends, Query, Request
+from unified_trading_library import UnifiedCloudConfig
 
-from unified_trading_api.middleware.auth import verify_api_key
-from unified_trading_api.models.standard import paginated_response, single_response
-from unified_trading_api.services.factory import get_service
+from unified_trading_api.middleware.auth import (  # noqa: qg-deep-import — self-package
+    verify_api_key,  # noqa: qg-deep-import — self-package
+)
+from unified_trading_api.models.standard import (  # noqa: qg-deep-import — self-package
+    paginated_response,
+    single_response,
+)
+from unified_trading_api.services.factory import get_service  # noqa: qg-deep-import — self-package
+
+_cloud_cfg = UnifiedCloudConfig()
 
 logger = logging.getLogger(__name__)
 
@@ -644,7 +651,11 @@ async def place_sports_bet(
     if not mock_mode_val:
         import httpx
 
-        exec_url: str = getattr(request.app.state, "execution_service_url", os.environ.get("LIVE_SERVICE_EXECUTION_URL", "http://localhost:8018"))  # pyright: ignore[reportAny]
+        exec_url: str = getattr(
+            request.app.state,
+            "execution_service_url",
+            _cloud_cfg.live_service_execution_url,
+        )  # pyright: ignore[reportAny]
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 resp = await client.post(

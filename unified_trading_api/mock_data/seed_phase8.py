@@ -616,7 +616,7 @@ def _gen_regime() -> list[dict[str, object]]:
 
 def generate_phase8_data() -> dict[str, list[dict[str, object]]]:
     """Return all Phase 8 seed collections keyed by domain name."""
-    from unified_trading_api.mock_data.seed_phase8_extras import (
+    from unified_trading_api.mock_data.seed_phase8_extras import (  # noqa: qg-deep-import — self-package
         gen_market_regime,
         gen_news,
         gen_portfolio_greeks,

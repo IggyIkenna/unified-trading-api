@@ -98,7 +98,9 @@ def _check_org_integrity(
     list_fn: _ListFn,
 ) -> list[str]:
     """Return errors for records with invalid org_id values."""
-    from unified_trading_api.mock_data.personas import ORG_IDS
+    from unified_trading_api.mock_data.personas import (  # noqa: qg-deep-import — self-package
+        ORG_IDS,  # noqa: qg-deep-import — self-package
+    )
 
     errors: list[str] = []
     valid_orgs = set(ORG_IDS)
@@ -234,7 +236,9 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
     #  STRATEGIES (50+) — registry-driven via seed_strategies.py
     # ══════════════════════════════════════════════════════════════════
 
-    from unified_trading_api.mock_data.seed_strategies import generate_strategies
+    from unified_trading_api.mock_data.seed_strategies import (  # noqa: qg-deep-import — self-package
+        generate_strategies,  # noqa: qg-deep-import — self-package
+    )
 
     _strategies = generate_strategies()
     _seed("strategies", _strategies)
@@ -4153,7 +4157,9 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
     #  ~32K records from all UAC representative_sample instruments
     # ══════════════════════════════════════════════════════════════════
 
-    from unified_trading_api.mock_data.seed_candles import generate_candles
+    from unified_trading_api.mock_data.seed_candles import (  # noqa: qg-deep-import — self-package
+        generate_candles,  # noqa: qg-deep-import — self-package
+    )
 
     _candle_data = generate_candles()
     for _interval_key, _candle_records in _candle_data.items():
@@ -4197,7 +4203,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
     #  All instruments from UAC representative_sample
     # ══════════════════════════════════════════════════════════════════
 
-    from unified_trading_api.mock_data.seed_tickers import (
+    from unified_trading_api.mock_data.seed_tickers import (  # noqa: qg-deep-import — self-package
         generate_tickers_batch,
         generate_tickers_live,
     )
@@ -4940,7 +4946,9 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
     #  PNL TIME-SERIES — 180 daily points per strategy (50+ strategies)
     # ══════════════════════════════════════════════════════════════════
 
-    from unified_trading_api.mock_data.seed_timeseries import generate_pnl_timeseries
+    from unified_trading_api.mock_data.seed_timeseries import (  # noqa: qg-deep-import — self-package
+        generate_pnl_timeseries,  # noqa: qg-deep-import — self-package
+    )
 
     _pnl_ts = generate_pnl_timeseries(_strategies)
     _seed("pnl_timeseries", _pnl_ts)
@@ -5124,7 +5132,9 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
     #  (additional data from seed_phase8.py if available)
     # ══════════════════════════════════════════════════════════════════
 
-    from unified_trading_api.mock_data.seed_phase8 import generate_phase8_data
+    from unified_trading_api.mock_data.seed_phase8 import (  # noqa: qg-deep-import — self-package
+        generate_phase8_data,  # noqa: qg-deep-import — self-package
+    )
 
     _p8 = generate_phase8_data()
     for _p8_domain, _p8_records in _p8.items():
@@ -5132,12 +5142,16 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
         _seed(_p8_domain, _p8_records)
 
     # Calendar domain (economic results + corporate actions)
-    from unified_trading_api.mock_data.seed_calendar import seed_calendar
+    from unified_trading_api.mock_data.seed_calendar import (  # noqa: qg-deep-import — self-package
+        seed_calendar,  # noqa: qg-deep-import — self-package
+    )
 
     seed_calendar(_store)
 
     # Events domain (calendar, predictions, news, positions)
-    from unified_trading_api.mock_data.seed_events import seed_events
+    from unified_trading_api.mock_data.seed_events import (  # noqa: qg-deep-import — self-package
+        seed_events,  # noqa: qg-deep-import — self-package
+    )
 
     seed_events(_store)
 

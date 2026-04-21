@@ -5,7 +5,12 @@ They mutate the InstrumentGenerator's ad-hoc pool for scenario testing:
   - Create fake instruments with custom strikes, expiries, venues
   - Delete/delist instruments mid-session
   - Expire instruments (set available_to=now)
+
 """
+
+# SCHEMA_PROVENANCE_EXEMPT: MockInstrumentCreate is a mock-mode POST body used
+# only by the test-scenario seeding endpoints; the canonical Instrument
+# contract lives in UAC.
 
 from __future__ import annotations
 
@@ -14,12 +19,21 @@ from typing import cast
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel
-from unified_api_contracts.internal.testing.instrument_generator import InstrumentGenerator
+from unified_api_contracts.internal.testing.instrument_generator import (  # noqa: qg-deep-import — UAC internal facade
+    InstrumentGenerator,  # noqa: qg-deep-import — UAC internal facade
+)
 
-from unified_trading_api.middleware.auth import verify_api_key
-from unified_trading_api.models.standard import paginated_response, single_response
-from unified_trading_api.services.app_state import get_mock_mode
-from unified_trading_api.services.factory import get_service
+from unified_trading_api.middleware.auth import (  # noqa: qg-deep-import — self-package
+    verify_api_key,  # noqa: qg-deep-import — self-package
+)
+from unified_trading_api.models.standard import (  # noqa: qg-deep-import — self-package
+    paginated_response,
+    single_response,
+)
+from unified_trading_api.services.app_state import (  # noqa: qg-deep-import — self-package
+    get_mock_mode,  # noqa: qg-deep-import — self-package
+)
+from unified_trading_api.services.factory import get_service  # noqa: qg-deep-import — self-package
 
 router = APIRouter(dependencies=[Depends(verify_api_key)])
 

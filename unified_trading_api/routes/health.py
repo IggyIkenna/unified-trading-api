@@ -12,7 +12,11 @@ from fastapi import APIRouter, Request
 from unified_trading_library import UnifiedCloudConfig
 
 from unified_trading_api import __version__ as _api_version
-from unified_trading_api.services.app_state import get_disable_auth, get_mock_mode, get_start_time
+from unified_trading_api.services.app_state import (  # noqa: qg-deep-import — self-package
+    get_disable_auth,
+    get_mock_mode,
+    get_start_time,
+)
 
 logger = logging.getLogger(__name__)
 

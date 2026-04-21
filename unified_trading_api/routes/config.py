@@ -6,9 +6,14 @@ from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, Query, Request
 
-from unified_trading_api.middleware.auth import verify_api_key
-from unified_trading_api.models.standard import paginated_response, single_response
-from unified_trading_api.services.factory import get_service
+from unified_trading_api.middleware.auth import (  # noqa: qg-deep-import — self-package
+    verify_api_key,  # noqa: qg-deep-import — self-package
+)
+from unified_trading_api.models.standard import (  # noqa: qg-deep-import — self-package
+    paginated_response,
+    single_response,
+)
+from unified_trading_api.services.factory import get_service  # noqa: qg-deep-import — self-package
 
 router = APIRouter(dependencies=[Depends(verify_api_key)])
 

@@ -7,8 +7,10 @@ import logging
 from fastapi import APIRouter, Request
 from unified_trading_library import MockStateStore
 
-from unified_trading_api.mock_data.seed import seed_all_domains
-from unified_trading_api.services.app_state import (
+from unified_trading_api.mock_data.seed import (  # noqa: qg-deep-import — self-package
+    seed_all_domains,  # noqa: qg-deep-import — self-package
+)
+from unified_trading_api.services.app_state import (  # noqa: qg-deep-import — self-package
     get_mock_mode,
     get_mock_store_raw,
     get_service_from_state,

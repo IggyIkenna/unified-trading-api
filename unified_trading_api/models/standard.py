@@ -1,5 +1,9 @@
 """Standard response models for error handling and pagination."""
 
+# SCHEMA_PROVENANCE_EXEMPT: ErrorDetail / PaginationMeta / StandardErrorResponse are
+# API response envelopes owned by this gateway. They describe the HTTP response shape,
+# not a cross-service domain contract — promoting them to UAC would just add a hop.
+
 from __future__ import annotations
 
 import uuid

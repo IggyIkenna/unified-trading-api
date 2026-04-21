@@ -16,8 +16,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from unified_trading_library import MockStateStore, UnifiedCloudConfig
 
-from unified_trading_api.mock_data.seed import SEED_VERSION, seed_all_domains
-from unified_trading_api.routes import (
+from unified_trading_api.mock_data.seed import (  # noqa: qg-deep-import — self-package
+    SEED_VERSION,
+    seed_all_domains,
+)
+from unified_trading_api.routes import (  # noqa: qg-deep-import — self-package
     admin,
     alerts,
     audit,
@@ -41,6 +44,7 @@ from unified_trading_api.routes import (
     market_data,
     ml,
     positions,
+    registry,
     reporting,
     risk,
     service_status,
@@ -49,7 +53,9 @@ from unified_trading_api.routes import (
     users,
     websocket,
 )
-from unified_trading_api.services.mock_service import MockDomainService
+from unified_trading_api.services.mock_service import (  # noqa: qg-deep-import — self-package
+    MockDomainService,  # noqa: qg-deep-import — self-package
+)
 
 logger = logging.getLogger(__name__)
 
@@ -106,7 +112,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         app.state.mock_store = store
     else:
         logger.info("Starting in REAL mode -- wiring GcsDomainService (GCS reader)")
-        from unified_trading_api.services.live_service import GcsDomainService
+        from unified_trading_api.services.live_service import (  # noqa: qg-deep-import — self-package
+            GcsDomainService,  # noqa: qg-deep-import — self-package
+        )
 
         app.state.service = GcsDomainService(
             project_id=cloud_config.gcp_project_id,
@@ -140,7 +148,9 @@ def create_app() -> FastAPI:
 
     mock_latency_ms = int(os.environ.get("MOCK_LATENCY_MS", "0"))  # config-bootstrap:
     if mock_latency_ms > 0:
-        from unified_trading_api.middleware.latency import LatencyMiddleware
+        from unified_trading_api.middleware.latency import (  # noqa: qg-deep-import — self-package
+            LatencyMiddleware,  # noqa: qg-deep-import — self-package
+        )
 
         app.add_middleware(LatencyMiddleware, base_ms=mock_latency_ms)
 
@@ -170,6 +180,7 @@ def create_app() -> FastAPI:
     )
     app.include_router(users.router, prefix="/users", tags=["users"])
     app.include_router(compliance.router, prefix="/compliance", tags=["compliance"])
+    app.include_router(registry.router, prefix="/api/v1/registry", tags=["registry"])
     app.include_router(defi_basis.router, prefix="/defi/basis", tags=["defi-basis"])
     app.include_router(defi_lending.router, prefix="/defi/lending", tags=["defi-lending"])
     app.include_router(

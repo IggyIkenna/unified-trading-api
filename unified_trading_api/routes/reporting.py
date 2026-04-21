@@ -15,9 +15,14 @@ import httpx
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import FileResponse, JSONResponse
 
-from unified_trading_api.middleware.auth import verify_api_key
-from unified_trading_api.models.standard import paginated_response, single_response
-from unified_trading_api.services.factory import get_service
+from unified_trading_api.middleware.auth import (  # noqa: qg-deep-import — self-package
+    verify_api_key,  # noqa: qg-deep-import — self-package
+)
+from unified_trading_api.models.standard import (  # noqa: qg-deep-import — self-package
+    paginated_response,
+    single_response,
+)
+from unified_trading_api.services.factory import get_service  # noqa: qg-deep-import — self-package
 
 router = APIRouter(dependencies=[Depends(verify_api_key)])
 
@@ -26,7 +31,12 @@ health_router = APIRouter()
 
 logger = logging.getLogger(__name__)
 
-_CLIENT_REPORTING_URL = os.environ.get("LIVE_SERVICE_REPORTING_URL", "http://localhost:8014")
+# client-reporting-api base URL (no trailing slash).
+# Not yet on UnifiedCloudConfig — use env + local default.
+_CLIENT_REPORTING_URL = os.environ.get(  # config-bootstrap:
+    "LIVE_SERVICE_REPORTING_URL",
+    "http://127.0.0.1:8014",
+).rstrip("/")
 
 
 @health_router.get("/health")
@@ -89,7 +99,7 @@ async def _proxy_or_mock(
             resp = await client.get(f"/api{path}", params=cleaned)
             result: dict[str, object] = resp.json()  # pyright: ignore[reportAny]
             return result
-    except Exception:
+    except (httpx.HTTPError, ValueError, OSError):
         logger.exception("Failed to proxy to client-reporting-api")
         return None
 

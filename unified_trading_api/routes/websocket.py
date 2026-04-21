@@ -16,7 +16,7 @@ from collections import defaultdict
 from typing import cast
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from unified_api_contracts.registry.representative_sample import (
+from unified_api_contracts.registry.representative_sample import (  # noqa: qg-deep-import — UAC internal facade
     CEFI_PERPETUAL_SPECS,
     CEFI_SPOT_SPECS,
     DEFI_INSTRUMENT_SPECS,
@@ -26,8 +26,12 @@ from unified_api_contracts.registry.representative_sample import (
 )
 from unified_trading_library import MockStateStore
 
-from unified_trading_api.mock_data.seed_tickers import BASE_PRICES
-from unified_trading_api.services.app_state import get_mock_mode_ws
+from unified_trading_api.mock_data.seed_tickers import (  # noqa: qg-deep-import — self-package
+    BASE_PRICES,  # noqa: qg-deep-import — self-package
+)
+from unified_trading_api.services.app_state import (  # noqa: qg-deep-import — self-package
+    get_mock_mode_ws,  # noqa: qg-deep-import — self-package
+)
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -151,7 +155,7 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
 
     except WebSocketDisconnect:
         logger.info("WebSocket client disconnected")
-    except Exception:
+    except (RuntimeError, OSError, ValueError, TypeError):
         logger.exception("WebSocket error")
     finally:
         if mock_task is not None:

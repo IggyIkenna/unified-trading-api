@@ -11,7 +11,7 @@ import logging
 from typing import cast
 
 from fastapi import Request
-from unified_api_contracts.internal.schemas.rbac import OrgType
+from unified_api_contracts.internal import OrgType  # noqa: qg-deep-import — UAC internal facade
 
 logger = logging.getLogger(__name__)
 
