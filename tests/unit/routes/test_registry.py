@@ -145,3 +145,47 @@ class TestPatchLifecycleTransitions:
         record = resp.json()["data"]
         assert record["maturity_phase"] == "paper_14d"
         assert record["product_routing"] == "both"
+
+
+class TestGetLifecycle:
+    def test_get_single_returns_record(
+        self, app_client: TestClient, mock_service: InMemoryService
+    ) -> None:
+        _seed_instance(mock_service, maturity_phase="paper_14d")
+        resp = app_client.get(
+            "/api/v1/registry/strategy-instances/elysium-base-btc/lifecycle",
+        )
+        assert resp.status_code == 200
+        record = resp.json()["data"]
+        assert record["instance_id"] == "elysium-base-btc"
+        assert record["maturity_phase"] == "paper_14d"
+
+    def test_get_single_404_when_absent(self, app_client: TestClient) -> None:
+        resp = app_client.get(
+            "/api/v1/registry/strategy-instances/unknown/lifecycle",
+        )
+        assert resp.status_code == 404
+
+    def test_list_returns_all_records(
+        self, app_client: TestClient, mock_service: InMemoryService
+    ) -> None:
+        mock_service.seed(
+            "strategy_instance_lifecycle",
+            [
+                {"id": "a", "instance_id": "a", "maturity_phase": "paper_1d"},
+                {"id": "b", "instance_id": "b", "maturity_phase": "live_early"},
+            ],
+        )
+        resp = app_client.get("/api/v1/registry/strategy-instances/lifecycle")
+        assert resp.status_code == 200
+        records = resp.json()["data"]
+        assert isinstance(records, list)
+        ids = sorted(r["instance_id"] for r in records)
+        assert ids == ["a", "b"]
+
+    def test_list_returns_empty_on_empty_collection(
+        self, app_client: TestClient
+    ) -> None:
+        resp = app_client.get("/api/v1/registry/strategy-instances/lifecycle")
+        assert resp.status_code == 200
+        assert resp.json()["data"] == []

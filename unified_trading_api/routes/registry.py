@@ -62,6 +62,42 @@ class LifecyclePatchRequest(BaseModel):  # CORRECT-LOCAL: API registry PATCH req
     )
 
 
+@router.get("/strategy-instances/{instance_id}/lifecycle")
+async def get_strategy_instance_lifecycle(
+    request: Request,
+    instance_id: str,
+) -> dict[str, object]:
+    """Fetch the Firestore lifecycle record for a single strategy instance.
+
+    Returns 404 when no lifecycle row exists — callers should treat that as
+    "instance has no server-side lifecycle yet" and fall back to the
+    hash-synthesis placeholder on the UI side until an admin seeds it via
+    ``PATCH``.
+    """
+    service = get_service(request)
+    record = service.get(_LIFECYCLE_COLLECTION, instance_id)
+    if record is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No lifecycle record for instance_id={instance_id}",
+        )
+    return {"data": record}
+
+
+@router.get("/strategy-instances/lifecycle")
+async def list_strategy_instance_lifecycles(
+    request: Request,
+) -> dict[str, object]:
+    """List every Firestore lifecycle record. Admin-editor page loads this once.
+
+    Empty collection returns ``{"data": []}`` rather than 404 — the editor
+    can then overlay defaults for unseen instance IDs.
+    """
+    service = get_service(request)
+    records = service.list(_LIFECYCLE_COLLECTION)
+    return {"data": list(records)}
+
+
 @router.patch("/strategy-instances/{instance_id}/lifecycle")
 async def patch_strategy_instance_lifecycle(
     request: Request,
