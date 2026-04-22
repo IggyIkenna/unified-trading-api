@@ -50,6 +50,7 @@ from unified_trading_api.routes import (  # noqa: qg-deep-import — self-packag
     service_status,
     sports,
     strategy_performance,
+    strategy_subscriptions,
     trading_analytics,
     users,
     websocket,
@@ -186,6 +187,11 @@ def create_app() -> FastAPI:
         strategy_performance.router,
         prefix="/api/v1",
         tags=["strategy-performance"],
+    )
+    app.include_router(
+        strategy_subscriptions.router,
+        prefix="/api/v1",
+        tags=["strategy-subscriptions"],
     )
     app.include_router(defi_basis.router, prefix="/defi/basis", tags=["defi-basis"])
     app.include_router(defi_lending.router, prefix="/defi/lending", tags=["defi-lending"])
