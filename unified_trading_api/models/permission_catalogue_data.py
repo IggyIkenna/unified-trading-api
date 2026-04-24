@@ -184,7 +184,6 @@ _DEFI_VENUES = [
 _SPORTS_VENUES = [
     "betfair",
     "pinnacle",
-    "smarkets",
     "matchbook",
     "polymarket",
     "kalshi",

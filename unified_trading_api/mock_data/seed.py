@@ -3600,7 +3600,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
             {
                 "asset_class": "sports",
                 "count": 380,
-                "venues": ["betfair", "smarkets"],
+                "venues": ["betfair", "matchbook"],
                 "org_id": _O,
             },
             {"asset_class": "prediction", "count": 45, "venues": ["polymarket"], "org_id": _O},
