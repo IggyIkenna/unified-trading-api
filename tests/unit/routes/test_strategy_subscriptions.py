@@ -13,7 +13,6 @@ from __future__ import annotations
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-
 from unified_api_contracts.internal.domain.strategy_service.lifecycle import (  # noqa: qg-deep-import
     StrategyMaturityPhase,
 )

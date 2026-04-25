@@ -159,7 +159,7 @@ def _cefi_spot_tickers(timestamp: str) -> list[dict[str, object]]:
                 "ask": ask,
                 "volume_24h": _VOLUME_MAP["cefi_spot"],
                 "change_24h_pct": change,
-                "asset_class": "cefi_spot",
+                "asset_group": "cefi_spot",
                 "timestamp": timestamp,
             }
         )
@@ -187,7 +187,7 @@ def _cefi_perp_tickers(timestamp: str) -> list[dict[str, object]]:
                 "ask": ask,
                 "volume_24h": _VOLUME_MAP["cefi_perp"],
                 "change_24h_pct": change,
-                "asset_class": "cefi_perpetual",
+                "asset_group": "cefi_perpetual",
                 "timestamp": timestamp,
             }
         )
@@ -199,7 +199,7 @@ def _tradfi_equity_tickers(timestamp: str) -> list[dict[str, object]]:
     for spec in TRADFI_EQUITY_SPECS:
         symbol = str(spec["symbol"])
         venue = str(spec["venue"])
-        asset_class = str(spec.get("asset_class", "tradfi_equity"))
+        asset_group = str(spec.get("asset_group", "tradfi_equity"))
 
         price = BASE_PRICES.get(symbol, 100.0)
         bid, ask = _apply_spread(price, 0.00005)  # 0.005%
@@ -214,7 +214,7 @@ def _tradfi_equity_tickers(timestamp: str) -> list[dict[str, object]]:
                 "ask": ask,
                 "volume_24h": _VOLUME_MAP["tradfi_equity"],
                 "change_24h_pct": change,
-                "asset_class": asset_class,
+                "asset_group": asset_group,
                 "timestamp": timestamp,
             }
         )
@@ -240,7 +240,7 @@ def _tradfi_futures_tickers(timestamp: str) -> list[dict[str, object]]:
                 "ask": ask,
                 "volume_24h": _VOLUME_MAP["tradfi_futures"],
                 "change_24h_pct": change,
-                "asset_class": "tradfi_futures",
+                "asset_group": "tradfi_futures",
                 "timestamp": timestamp,
             }
         )
@@ -270,7 +270,7 @@ def _defi_tickers(timestamp: str) -> list[dict[str, object]]:
                 "ask": ask,
                 "volume_24h": _VOLUME_MAP["defi"],
                 "change_24h_pct": change,
-                "asset_class": "defi",
+                "asset_group": "defi",
                 "timestamp": timestamp,
             }
         )
@@ -291,7 +291,7 @@ def _sports_tickers(timestamp: str) -> list[dict[str, object]]:
     for spec in SPORTS_INSTRUMENT_SPECS:
         symbol = str(spec["symbol"])
         venue = str(spec["venue"])
-        asset_class = str(spec.get("asset_class", "sports"))
+        asset_group = str(spec.get("asset_group", "sports"))
 
         price = _probs.get(symbol, 0.50)
         # Sports spread: 2-5% (use 3% as default)
@@ -308,7 +308,7 @@ def _sports_tickers(timestamp: str) -> list[dict[str, object]]:
                 "ask": ask,
                 "volume_24h": _VOLUME_MAP["sports"],
                 "change_24h_pct": change,
-                "asset_class": asset_class,
+                "asset_group": asset_group,
                 "timestamp": timestamp,
             }
         )
@@ -352,12 +352,12 @@ def generate_tickers_batch() -> list[dict[str, object]]:
         batch_price = round(price * (1.0 + offset_pct), 8)
 
         # Recalculate bid/ask with same spread logic
-        asset_class = str(ticker["asset_class"])
-        if asset_class == "defi":
+        asset_group = str(ticker["asset_group"])
+        if asset_group == "defi":
             spread = 0.003
-        elif asset_class in ("prediction", "sports"):
+        elif asset_group in ("prediction", "sports"):
             spread = 0.03
-        elif asset_class.startswith("tradfi"):
+        elif asset_group.startswith("tradfi"):
             spread = 0.00005
         else:
             spread = 0.0001
@@ -373,7 +373,7 @@ def generate_tickers_batch() -> list[dict[str, object]]:
                 "ask": ask,
                 "volume_24h": ticker["volume_24h"],
                 "change_24h_pct": ticker["change_24h_pct"],
-                "asset_class": asset_class,
+                "asset_group": asset_group,
                 "timestamp": ts,
             }
         )

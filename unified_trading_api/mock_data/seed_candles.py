@@ -287,8 +287,8 @@ def _build_instrument_configs() -> list[tuple[str, float, float, str]]:
         symbol = spec["symbol"]
         inst_id = f"{spec['venue']}:{symbol}"
         price = _BASE_PRICES.get(str(symbol), 100.0)
-        asset_class = spec.get("asset_class", "tradfi_equity")
-        vol = _DAILY_VOL.get(str(asset_class), _DAILY_VOL["tradfi_equity"])
+        asset_group = spec.get("asset_group", "tradfi_equity")
+        vol = _DAILY_VOL.get(str(asset_group), _DAILY_VOL["tradfi_equity"])
         configs.append((inst_id, price, vol, "tradfi_equity"))
 
     # TradFi Futures

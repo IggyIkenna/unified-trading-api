@@ -38,7 +38,6 @@ from typing import cast
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, ConfigDict, Field
-
 from unified_api_contracts.internal.domain.strategy_service.lifecycle import (  # noqa: qg-deep-import — internal facade
     StrategyMaturityPhase,
     maturity_phase_rank,
@@ -113,9 +112,7 @@ class _SubscriptionStore:
                     return sub
         return None
 
-    def create(
-        self, sub: StrategyInstanceSubscription
-    ) -> StrategyInstanceSubscription:
+    def create(self, sub: StrategyInstanceSubscription) -> StrategyInstanceSubscription:
         with self._lock:
             if sub.subscription_type is SubscriptionType.DART_EXCLUSIVE:
                 existing = self._active_exclusive_locked(sub.instance_id)
@@ -128,15 +125,9 @@ class _SubscriptionStore:
             self._by_key[key] = sub
             return sub
 
-    def _active_exclusive_locked(
-        self, instance_id: str
-    ) -> StrategyInstanceSubscription | None:
+    def _active_exclusive_locked(self, instance_id: str) -> StrategyInstanceSubscription | None:
         for sub in self._by_key.values():
-            if (
-                sub.instance_id == instance_id
-                and sub.exclusive_lock
-                and sub.released_at is None
-            ):
+            if sub.instance_id == instance_id and sub.exclusive_lock and sub.released_at is None:
                 return sub
         return None
 
@@ -286,9 +277,7 @@ _SUBSCRIPTION_ENTITLEMENTS: dict[SubscriptionType, frozenset[str]] = {
 }
 
 
-def _check_subscription_entitlement(
-    request: Request, subscription_type: SubscriptionType
-) -> None:
+def _check_subscription_entitlement(request: Request, subscription_type: SubscriptionType) -> None:
     ctx = get_entitlement_context(request)
     if ctx.is_internal:
         return
@@ -412,7 +401,7 @@ def unsubscribe(
             ),
         )
     logger.info("unsubscribe instance=%s client=%s", instance_id, client_id)
-    assert released.released_at is not None  # noqa: S101 — invariant after release
+    assert released.released_at is not None
     return UnsubscribeResponse(
         instance_id=released.instance_id,
         client_id=released.client_id,

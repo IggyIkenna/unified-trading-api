@@ -35,9 +35,7 @@ class TestPerformanceEndpointBasics:
         data = _get(app_client, views="backtest,paper")
         assert set(data["series"].keys()) == {"backtest", "paper"}
 
-    def test_transition_markers_present_when_window_large(
-        self, app_client: TestClient
-    ) -> None:
+    def test_transition_markers_present_when_window_large(self, app_client: TestClient) -> None:
         data = _get(app_client, **{"from": "180d"})
         markers = data["transition_markers"]
         assert markers["paper_started_at"] is not None
@@ -51,8 +49,12 @@ class TestPerformanceEndpointBasics:
 
     def test_deterministic_between_calls(self, app_client: TestClient) -> None:
         # Pin the window so two calls don't differ purely on `now` drift.
-        a = _get(app_client, **{"from": "2025-01-01T00:00:00+00:00", "to": "2025-06-01T00:00:00+00:00"})
-        b = _get(app_client, **{"from": "2025-01-01T00:00:00+00:00", "to": "2025-06-01T00:00:00+00:00"})
+        a = _get(
+            app_client, **{"from": "2025-01-01T00:00:00+00:00", "to": "2025-06-01T00:00:00+00:00"}
+        )
+        b = _get(
+            app_client, **{"from": "2025-01-01T00:00:00+00:00", "to": "2025-06-01T00:00:00+00:00"}
+        )
         assert a["series"]["backtest"]["aggregate"] == b["series"]["backtest"]["aggregate"]
 
 
@@ -114,9 +116,7 @@ class TestPerformanceEndpointValidation:
 
 
 class TestPerformanceEndpointMissingViewFallback:
-    def test_single_view_request_returns_only_that_view(
-        self, app_client: TestClient
-    ) -> None:
+    def test_single_view_request_returns_only_that_view(self, app_client: TestClient) -> None:
         # Component "stitched" mode falls back gracefully when a view is
         # not requested — only the requested key appears in the response.
         data = _get(app_client, views="backtest")

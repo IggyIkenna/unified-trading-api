@@ -183,9 +183,7 @@ class TestGetLifecycle:
         ids = sorted(r["instance_id"] for r in records)
         assert ids == ["a", "b"]
 
-    def test_list_returns_empty_on_empty_collection(
-        self, app_client: TestClient
-    ) -> None:
+    def test_list_returns_empty_on_empty_collection(self, app_client: TestClient) -> None:
         resp = app_client.get("/api/v1/registry/strategy-instances/lifecycle")
         assert resp.status_code == 200
         assert resp.json()["data"] == []

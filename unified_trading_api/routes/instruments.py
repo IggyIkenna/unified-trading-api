@@ -42,13 +42,13 @@ router = APIRouter(dependencies=[Depends(verify_api_key)])
 async def get_instruments(
     request: Request,
     venue: str = Query(None),
-    asset_class: str = Query(None),
+    asset_group: str = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=200),
 ) -> dict[str, object]:
     """Get instruments list."""
     service = get_service(request)
-    records = service.list("instruments", filters={"venue": venue, "asset_class": asset_class})
+    records = service.list("instruments", filters={"venue": venue, "asset_group": asset_group})
     return paginated_response(records, page, page_size)
 
 
@@ -125,7 +125,7 @@ class MockInstrumentCreate(BaseModel):  # CORRECT-LOCAL: API request body
     symbol: str
     base_asset: str = ""
     quote_asset: str = "USD"
-    asset_class: str = ""
+    asset_group: str = ""
     strike: float | None = None
     option_type: str | None = None
     expiry: str | None = None
@@ -154,7 +154,7 @@ async def create_mock_instrument(
         "symbol": body.symbol,
         "base_asset": body.base_asset,
         "quote_asset": body.quote_asset,
-        "asset_class": body.asset_class,
+        "asset_group": body.asset_group,
         "timestamp": datetime.now(UTC).isoformat(),
     }
     if body.strike is not None:

@@ -143,7 +143,7 @@ class TestInstrumentRoutes:
         mock_service.seed(
             "instruments",
             [
-                {"id": "i1", "symbol": "BTC-PERP", "venue": "binance", "asset_class": "crypto"},
+                {"id": "i1", "symbol": "BTC-PERP", "venue": "binance", "asset_group": "crypto"},
             ],
         )
         resp = app_client.get("/instruments/list")
@@ -156,8 +156,8 @@ class TestInstrumentRoutes:
         mock_service.seed(
             "instruments",
             [
-                {"id": "i1", "venue": "binance", "asset_class": "crypto"},
-                {"id": "i2", "venue": "okx", "asset_class": "crypto"},
+                {"id": "i1", "venue": "binance", "asset_group": "crypto"},
+                {"id": "i2", "venue": "okx", "asset_group": "crypto"},
             ],
         )
         resp = app_client.get("/instruments/list?venue=binance")
@@ -186,7 +186,7 @@ class TestInstrumentRoutes:
                 "symbol": "TEST-PERP",
                 "base_asset": "TEST",
                 "quote_asset": "USD",
-                "asset_class": "crypto",
+                "asset_group": "crypto",
             },
         )
         assert resp.status_code == 200
@@ -260,7 +260,7 @@ class TestTradingAnalyticsRoutes:
     def test_get_analytics_instruments(
         self, app_client: TestClient, mock_service: InMemoryService
     ) -> None:
-        mock_service.seed("analytics_instruments", [{"id": "ai1", "asset_class": "crypto"}])
+        mock_service.seed("analytics_instruments", [{"id": "ai1", "asset_group": "crypto"}])
         resp = app_client.get("/analytics/instruments")
         assert resp.status_code == 200
 
@@ -288,7 +288,7 @@ class TestTradingAnalyticsRoutes:
         mock_service.seed(
             "strategies",
             [
-                {"id": "s1", "name": "Alpha", "status": "live", "asset_class": "crypto"},
+                {"id": "s1", "name": "Alpha", "status": "live", "asset_group": "crypto"},
             ],
         )
         resp = app_client.get("/analytics/strategies")

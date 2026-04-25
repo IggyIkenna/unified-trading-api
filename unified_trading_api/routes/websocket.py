@@ -56,7 +56,7 @@ def _build_instruments_from_registry() -> list[dict[str, object]]:
                 "venue": str(spec["venue"]),
                 "price": price,
                 "vol": price * 0.001,
-                "asset_class": "cefi",
+                "asset_group": "cefi",
             }
         )
     for spec in CEFI_PERPETUAL_SPECS:
@@ -68,7 +68,7 @@ def _build_instruments_from_registry() -> list[dict[str, object]]:
                 "venue": str(spec["venue"]),
                 "price": price,
                 "vol": price * 0.0012,
-                "asset_class": "cefi",
+                "asset_group": "cefi",
             }
         )
     for spec in TRADFI_EQUITY_SPECS:
@@ -80,7 +80,7 @@ def _build_instruments_from_registry() -> list[dict[str, object]]:
                 "venue": str(spec["venue"]),
                 "price": price,
                 "vol": price * 0.008,
-                "asset_class": "tradfi",
+                "asset_group": "tradfi",
             }
         )
     for spec in TRADFI_FUTURES_SPECS:
@@ -92,7 +92,7 @@ def _build_instruments_from_registry() -> list[dict[str, object]]:
                 "venue": str(spec["venue"]),
                 "price": price,
                 "vol": price * 0.003,
-                "asset_class": "tradfi",
+                "asset_group": "tradfi",
             }
         )
     for spec in DEFI_INSTRUMENT_SPECS:
@@ -104,7 +104,7 @@ def _build_instruments_from_registry() -> list[dict[str, object]]:
                 "venue": str(spec["venue"]),
                 "price": price,
                 "vol": price * 0.0001,
-                "asset_class": "defi",
+                "asset_group": "defi",
             }
         )
     for spec in SPORTS_INSTRUMENT_SPECS:
@@ -115,7 +115,7 @@ def _build_instruments_from_registry() -> list[dict[str, object]]:
                 "venue": str(spec["venue"]),
                 "price": 0.55,
                 "vol": 0.02,
-                "asset_class": "sports",
+                "asset_group": "sports",
             }
         )
     return instruments

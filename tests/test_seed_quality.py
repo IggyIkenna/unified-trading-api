@@ -156,11 +156,11 @@ class TestStrategyExpansion:
         strategies = seeded_store.list("strategies")
         assert len(strategies) >= 50
 
-    def test_all_asset_classes_covered(self, seeded_store: MockStateStore) -> None:
+    def test_all_asset_groupes_covered(self, seeded_store: MockStateStore) -> None:
         strategies = seeded_store.list("strategies")
-        asset_classes = {str(s.get("asset_class")) for s in strategies}
+        asset_groupes = {str(s.get("asset_group")) for s in strategies}
         for expected in ("cefi", "tradfi", "defi", "sports", "prediction"):
-            assert expected in asset_classes, f"Missing asset class: {expected}"
+            assert expected in asset_groupes, f"Missing asset class: {expected}"
 
     def test_org_distribution(self, seeded_store: MockStateStore) -> None:
         strategies = seeded_store.list("strategies")

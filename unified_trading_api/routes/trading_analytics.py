@@ -110,11 +110,11 @@ async def get_settlements(
 @router.get("/instruments")
 async def get_instruments(
     request: Request,
-    asset_class: str = Query(None),
+    asset_group: str = Query(None),
 ) -> dict[str, object]:
     """Get analytics instrument list."""
     service = get_service(request)
-    records = service.list("analytics_instruments", filters={"asset_class": asset_class})
+    records = service.list("analytics_instruments", filters={"asset_group": asset_group})
     return single_response(records)
 
 
@@ -244,14 +244,14 @@ async def get_period_summary(
 @router.get("/strategies")
 async def get_strategies(
     request: Request,
-    asset_class: str = Query(None),
+    asset_group: str = Query(None),
     status: str = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=200),
 ) -> dict[str, object]:
     """Get all strategy configs with filtering."""
     service = get_service(request)
-    records = service.list("strategies", filters={"asset_class": asset_class, "status": status})
+    records = service.list("strategies", filters={"asset_group": asset_group, "status": status})
     return paginated_response(records, page, page_size)
 
 

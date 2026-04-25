@@ -2945,6 +2945,7 @@ dependencies = [
     { name = "ruff" },
     { name = "tardis-client" },
     { name = "vcrpy" },
+    { name = "vulture" },
 ]
 
 [package.metadata]
@@ -2974,6 +2975,7 @@ requires-dist = [
     { name = "ruff", specifier = "==0.15.0" },
     { name = "tardis-client", specifier = ">=1.3.7,<2.0.0" },
     { name = "vcrpy", specifier = ">=8.0.0,<9.0.0" },
+    { name = "vulture", specifier = ">=2.0,<3.0.0" },
 ]
 
 [[package]]

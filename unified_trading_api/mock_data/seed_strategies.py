@@ -49,7 +49,7 @@ def _legacy_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-001",
             "name": "DEFI_ETH_BASIS_SCE_1H",
-            "asset_class": "defi",
+            "asset_group": "defi",
             "venue": "uniswap_v3",
             "status": "live",
             "version": "2.1.0",
@@ -63,7 +63,7 @@ def _legacy_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-002",
             "name": "CEFI_BTC_ML_DIR_HUF_4H",
-            "asset_class": "cefi",
+            "asset_group": "cefi",
             "venue": "binance",
             "status": "live",
             "version": "3.4.1",
@@ -77,7 +77,7 @@ def _legacy_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-003",
             "name": "CEFI_ETH_OPT_MM_EVT_TICK",
-            "asset_class": "cefi",
+            "asset_group": "cefi",
             "venue": "deribit",
             "status": "live",
             "version": "1.8.0",
@@ -91,7 +91,7 @@ def _legacy_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-004",
             "name": "CEFI_BTC_MM_HUF_15S",
-            "asset_class": "cefi",
+            "asset_group": "cefi",
             "venue": "binance",
             "status": "live",
             "version": "4.0.2",
@@ -105,7 +105,7 @@ def _legacy_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-005",
             "name": "TRADFI_ES_STAT_ARB_SCE_5M",
-            "asset_class": "tradfi",
+            "asset_group": "tradfi",
             "venue": "cme",
             "status": "staging",
             "version": "0.9.3",
@@ -119,7 +119,7 @@ def _legacy_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-006",
             "name": "CEFI_MULTI_MOM_HUF_1H",
-            "asset_class": "cefi",
+            "asset_group": "cefi",
             "venue": "binance",
             "status": "live",
             "version": "2.3.0",
@@ -133,7 +133,7 @@ def _legacy_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-007",
             "name": "DEFI_AAVE_YIELD_EVT_BLOCK",
-            "asset_class": "defi",
+            "asset_group": "defi",
             "venue": "aave_v3",
             "status": "live",
             "version": "1.2.0",
@@ -147,7 +147,7 @@ def _legacy_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-008",
             "name": "SPORTS_NFL_ARB_EVT_GAME",
-            "asset_class": "sports",
+            "asset_group": "sports",
             "venue": "betfair",
             "status": "live",
             "version": "1.5.1",
@@ -162,7 +162,7 @@ def _legacy_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-009",
             "name": "CEFI_SOL_PERP_TREND_HUF_30M",
-            "asset_class": "cefi",
+            "asset_group": "cefi",
             "venue": "hyperliquid",
             "status": "live",
             "version": "1.1.0",
@@ -176,7 +176,7 @@ def _legacy_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-010",
             "name": "DEFI_UNI_LP_REBAL_SCE_1H",
-            "asset_class": "defi",
+            "asset_group": "defi",
             "venue": "uniswap_v3",
             "status": "staging",
             "version": "0.7.2",
@@ -190,7 +190,7 @@ def _legacy_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-011",
             "name": "CEFI_ETH_FUNDING_ARB_HUF_8H",
-            "asset_class": "cefi",
+            "asset_group": "cefi",
             "venue": "binance",
             "status": "live",
             "version": "2.0.1",
@@ -204,7 +204,7 @@ def _legacy_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-012",
             "name": "SPORTS_EPL_ML_DIR_EVT_MATCH",
-            "asset_class": "sports",
+            "asset_group": "sports",
             "venue": "betfair",
             "status": "live",
             "version": "3.1.0",
@@ -218,7 +218,7 @@ def _legacy_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-013",
             "name": "TRADFI_NQ_MOM_SCE_15M",
-            "asset_class": "tradfi",
+            "asset_group": "tradfi",
             "venue": "cme",
             "status": "paper",
             "version": "0.5.0",
@@ -232,7 +232,7 @@ def _legacy_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-014",
             "name": "CEFI_MULTI_VOL_SURF_EVT_1H",
-            "asset_class": "cefi",
+            "asset_group": "cefi",
             "venue": "deribit",
             "status": "live",
             "version": "1.9.4",
@@ -246,7 +246,7 @@ def _legacy_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-015",
             "name": "DEFI_FLASH_LOAN_ARB_EVT_BLOCK",
-            "asset_class": "defi",
+            "asset_group": "defi",
             "venue": "aave_v3",
             "status": "paper",
             "version": "0.3.1",
@@ -260,7 +260,7 @@ def _legacy_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-016",
             "name": "SPORTS_NBA_LIVE_EVT_QUARTER",
-            "asset_class": "sports",
+            "asset_group": "sports",
             "venue": "matchbook",
             "status": "staging",
             "version": "0.8.0",
@@ -274,7 +274,7 @@ def _legacy_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-017",
             "name": "CEFI_BTC_GRID_HUF_5M",
-            "asset_class": "cefi",
+            "asset_group": "cefi",
             "venue": "binance",
             "status": "paper",
             "version": "0.4.0",
@@ -288,7 +288,7 @@ def _legacy_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-018",
             "name": "PREDICTION_POLY_SENT_EVT_1H",
-            "asset_class": "prediction",
+            "asset_group": "prediction",
             "venue": "polymarket",
             "status": "live",
             "version": "1.0.0",
@@ -311,7 +311,7 @@ def _new_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-019",
             "name": "CEFI_AVAX_MOMENTUM_HUF_1H",
-            "asset_class": "cefi",
+            "asset_group": "cefi",
             "venue": "binance",
             "status": "live",
             "version": "1.3.0",
@@ -325,7 +325,7 @@ def _new_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-020",
             "name": "CEFI_ETH_MEAN_REV_SCE_4H",
-            "asset_class": "cefi",
+            "asset_group": "cefi",
             "venue": "okx",
             "status": "live",
             "version": "2.0.0",
@@ -339,7 +339,7 @@ def _new_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-021",
             "name": "CEFI_DOGE_MM_HUF_30S",
-            "asset_class": "cefi",
+            "asset_group": "cefi",
             "venue": "binance",
             "status": "live",
             "version": "1.0.1",
@@ -353,7 +353,7 @@ def _new_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-022",
             "name": "CEFI_LINK_MOMENTUM_SCE_2H",
-            "asset_class": "cefi",
+            "asset_group": "cefi",
             "venue": "hyperliquid",
             "status": "staging",
             "version": "0.6.0",
@@ -367,7 +367,7 @@ def _new_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-023",
             "name": "CEFI_ARB_MEAN_REV_HUF_15M",
-            "asset_class": "cefi",
+            "asset_group": "cefi",
             "venue": "okx",
             "status": "development",
             "version": "0.1.0",
@@ -381,7 +381,7 @@ def _new_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-024",
             "name": "CEFI_XRP_MM_HUF_1M",
-            "asset_class": "cefi",
+            "asset_group": "cefi",
             "venue": "binance",
             "status": "live",
             "version": "1.7.0",
@@ -398,7 +398,7 @@ def _new_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-025",
             "name": "TRADFI_ES_ML_DIR_SCE_30M",
-            "asset_class": "tradfi",
+            "asset_group": "tradfi",
             "venue": "cme",
             "status": "live",
             "version": "2.2.0",
@@ -412,7 +412,7 @@ def _new_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-026",
             "name": "TRADFI_SPY_OPTIONS_ML_EVT_1D",
-            "asset_class": "tradfi",
+            "asset_group": "tradfi",
             "venue": "cboe",
             "status": "live",
             "version": "1.4.0",
@@ -426,7 +426,7 @@ def _new_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-027",
             "name": "TRADFI_CL_ML_DIR_SCE_1H",
-            "asset_class": "tradfi",
+            "asset_group": "tradfi",
             "venue": "cme",
             "status": "live",
             "version": "1.9.0",
@@ -440,7 +440,7 @@ def _new_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-028",
             "name": "TRADFI_GC_MM_OPTIONS_EVT_TICK",
-            "asset_class": "tradfi",
+            "asset_group": "tradfi",
             "venue": "cme",
             "status": "live",
             "version": "3.0.1",
@@ -454,7 +454,7 @@ def _new_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-029",
             "name": "TRADFI_ZN_OPTIONS_ML_SCE_4H",
-            "asset_class": "tradfi",
+            "asset_group": "tradfi",
             "venue": "cme",
             "status": "staging",
             "version": "0.8.1",
@@ -468,7 +468,7 @@ def _new_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-030",
             "name": "TRADFI_SI_ML_DIR_SCE_2H",
-            "asset_class": "tradfi",
+            "asset_group": "tradfi",
             "venue": "cme",
             "status": "live",
             "version": "1.1.0",
@@ -482,7 +482,7 @@ def _new_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-031",
             "name": "TRADFI_QQQ_MM_OPTIONS_EVT_5M",
-            "asset_class": "tradfi",
+            "asset_group": "tradfi",
             "venue": "cboe",
             "status": "paper",
             "version": "0.3.0",
@@ -496,7 +496,7 @@ def _new_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-032",
             "name": "TRADFI_EURUSD_ML_DIR_SCE_1H",
-            "asset_class": "tradfi",
+            "asset_group": "tradfi",
             "venue": "cme",
             "status": "live",
             "version": "2.5.0",
@@ -510,7 +510,7 @@ def _new_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-033",
             "name": "TRADFI_HG_OPTIONS_ML_SCE_1D",
-            "asset_class": "tradfi",
+            "asset_group": "tradfi",
             "venue": "cme",
             "status": "development",
             "version": "0.1.0",
@@ -527,7 +527,7 @@ def _new_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-034",
             "name": "DEFI_WBTC_BASIS_SCE_4H",
-            "asset_class": "defi",
+            "asset_group": "defi",
             "venue": "uniswap_v3",
             "status": "live",
             "version": "1.5.0",
@@ -541,7 +541,7 @@ def _new_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-035",
             "name": "DEFI_STETH_STAKED_BASIS_EVT_1D",
-            "asset_class": "defi",
+            "asset_group": "defi",
             "venue": "lido",
             "status": "live",
             "version": "2.0.0",
@@ -555,7 +555,7 @@ def _new_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-036",
             "name": "DEFI_ETH_RECURSIVE_STAKED_EVT_BLOCK",
-            "asset_class": "defi",
+            "asset_group": "defi",
             "venue": "aave_v3",
             "status": "live",
             "version": "1.0.0",
@@ -569,7 +569,7 @@ def _new_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-037",
             "name": "DEFI_USDC_AAVE_LEND_EVT_1H",
-            "asset_class": "defi",
+            "asset_group": "defi",
             "venue": "aave_v3",
             "status": "live",
             "version": "1.8.0",
@@ -583,7 +583,7 @@ def _new_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-038",
             "name": "DEFI_ARB_AMM_LP_SCE_4H",
-            "asset_class": "defi",
+            "asset_group": "defi",
             "venue": "uniswap_v3",
             "status": "staging",
             "version": "0.5.0",
@@ -597,7 +597,7 @@ def _new_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-039",
             "name": "DEFI_MATIC_AMM_LP_SCE_2H",
-            "asset_class": "defi",
+            "asset_group": "defi",
             "venue": "uniswap_v3",
             "status": "development",
             "version": "0.2.0",
@@ -611,7 +611,7 @@ def _new_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-040",
             "name": "DEFI_DAI_AAVE_LEND_EVT_8H",
-            "asset_class": "defi",
+            "asset_group": "defi",
             "venue": "aave_v3",
             "status": "live",
             "version": "1.3.0",
@@ -628,7 +628,7 @@ def _new_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-041",
             "name": "SPORTS_EPL_ARB_EVT_MATCH",
-            "asset_class": "sports",
+            "asset_group": "sports",
             "venue": "betfair",
             "status": "live",
             "version": "2.4.0",
@@ -642,7 +642,7 @@ def _new_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-042",
             "name": "SPORTS_NFL_VALUE_BET_EVT_GAME",
-            "asset_class": "sports",
+            "asset_group": "sports",
             "venue": "betfair",
             "status": "live",
             "version": "1.6.0",
@@ -656,7 +656,7 @@ def _new_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-043",
             "name": "SPORTS_LALIGA_ML_EVT_MATCH",
-            "asset_class": "sports",
+            "asset_group": "sports",
             "venue": "betfair",
             "status": "live",
             "version": "1.2.0",
@@ -670,7 +670,7 @@ def _new_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-044",
             "name": "SPORTS_NBA_MM_EVT_QUARTER",
-            "asset_class": "sports",
+            "asset_group": "sports",
             "venue": "betfair",
             "status": "staging",
             "version": "0.7.0",
@@ -684,7 +684,7 @@ def _new_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-045",
             "name": "SPORTS_MLB_VALUE_BET_EVT_GAME",
-            "asset_class": "sports",
+            "asset_group": "sports",
             "venue": "matchbook",
             "status": "paper",
             "version": "0.4.0",
@@ -698,7 +698,7 @@ def _new_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-046",
             "name": "SPORTS_SERIE_A_ARB_EVT_MATCH",
-            "asset_class": "sports",
+            "asset_group": "sports",
             "venue": "betfair",
             "status": "development",
             "version": "0.1.0",
@@ -715,7 +715,7 @@ def _new_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-047",
             "name": "PREDICTION_POLY_ML_DIR_EVT_4H",
-            "asset_class": "prediction",
+            "asset_group": "prediction",
             "venue": "polymarket",
             "status": "live",
             "version": "1.1.0",
@@ -729,7 +729,7 @@ def _new_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-048",
             "name": "PREDICTION_POLY_ARB_EVT_1H",
-            "asset_class": "prediction",
+            "asset_group": "prediction",
             "venue": "polymarket",
             "status": "staging",
             "version": "0.6.0",
@@ -746,7 +746,7 @@ def _new_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-049",
             "name": "CEFI_MATIC_MOMENTUM_SCE_2H",
-            "asset_class": "cefi",
+            "asset_group": "cefi",
             "venue": "okx",
             "status": "development",
             "version": "0.2.0",
@@ -760,7 +760,7 @@ def _new_strategies() -> list[dict[str, object]]:
         {
             "id": "strat-050",
             "name": "CEFI_SUI_MOMENTUM_HUF_1H",
-            "asset_class": "cefi",
+            "asset_group": "cefi",
             "venue": "binance",
             "status": "live",
             "version": "1.0.0",
