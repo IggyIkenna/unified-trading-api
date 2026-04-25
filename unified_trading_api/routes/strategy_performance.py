@@ -31,6 +31,10 @@ Runtime source resolution:
    in mock mode (``CLOUD_MOCK_MODE=true``).
 
 PBM endpoint contract (prereq follow-up — see Plan C p1-pbm-endpoint-delivery):
+    Lives at ``position-balance-monitor-service/position_balance_monitor_service/
+    api/routes/pnl_series.py`` (matches the existing
+    ``aggregated.py``/``nav_snapshot.py``/``reconciliation.py``/``risk.py``/
+    ``trades.py``/``treasury.py`` route file pattern).
     ``GET <pbm>/api/v1/accounts/{account_id}/pnl-series``
     Query: ``instance_id`` (required), ``from`` (ISO-8601 or ``Nd`` rolling),
     ``to`` (ISO-8601 or ``now``), ``per_venue`` (bool).
@@ -39,6 +43,16 @@ PBM endpoint contract (prereq follow-up — see Plan C p1-pbm-endpoint-delivery)
 Plan C p1-pbm-wiring-followup closure (2026-04-22): entitlement gate + typed
 PBM adapter with fallback shipped. PBM endpoint itself is a separate PBM-repo
 follow-up (Plan C p1-pbm-endpoint-delivery).
+
+UTA-side ``HttpPbmPerformanceClient`` placement (2026-04-25 placement audit):
+when the real implementation lands, extract it to
+``unified_trading_api/services/pbm_performance.py`` (matches existing
+``services/`` directory convention with ``base.py`` + ``live_service.py`` +
+``mock_service.py`` + ``factory.py`` pattern). UTA does NOT have a ``clients/``
+directory — the original prompt's "clients/pbm_performance.py" path would
+have created an orphan convention. The ABCs + ``SynthPbmPerformanceClient``
+defined below stay co-located with the route handler until the real HTTP
+implementation arrives, then all three move together to ``services/``.
 
 Permissioning
 -------------
