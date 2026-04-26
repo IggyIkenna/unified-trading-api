@@ -98,7 +98,7 @@ class InstrumentsReader:
             # collections that would yield an array of bools.
             if not isinstance(value, (list, dict, bytes, tuple)):
                 try:
-                    if pd.isna(value):
+                    if pd.isna(value):  # pyright: ignore[reportAny]
                         result[key_str] = None
                         continue
                 except (TypeError, ValueError):
@@ -109,7 +109,7 @@ class InstrumentsReader:
                 result[key_str] = float(value)
             else:
                 # numpy scalar → python scalar via .item(). Skip for native Python types.
-                item_attr = getattr(value, "item", None)
+                item_attr = getattr(value, "item", None)  # pyright: ignore[reportUnknownArgumentType]
                 if callable(item_attr) and not isinstance(value, (str, list, dict, bytes, tuple, bool, int, float)):
                     result[key_str] = item_attr()  # pyright: ignore[reportAny]
                 else:
