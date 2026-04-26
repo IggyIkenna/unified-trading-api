@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import random as _rng
+from datetime import date as _Date
 
 from fastapi import APIRouter, Depends, Query, Request
 
@@ -12,6 +13,12 @@ from unified_trading_api.middleware.auth import (  # noqa: qg-deep-import — se
 from unified_trading_api.models.standard import (  # noqa: qg-deep-import — self-package
     paginated_response,
     single_response,
+)
+from unified_trading_api.services.app_state import (  # noqa: qg-deep-import — self-package
+    get_mock_mode,  # noqa: qg-deep-import — self-package
+)
+from unified_trading_api.services.batch_candles import (  # noqa: qg-deep-import — self-package
+    BatchCandleReader,  # noqa: qg-deep-import — self-package
 )
 from unified_trading_api.services.factory import get_service  # noqa: qg-deep-import — self-package
 
@@ -27,17 +34,39 @@ router = APIRouter(dependencies=[Depends(verify_api_key)])
 async def get_candles(
     request: Request,
     instrument: str = Query(...),
-    interval: str = Query("1h"),
-    limit: int = Query(200, ge=1, le=500),
-    _venue: str = Query(None),
+    venue: str | None = Query(None),
+    timeframe: str = Query("1H"),
+    count: int = Query(200, ge=1, le=500),
+    mode: str = Query("batch"),
+    as_of: _Date | None = Query(None),
+    from_date: _Date | None = Query(None),
+    to_date: _Date | None = Query(None),
 ) -> dict[str, object]:
-    """Get OHLCV candles for an instrument."""
-    service = get_service(request)
-    collection = f"candles_{interval}" if interval != "1h" else "candles"
-    records = service.list(collection, filters={"instrument": instrument})
-    if not records:
+    """Get OHLCV candles for an instrument.
+
+    In mock mode or when venue is absent: returns mock fixture data.
+    In real mode with venue: reads from GCS via BatchCandleReader.
+    """
+    if get_mock_mode(request) or not venue:
+        service = get_service(request)
         records = service.list("candles", filters={"instrument": instrument})
-    return single_response(records[:limit], instrument=instrument, interval=interval)
+        return single_response(records[:count], instrument=instrument, timeframe=timeframe)
+
+    project_id: str | None = getattr(request.app.state.service, "_project_id", None)  # pyright: ignore[reportAny]
+    if not project_id:
+        return single_response([], instrument=instrument, timeframe=timeframe)
+
+    reader = BatchCandleReader(project_id)
+    candles = reader.get_candles(
+        venue=venue,
+        symbol=instrument,
+        timeframe=timeframe,
+        limit=count,
+        as_of=as_of,
+        from_date=from_date,
+        to_date=to_date,
+    )
+    return single_response(candles, instrument=instrument, timeframe=timeframe)
 
 
 @router.get("/orderbook")

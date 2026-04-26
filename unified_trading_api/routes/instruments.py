@@ -65,7 +65,7 @@ async def get_catalogue(
 async def get_registry(
     request: Request,
     venue: str = Query(None, description="Filter by venue (e.g. binance, deribit)"),
-    category: str = Query(None, description="Filter by category: cefi, defi, tradfi, sports"),
+    asset_group: str = Query(None, description="Filter by asset group: cefi, defi, tradfi"),
     instrument_type: str = Query(
         None, description="Filter by type: spot, future, option, perp, lp_pool"
     ),
@@ -75,7 +75,7 @@ async def get_registry(
 ) -> dict[str, object]:
     """Get instrument registry — canonical mapping across venues.
 
-    Supports filtering by venue, category, instrument_type, and status.
+    Supports filtering by venue, asset_group, instrument_type, and status.
     Response includes trading_hours, tick_size, lot_size, fee_structure,
     and available_since where available.
     """
@@ -84,12 +84,29 @@ async def get_registry(
         "instrument_registry",
         filters={
             "venue": venue,
-            "category": category,
+            "asset_group": asset_group,
             "instrument_type": instrument_type,
             "status": status,
         },
     )
     return paginated_response(records, page, page_size)
+
+
+@router.get("/curated")
+async def get_curated_instruments(
+    asset_group: str | None = Query(None, description="Filter by asset group: cefi, defi, tradfi"),
+) -> dict[str, object]:
+    """Return curated instruments for the trading terminal watchlist.
+
+    These are the symbols with confirmed GCS market data coverage.
+    """
+    from unified_trading_api.config.curated_symbols import CURATED_SYMBOLS  # noqa: qg-deep-import — self-package
+
+    if asset_group:
+        data: dict[str, object] = {asset_group: CURATED_SYMBOLS.get(asset_group.lower(), [])}
+    else:
+        data = dict(CURATED_SYMBOLS)
+    return single_response(data)
 
 
 # ---------------------------------------------------------------------------

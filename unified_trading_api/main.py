@@ -50,7 +50,7 @@ from unified_trading_api.routes import (  # noqa: qg-deep-import — self-packag
     service_status,
     sports,
     strategy_performance,
-    strategy_subscriptions,
+    # strategy_subscriptions,  # XXX local-dev: UAC missing ApprovalRecord/StrategyVersion/SubscriptionType — skip until UAC fixed
     trading_analytics,
     users,
     websocket,
@@ -188,11 +188,12 @@ def create_app() -> FastAPI:
         prefix="/api/v1",
         tags=["strategy-performance"],
     )
-    app.include_router(
-        strategy_subscriptions.router,
-        prefix="/api/v1",
-        tags=["strategy-subscriptions"],
-    )
+    # XXX local-dev: strategy_subscriptions disabled until UAC re-exports ApprovalRecord/StrategyVersion/SubscriptionType
+    # app.include_router(
+    #     strategy_subscriptions.router,
+    #     prefix="/api/v1",
+    #     tags=["strategy-subscriptions"],
+    # )
     app.include_router(defi_basis.router, prefix="/defi/basis", tags=["defi-basis"])
     app.include_router(defi_lending.router, prefix="/defi/lending", tags=["defi-lending"])
     app.include_router(
