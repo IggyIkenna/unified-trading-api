@@ -130,9 +130,12 @@ async def get_trades(
 @router.get("/tickers")
 async def get_tickers(
     request: Request,
-    venue: str = Query(...),
+    venue: str | None = Query(None),
 ) -> dict[str, object]:
-    """Get all tickers for a venue."""
+    """Get all tickers for a venue. Real-mode tick aggregation isn't wired
+    yet — returns the mock list (or empty in real mode without a backend
+    ticker source).
+    """
     service = get_service(request)
     return single_response(service.list("tickers"), venue=venue)
 
