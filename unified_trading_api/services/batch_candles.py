@@ -1,11 +1,26 @@
-"""Batch candle reader — reads raw tick data from GCS and aggregates to OHLCV bars."""
+"""Batch candle reader — reads pre-aggregated OHLCV bars from processed_candles/ in GCS.
+
+Charts read processed candles only — never raw tick data, never request-time
+aggregation. If a (date, timeframe, symbol) shard isn't backfilled, the reader
+returns an empty list and the UI surfaces "no data" for that window. See
+codex feedback: feedback_no_raw_data_for_charts.md.
+
+Path layout (matches market-data-processing-service docs/GCS_PATHS.md):
+  bucket: market-data-tick-{cefi|tradfi|defi}-{project_id}
+  prefix: processed_candles/by_date/day=YYYY-MM-DD/timeframe={tf}
+                            /data_type={dtype}/venue={VENUE}/{symbol}.parquet
+
+Schema (set by market-data-processing-service):
+  timestamp (ts), open, high, low, close, volume, trade_count,
+  buy_trade_count, sell_trade_count, buy_volume, sell_volume,
+  delay_*_ms, instrument_id, symbol, venue
+"""
 
 from __future__ import annotations
 
 import io
 import logging
 from datetime import UTC, date, datetime, timedelta
-from typing import Literal
 
 import pandas as pd
 import pyarrow.parquet as pq
@@ -15,22 +30,23 @@ from unified_trading_api.config.curated_symbols import get_symbol_config  # noqa
 
 logger = logging.getLogger(__name__)
 
-# Map API/frontend timeframe string → pandas resample rule
-_RESAMPLE_RULES: dict[str, str] = {
-    "1m": "1min",
-    "1M": "1min",
-    "5m": "5min",
-    "5M": "5min",
-    "15m": "15min",
-    "15M": "15min",
-    "30m": "30min",
-    "30M": "30min",
+# Map UI/frontend timeframe string → processed_candles partition value.
+# The processing pipeline writes 15s/1m/5m/15m/1h/4h/24h. The UI sends
+# 1m/5m/15m/1H/4H/1D etc., so we normalise here.
+_TIMEFRAME_MAP: dict[str, str] = {
+    "1m": "1m",
+    "1M": "1m",
+    "5m": "5m",
+    "5M": "5m",
+    "15m": "15m",
+    "15M": "15m",
     "1H": "1h",
     "1h": "1h",
     "4H": "4h",
     "4h": "4h",
-    "1D": "1D",
-    "1d": "1D",
+    "1D": "24h",
+    "1d": "24h",
+    "24h": "24h",
 }
 
 _CEFI_VENUE_PREFIXES: tuple[str, ...] = (
@@ -54,118 +70,63 @@ def _venue_to_category(venue: str) -> str:
 
 
 class BatchCandleReader:
-    """Reads OHLCV candles from GCS raw tick data, aggregating trades/prices to bars."""
+    """Reads pre-aggregated OHLCV from GCS processed_candles/ shards.
+
+    Single GCS read per (date, timeframe, symbol). No aggregation. Returns
+    [] when a shard is missing — the UI's empty-state is the correct surface
+    for that.
+    """
 
     def __init__(self, project_id: str) -> None:
         self._project_id = project_id
         self._storage = get_storage_client(project_id=project_id)
 
+    @staticmethod
     def _blob_path(
-        self,
-        category: str,
         venue: str,
-        instrument_type: str,
-        data_type: str,
         symbol: str,
+        timeframe_partition: str,
+        data_type: str,
         target_date: date,
-        chain: str = "",
     ) -> str:
-        date_str = target_date.isoformat()
-        if category == "defi" and chain:
-            return (
-                f"raw_tick_data/by_date/day={date_str}/category={category}"
-                f"/chain={chain}/venue={venue}/instrument_type={instrument_type}"
-                f"/data_type={data_type}/{symbol}.parquet"
-            )
         return (
-            f"raw_tick_data/by_date/day={date_str}/category={category}"
-            f"/venue={venue}/instrument_type={instrument_type}"
-            f"/data_type={data_type}/{symbol}.parquet"
+            f"processed_candles/by_date/day={target_date.isoformat()}"
+            f"/timeframe={timeframe_partition}/data_type={data_type}"
+            f"/venue={venue}/{symbol}.parquet"
         )
 
-    def _read_df(
-        self,
-        bucket: str,
-        blob_path: str,
-        columns: list[str] | None = None,
-    ) -> pd.DataFrame | None:
+    def _read_df(self, bucket: str, blob_path: str) -> pd.DataFrame | None:
         try:
             raw = self._storage.download_bytes(bucket=bucket, blob_path=blob_path)
-            return pq.read_table(io.BytesIO(raw), columns=columns).to_pandas()  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
+            return pq.read_table(io.BytesIO(raw)).to_pandas()  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
         except Exception as exc:
-            logger.debug("Blob read failed %s/%s: %s", bucket, blob_path, exc)
+            logger.debug("Blob read miss %s/%s: %s", bucket, blob_path, exc)
             return None
 
     @staticmethod
-    def _detect_trade_schema(
-        df: pd.DataFrame,
-    ) -> tuple[str, Literal["us", "ns"], str, str]:
-        """Detect (time_col, time_unit, price_col, size_col) from a trades DataFrame.
+    def _frame_to_records(df: pd.DataFrame) -> list[dict[str, object]]:
+        """Convert a processed-candles DataFrame to chart-friendly OHLCV dicts.
 
-        Tardis CEFI archive: ``timestamp`` (us), ``price``, ``amount``.
-        Databento / canonical pipeline: ``ts_event`` (ns), ``price``, ``size``.
-        Oracle prices: ``timestamp`` (us) + ``price``, no size column.
+        The processed schema has `timestamp` (datetime), `open/high/low/close/volume`.
+        TRADFI shards include rows for outside-RTH minutes with NaN OHLC; those
+        get dropped here so the chart never receives null bars.
         """
-        cols = set(df.columns)
-        if "timestamp" in cols:
-            time_col: str = "timestamp"
-            time_unit: Literal["us", "ns"] = "us"
-        else:
-            time_col = "ts_event"
-            time_unit = "ns"
-        if "amount" in cols:
-            size_col = "amount"
-        elif "size" in cols:
-            size_col = "size"
-        elif "volume" in cols:
-            size_col = "volume"
-        else:
-            size_col = ""
-        return time_col, time_unit, "price", size_col
-
-    def _aggregate_trades(self, df: pd.DataFrame, rule: str) -> pd.DataFrame:
-        """Convert raw trades (price + size + timestamp) to OHLCV bars."""
-        time_col, time_unit, price_col, size_col = self._detect_trade_schema(df)
-        df = df.copy()
-        df["__ts"] = pd.to_datetime(df[time_col], unit=time_unit, utc=True)
-        df = df.set_index("__ts").sort_index()
-        ohlcv = df[price_col].resample(rule).agg(open="first", high="max", low="min", close="last")
-        if size_col:
-            ohlcv["volume"] = df[size_col].resample(rule).sum()
-        else:
-            ohlcv["volume"] = 0.0
-        return ohlcv.dropna(subset=["open"])  # pyright: ignore[reportCallIssue, reportUnknownVariableType]
-
-    def _aggregate_ohlcv(self, df: pd.DataFrame, rule: str) -> pd.DataFrame:
-        """Resample native OHLCV to a larger timeframe."""
-        cols = set(df.columns)
-        if "ts_event" in cols:
-            time_col: str = "ts_event"
-            time_unit: Literal["us", "ns"] = "ns"
-        else:
-            time_col = "timestamp"
-            time_unit = "us"
-        df = df.copy()
-        df["__ts"] = pd.to_datetime(df[time_col], unit=time_unit, utc=True)
-        df = df.set_index("__ts").sort_index()
-        result = pd.DataFrame(
-            {
-                "open": df["open"].resample(rule).first(),
-                "high": df["high"].resample(rule).max(),
-                "low": df["low"].resample(rule).min(),
-                "close": df["close"].resample(rule).last(),
-                "volume": df["volume"].resample(rule).sum(),
-            }
-        )
-        return result.dropna(subset=["open"])  # pyright: ignore[reportCallIssue, reportUnknownVariableType]
-
-    def _to_records(self, df: pd.DataFrame, limit: int) -> list[dict[str, object]]:
-        df = df.tail(limit)
+        if df.empty:
+            return []
+        # Normalise column names: some shards may have `ts` or `timestamp`
+        ts_col = "timestamp" if "timestamp" in df.columns else "ts"
+        # Drop rows where the bar didn't actually trade (NaN OHLC).
+        df = df.dropna(subset=["open", "high", "low", "close"])  # pyright: ignore[reportCallIssue, reportUnknownVariableType]
+        if df.empty:
+            return []
+        df = df.sort_values(by=ts_col)
         records: list[dict[str, object]] = []
-        for ts, row in df.iterrows():
+        for _, row in df.iterrows():
+            ts_val = row[ts_col]  # pyright: ignore[reportUnknownVariableType, reportAny]
+            unix_sec = int(pd.Timestamp(ts_val).timestamp())  # pyright: ignore[reportUnknownArgumentType, reportAny]
             records.append(
                 {
-                    "time": int(pd.Timestamp(ts).timestamp()),  # type: ignore[arg-type]
+                    "time": unix_sec,
                     "open": float(row["open"]),  # pyright: ignore[reportAny]
                     "high": float(row["high"]),  # pyright: ignore[reportAny]
                     "low": float(row["low"]),  # pyright: ignore[reportAny]
@@ -185,20 +146,25 @@ class BatchCandleReader:
         from_date: date | None = None,
         to_date: date | None = None,
     ) -> list[dict[str, object]]:
-        """Return OHLCV candles for (venue, symbol) aggregated to timeframe.
+        """Return processed OHLCV candles for (venue, symbol, timeframe).
 
         Date precedence: as_of (single day) > from_date..to_date > yesterday.
+        Reads one parquet per day. No raw aggregation. Empty result is a
+        valid signal that the processing pipeline hasn't backfilled the
+        requested window.
         """
         sym_config = get_symbol_config(venue, symbol)
         if sym_config is None:
             logger.warning("Symbol not in curated list: %s / %s", venue, symbol)
             return []
 
-        rule = _RESAMPLE_RULES.get(timeframe, "1h")
+        timeframe_partition = _TIMEFRAME_MAP.get(timeframe)
+        if timeframe_partition is None:
+            logger.warning("Unsupported timeframe: %r", timeframe)
+            return []
+
         category = _venue_to_category(venue)
-        instrument_type = sym_config["instrument_type"]
         data_type = sym_config["data_type"]
-        chain = sym_config.get("chain", "")
 
         if as_of:
             dates: list[date] = [as_of]
@@ -216,19 +182,17 @@ class BatchCandleReader:
 
         frames: list[pd.DataFrame] = []
         for target_date in dates:
-            blob = self._blob_path(category, venue, instrument_type, data_type, symbol, target_date, chain)
-            # No column projection: source schemas vary (Tardis vs Databento) and
-            # mismatched names error in pyarrow. _aggregate_* sniffs columns from the frame.
+            blob = self._blob_path(venue, symbol, timeframe_partition, data_type, target_date)
             df = self._read_df(bucket, blob)
-            if df is None or df.empty:
-                continue
-            if data_type == "ohlcv_1m":
-                frames.append(self._aggregate_ohlcv(df, rule))
-            else:
-                frames.append(self._aggregate_trades(df, rule))
+            if df is not None and not df.empty:
+                frames.append(df)
 
         if not frames:
             return []
 
-        merged = pd.concat(frames).sort_index()
-        return self._to_records(merged, limit)
+        merged = pd.concat(frames, ignore_index=True)
+        records = self._frame_to_records(merged)
+        # Apply limit — keep the most recent `limit` bars
+        if len(records) > limit:
+            records = records[-limit:]
+        return records

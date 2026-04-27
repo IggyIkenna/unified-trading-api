@@ -127,6 +127,24 @@ CURATED_SYMBOLS: dict[str, list[dict[str, str]]] = {
             "base": "MSFT",
             "quote": "USD",
         },
+        {
+            "venue": "NASDAQ",
+            "symbol": "GOOGL",
+            "display_name": "Alphabet Inc. (Class A)",
+            "instrument_type": "equity",
+            "data_type": "ohlcv_1m",
+            "base": "GOOGL",
+            "quote": "USD",
+        },
+        {
+            "venue": "NYSE",
+            "symbol": "JPM",
+            "display_name": "JPMorgan Chase & Co.",
+            "instrument_type": "equity",
+            "data_type": "ohlcv_1m",
+            "base": "JPM",
+            "quote": "USD",
+        },
     ],
     "defi": [
         {
