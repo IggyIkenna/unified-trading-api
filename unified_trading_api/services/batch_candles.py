@@ -14,12 +14,16 @@ Schema (set by market-data-processing-service):
   timestamp (ts), open, high, low, close, volume, trade_count,
   buy_trade_count, sell_trade_count, buy_volume, sell_volume,
   delay_*_ms, instrument_id, symbol, venue
+
+Multi-day reads run in a small thread pool (GCS calls are I/O-bound, ~0.2 s
+each). 30-day window cold-reads in well under a second.
 """
 
 from __future__ import annotations
 
 import io
 import logging
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, date, datetime, timedelta
 
 import pandas as pd
@@ -180,12 +184,23 @@ class BatchCandleReader:
             logger.warning("Cannot build bucket for category '%s'", category)
             return []
 
+        # Per-day GCS reads in parallel — they're independent and I/O-bound,
+        # so a small thread pool turns N×0.2s into ~0.2s for the whole window.
+        def _fetch(d: date) -> pd.DataFrame | None:
+            blob = self._blob_path(venue, symbol, timeframe_partition, data_type, d)
+            return self._read_df(bucket, blob)
+
         frames: list[pd.DataFrame] = []
-        for target_date in dates:
-            blob = self._blob_path(venue, symbol, timeframe_partition, data_type, target_date)
-            df = self._read_df(bucket, blob)
+        if len(dates) == 1:
+            df = _fetch(dates[0])
             if df is not None and not df.empty:
                 frames.append(df)
+        else:
+            workers = min(16, len(dates))
+            with ThreadPoolExecutor(max_workers=workers) as ex:
+                for df in ex.map(_fetch, dates):
+                    if df is not None and not df.empty:
+                        frames.append(df)
 
         if not frames:
             return []
