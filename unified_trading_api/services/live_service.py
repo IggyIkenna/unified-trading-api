@@ -182,8 +182,11 @@ class GcsDomainService:
             logger.debug("No dataset mapping for collection '%s'", collection)
             return []
 
-        # Determine date: as_of filter (batch) or today (live)
-        as_of = str(filters.get("as_of", "")) if filters else ""
+        # Determine date: as_of filter (batch) or today (live).
+        # Guard against None — str(None) is "None" (truthy) and would inject
+        # the literal string into the GCS path.
+        raw_as_of = filters.get("as_of") if filters else None
+        as_of = str(raw_as_of) if raw_as_of else ""
         date_str = as_of[:10] if as_of else datetime.now(UTC).strftime("%Y-%m-%d")
 
         # Resolve bucket
