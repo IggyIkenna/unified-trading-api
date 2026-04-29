@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import random as _rng
 from datetime import date as _Date
 
@@ -36,7 +37,7 @@ async def get_candles(
     instrument: str = Query(...),
     venue: str | None = Query(None),
     timeframe: str = Query("1H"),
-    count: int = Query(200, ge=1, le=500),
+    count: int = Query(200, ge=1, le=20000),
     mode: str = Query("batch"),
     as_of: _Date | None = Query(None),
     from_date: _Date | None = Query(None),
@@ -47,14 +48,26 @@ async def get_candles(
     In mock mode or when venue is absent: returns mock fixture data.
     In real mode with venue: reads from GCS via BatchCandleReader.
     """
-    if get_mock_mode(request) or not venue:
+    if get_mock_mode(request):
         service = get_service(request)
         records = service.list("candles", filters={"instrument": instrument})
         return single_response(records[:count], instrument=instrument, timeframe=timeframe)
 
+    if not venue:
+        # Real mode without a venue: chart can't disambiguate which bucket
+        # to read. Surface as empty + warning rather than guessing.
+        return single_response([], instrument=instrument, timeframe=timeframe, warning="venue required")
+
     project_id: str | None = getattr(request.app.state.service, "_project_id", None)  # pyright: ignore[reportAny]
     if not project_id:
-        return single_response([], instrument=instrument, timeframe=timeframe)
+        # Fallback to the canonical env handle. UnifiedCloudConfig reads
+        # this via Secret Manager in deployed envs; in local dev it's set
+        # directly. If neither resolves, surface the failure loud rather
+        # than returning an empty payload that masquerades as "no data".
+        project_id = os.environ.get("GCP_PROJECT_ID") or os.environ.get("GOOGLE_CLOUD_PROJECT")
+    if not project_id:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=503, detail="project_id_unresolved")
 
     reader = BatchCandleReader(project_id)
     candles = reader.get_candles(

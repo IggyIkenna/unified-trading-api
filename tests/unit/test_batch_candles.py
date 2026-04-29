@@ -134,3 +134,169 @@ class TestGetCandles:
             limit=100, as_of=date(2099, 1, 1),
         )
         assert bars == []
+
+
+class TestManifestPruning:
+    """Manifest-driven pruning skips empty days before issuing GCS reads."""
+
+    def test_empty_manifest_does_not_prune(self) -> None:
+        """If the manifest is empty (bucket never indexed), don't prune. GCS
+        is the final source of truth and missing shards return []."""
+        mock_storage = MagicMock()
+        mock_storage.download_bytes.side_effect = FileNotFoundError("404")
+        with patch(
+            "unified_trading_api.services.batch_candles.get_storage_client",
+            return_value=mock_storage,
+        ), patch(
+            "unified_trading_api.services.batch_candles.read_availability_index",
+            return_value=pd.DataFrame(),
+        ):
+            reader = BatchCandleReader(project_id="p")
+            bars = reader.get_candles(
+                venue="NASDAQ", symbol="AAPL", timeframe="5m",
+                limit=100,
+                from_date=date(2026, 1, 13), to_date=date(2026, 1, 15),
+            )
+        # No shards exist (mock 404s every read) → empty result, but GCS reads
+        # were still attempted (3 downloads — one per day in the unfiltered
+        # window).
+        assert bars == []
+        assert mock_storage.download_bytes.call_count == 3
+
+    def test_manifest_filters_to_present_days(self) -> None:
+        """Days not in the manifest are skipped — no GCS read attempted."""
+        manifest = pd.DataFrame(
+            [
+                {
+                    "service_name": "market-data-processing-service",
+                    "data_type": "ohlcv_1m",
+                    "timeframe": "5m",
+                    "venue": "NASDAQ",
+                    "instrument_id": "AAPL",
+                    "available": True,
+                    "date": "2026-01-13",
+                },
+                # 2026-01-14 deliberately missing
+                {
+                    "service_name": "market-data-processing-service",
+                    "data_type": "ohlcv_1m",
+                    "timeframe": "5m",
+                    "venue": "NASDAQ",
+                    "instrument_id": "AAPL",
+                    "available": True,
+                    "date": "2026-01-15",
+                },
+                # Also a row for a different symbol — must NOT match
+                {
+                    "service_name": "market-data-processing-service",
+                    "data_type": "ohlcv_1m",
+                    "timeframe": "5m",
+                    "venue": "NASDAQ",
+                    "instrument_id": "MSFT",
+                    "available": True,
+                    "date": "2026-01-14",
+                },
+            ]
+        )
+        mock_storage = MagicMock()
+        mock_storage.download_bytes.side_effect = FileNotFoundError("404")
+        with patch(
+            "unified_trading_api.services.batch_candles.get_storage_client",
+            return_value=mock_storage,
+        ), patch(
+            "unified_trading_api.services.batch_candles.read_availability_index",
+            return_value=manifest,
+        ):
+            reader = BatchCandleReader(project_id="p")
+            _ = reader.get_candles(
+                venue="NASDAQ", symbol="AAPL", timeframe="5m",
+                limit=100,
+                from_date=date(2026, 1, 13), to_date=date(2026, 1, 15),
+            )
+        # 3-day window pruned to 2 (13th + 15th present, 14th + MSFT match
+        # filtered out).
+        assert mock_storage.download_bytes.call_count == 2
+
+    def test_no_matching_rows_falls_back_to_unfiltered(self) -> None:
+        """Manifest exists but has nothing for our exact (data_type, tf, venue,
+        symbol) tuple — don't prune; fall back to GCS attempts."""
+        manifest = pd.DataFrame(
+            [
+                {
+                    "service_name": "market-data-processing-service",
+                    "data_type": "trades",  # different
+                    "timeframe": "5m",
+                    "venue": "NASDAQ",
+                    "instrument_id": "AAPL",
+                    "available": True,
+                    "date": "2026-01-13",
+                },
+            ]
+        )
+        mock_storage = MagicMock()
+        mock_storage.download_bytes.side_effect = FileNotFoundError("404")
+        with patch(
+            "unified_trading_api.services.batch_candles.get_storage_client",
+            return_value=mock_storage,
+        ), patch(
+            "unified_trading_api.services.batch_candles.read_availability_index",
+            return_value=manifest,
+        ):
+            reader = BatchCandleReader(project_id="p")
+            _ = reader.get_candles(
+                venue="NASDAQ", symbol="AAPL", timeframe="5m",
+                limit=100,
+                from_date=date(2026, 1, 13), to_date=date(2026, 1, 14),
+            )
+        # No matching MDPS rows for (ohlcv_1m, 5m, NASDAQ, AAPL) — no pruning.
+        # Both days attempted.
+        assert mock_storage.download_bytes.call_count == 2
+
+
+class TestBucketVariant:
+    """MARKET_DATA_BUCKET_VARIANT switches between prod and test buckets."""
+
+    def test_test_variant_appends_test_to_bucket_name(self) -> None:
+        from unified_trading_api.services import batch_candles as bc
+
+        captured: dict[str, str] = {}
+
+        def _capture_download(*, bucket: str, blob_path: str) -> bytes:
+            captured["bucket"] = bucket
+            raise FileNotFoundError("404 — capturing the bucket name")
+
+        mock_storage = MagicMock()
+        mock_storage.download_bytes.side_effect = _capture_download
+        with patch.object(bc, "_BUCKET_VARIANT", "test"), patch.object(
+            bc, "get_storage_client", return_value=mock_storage
+        ), patch.object(bc, "read_availability_index", return_value=pd.DataFrame()):
+            reader = bc.BatchCandleReader(project_id="proj")
+            _ = reader.get_candles(
+                venue="NASDAQ", symbol="AAPL", timeframe="5m",
+                limit=100, as_of=date(2026, 1, 15),
+            )
+        # Test variant inserts -test- before the project id
+        assert "-test-proj" in captured["bucket"]
+        assert "tradfi" in captured["bucket"]
+
+    def test_prod_variant_default_no_suffix(self) -> None:
+        from unified_trading_api.services import batch_candles as bc
+
+        captured: dict[str, str] = {}
+
+        def _capture_download(*, bucket: str, blob_path: str) -> bytes:
+            captured["bucket"] = bucket
+            raise FileNotFoundError("404")
+
+        mock_storage = MagicMock()
+        mock_storage.download_bytes.side_effect = _capture_download
+        with patch.object(bc, "_BUCKET_VARIANT", "prod"), patch.object(
+            bc, "get_storage_client", return_value=mock_storage
+        ), patch.object(bc, "read_availability_index", return_value=pd.DataFrame()):
+            reader = bc.BatchCandleReader(project_id="proj")
+            _ = reader.get_candles(
+                venue="NASDAQ", symbol="AAPL", timeframe="5m",
+                limit=100, as_of=date(2026, 1, 15),
+            )
+        assert "-test-" not in captured["bucket"]
+        assert captured["bucket"].endswith("-proj")

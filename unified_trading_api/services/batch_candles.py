@@ -5,7 +5,7 @@ aggregation. If a (date, timeframe, symbol) shard isn't backfilled, the reader
 returns an empty list and the UI surfaces "no data" for that window. See
 codex feedback: feedback_no_raw_data_for_charts.md.
 
-Path layout (matches market-data-processing-service docs/GCS_PATHS.md):
+Path layout (matches actual GCS reality, NOT the stale processing-service doc):
   bucket: market-data-tick-{cefi|tradfi|defi}-{project_id}
   prefix: processed_candles/by_date/day=YYYY-MM-DD/timeframe={tf}
                             /data_type={dtype}/venue={VENUE}/{symbol}.parquet
@@ -15,6 +15,12 @@ Schema (set by market-data-processing-service):
   buy_trade_count, sell_trade_count, buy_volume, sell_volume,
   delay_*_ms, instrument_id, symbol, venue
 
+Manifest pruning: before issuing GCS reads, the reader consults
+`_index/availability_index.parquet` (via UTL `read_availability_index`,
+60s cached) to skip days that don't have a shard. Drops empty-day round
+trips on weekends/holidays. Falls back gracefully if the manifest is
+absent (returns the unfiltered candidate list).
+
 Multi-day reads run in a small thread pool (GCS calls are I/O-bound, ~0.2 s
 each). 30-day window cold-reads in well under a second.
 """
@@ -23,14 +29,21 @@ from __future__ import annotations
 
 import io
 import logging
+import os
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, date, datetime, timedelta
 
 import pandas as pd
 import pyarrow.parquet as pq
 from unified_trading_library import build_bucket, get_storage_client  # pyright: ignore[reportPrivateImportUsage]
+from unified_trading_library.manifest_writer import read_availability_index
 
 from unified_trading_api.config.curated_symbols import get_symbol_config  # noqa: qg-deep-import — self-package
+
+# Bucket variant — `prod` (default) or `test`. Test variant appends "test-" to the
+# bucket suffix per codex per-category-bucket-layouts.md. Same hive layout, different
+# bucket name. Set MARKET_DATA_BUCKET_VARIANT=test to target test buckets.
+_BUCKET_VARIANT = os.environ.get("MARKET_DATA_BUCKET_VARIANT", "prod")
 
 logger = logging.getLogger(__name__)
 
@@ -84,6 +97,32 @@ class BatchCandleReader:
     def __init__(self, project_id: str) -> None:
         self._project_id = project_id
         self._storage = get_storage_client(project_id=project_id)
+        self._tune_connection_pool()
+
+    def _tune_connection_pool(self) -> None:
+        """Bump the urllib3 connection pool size on the storage client.
+
+        Default urllib3 pool size is 10. When ThreadPoolExecutor parallelises
+        16 GCS reads, anything past 10 re-handshakes TLS — observed as
+        ``Connection pool is full, discarding connection`` warnings and the
+        10-day parallel scenario falling to ~4× single-day instead of 1×.
+        Bumping to 32 covers the worker count + a small headroom.
+        """
+        from requests.adapters import HTTPAdapter
+
+        # UTL wraps google-cloud-storage; the underlying client exposes
+        # `_http` (an authorized requests Session). We mount a fresh adapter
+        # with a wider pool so concurrent downloads share connections.
+        try:
+            inner = getattr(self._storage, "_client", None) or self._storage
+            session = getattr(inner, "_http", None)
+            if session is None:
+                return
+            adapter = HTTPAdapter(pool_connections=32, pool_maxsize=32, max_retries=3)
+            session.mount("https://", adapter)
+            session.mount("http://", adapter)
+        except Exception as exc:
+            logger.debug("Could not tune connection pool: %s", exc)
 
     @staticmethod
     def _blob_path(
@@ -98,6 +137,63 @@ class BatchCandleReader:
             f"/timeframe={timeframe_partition}/data_type={data_type}"
             f"/venue={venue}/{symbol}.parquet"
         )
+
+    def _prune_dates_via_manifest(
+        self,
+        bucket: str,
+        dates: list[date],
+        data_type: str,
+        timeframe_partition: str,
+        venue: str,
+        symbol: str,
+    ) -> list[date]:
+        """Filter `dates` to those with an MDPS manifest row for this shard.
+
+        Manifest predicate matches the row that the rebuild script emits:
+        service=MDPS, data_type, timeframe, venue, instrument_id (=symbol).
+
+        If the manifest is empty (no rows at all) — bucket likely never
+        had its index built — we don't prune. The downstream GCS read
+        is the final source of truth and a missing shard returns [].
+        """
+        try:
+            mdf = read_availability_index(bucket)
+        except Exception as exc:
+            logger.debug("Manifest read failed for %s; not pruning: %s", bucket, exc)
+            return dates
+        if mdf.empty:
+            return dates
+
+        mdps = mdf[mdf["service_name"] == "market-data-processing-service"]
+        if mdps.empty:
+            return dates
+
+        # Match on the dimensions our rebuild script writes per file:
+        #   data_type, timeframe, venue, instrument_id, available=True
+        mdps = mdps[
+            (mdps["data_type"] == data_type)
+            & (mdps["timeframe"] == timeframe_partition)
+            & (mdps["venue"] == venue)
+            & (mdps["instrument_id"] == symbol)
+            & (mdps["available"] == True)  # noqa: E712 — DataFrame mask
+        ]
+        if mdps.empty:
+            # No rows for this exact shard — the manifest may simply not be
+            # populated at this granularity yet (per-symbol underfill is
+            # tracked as a follow-up). Fall back to no pruning.
+            logger.debug(
+                "Manifest has MDPS rows but none match (%s,%s,%s,%s); not pruning",
+                data_type,
+                timeframe_partition,
+                venue,
+                symbol,
+            )
+            return dates
+
+        have = set(mdps["date"].astype(str).tolist())
+        pruned = [d for d in dates if d.isoformat() in have]
+        logger.debug("Manifest pruned %d → %d dates", len(dates), len(pruned))
+        return pruned
 
     def _read_df(self, bucket: str, blob_path: str) -> pd.DataFrame | None:
         try:
@@ -179,9 +275,29 @@ class BatchCandleReader:
             dates = [datetime.now(UTC).date() - timedelta(days=1)]
 
         try:
-            bucket = build_bucket("raw_tick_data", project_id=self._project_id, category=category)
+            bucket = build_bucket(
+                "processed_candles", project_id=self._project_id, asset_group=category
+            )
         except KeyError:
             logger.warning("Cannot build bucket for category '%s'", category)
+            return []
+        # Apply test-variant suffix when configured: market-data-tick-{cat}-{project}
+        # → market-data-tick-{cat}-test-{project}. Hive layout identical.
+        if _BUCKET_VARIANT == "test" and "-test-" not in bucket:
+            bucket = bucket.replace(f"-{self._project_id}", f"-test-{self._project_id}")
+
+        # Manifest-pruned date list: drop days that have no MDPS shard
+        # registered. Falls back to the full candidate list if the manifest
+        # is empty / unreadable so we never break a working request.
+        dates = self._prune_dates_via_manifest(
+            bucket=bucket,
+            dates=dates,
+            data_type=data_type,
+            timeframe_partition=timeframe_partition,
+            venue=venue,
+            symbol=symbol,
+        )
+        if not dates:
             return []
 
         # Per-day GCS reads in parallel — they're independent and I/O-bound,

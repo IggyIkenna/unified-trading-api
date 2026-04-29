@@ -456,6 +456,49 @@ class TestMarketDataRoutes:
         resp = app_client.get("/market-data/candles?instrument=BTC-PERP&interval=4h")
         assert resp.status_code == 200
 
+    def test_get_candles_real_mode_no_venue_returns_warning(
+        self, app_client: TestClient
+    ) -> None:
+        """Real mode without a venue param: empty + warning, not an error."""
+        from unittest.mock import patch
+        with patch(
+            "unified_trading_api.services.app_state.get_mock_mode",
+            return_value=False,
+        ):
+            resp = app_client.get("/market-data/candles?instrument=AAPL&timeframe=1m&mode=batch")
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["data"] == []
+        assert body.get("warning") == "venue required"
+
+    def test_get_candles_real_mode_calls_batch_reader_with_project_id(
+        self, app_client: TestClient
+    ) -> None:
+        """Real mode calls BatchCandleReader with the resolved project_id."""
+        from unittest.mock import MagicMock, patch
+        mock_reader = MagicMock()
+        mock_reader.get_candles.return_value = [
+            {"time": 1, "open": 1, "high": 1, "low": 1, "close": 1, "volume": 1},
+        ]
+        with patch(
+            "unified_trading_api.services.app_state.get_mock_mode",
+            return_value=False,
+        ), patch(
+            "unified_trading_api.routes.market_data.BatchCandleReader",
+            return_value=mock_reader,
+        ):
+            resp = app_client.get(
+                "/market-data/candles?venue=NASDAQ&instrument=AAPL&timeframe=1m&mode=batch"
+            )
+        assert resp.status_code == 200
+        body = resp.json()
+        assert len(body["data"]) == 1
+        # Reader was called with the (venue, symbol, timeframe) we passed
+        kwargs = mock_reader.get_candles.call_args.kwargs
+        assert kwargs["venue"] == "NASDAQ"
+        assert kwargs["symbol"] == "AAPL"
+        assert kwargs["timeframe"] == "1m"
+
     def test_get_orderbook(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("tickers_live", [{"id": "t1", "instrument": "BTC-PERP", "price": 67000}])
         resp = app_client.get("/market-data/orderbook?instrument=BTC-PERP&depth=5")
