@@ -1,23 +1,40 @@
 """Benchmark GCS read latency for the price-chart candle path.
 
-Runs against the *current* code path (BatchCandleReader) so the numbers
-become the baseline we can diff against once Unit A swaps in UTL +
-manifest pruning.
+⚠ **DO NOT RUN IN CI / TEST SUITES.** ⚠
 
-Six scenarios, five iterations each, p50/p99 reported:
+This script hits **real Google Cloud Storage** and is *not* a test —
+it has no pass/fail assertions, only prints latency numbers.  Running
+it on every CI pipeline burns minutes per pipeline and pulls a few
+megabytes from a real bucket each invocation.  It is intentionally
+**outside** `tests/` (pytest's `testpaths = ["tests"]` will not pick
+it up) and **must stay outside**.  Do not add a `test_*` prefix, do
+not move it into `tests/`, do not wire it into a Makefile / quality
+gate / pre-commit.
+
+Run on demand only — when you've changed the read path and want to
+see whether latency moved, or when you're sizing a deployment:
+
+  GCP_PROJECT_ID=central-element-323112 \\
+    /path/to/venv/bin/python scripts/bench_candle_reads.py \\
+      --project-id central-element-323112 \\
+      --out unified-trading-pm/reports/price_chart_gcs_benchmark_<DATE>.md
+
+Output: prints a markdown table; --out FILE writes it to disk.
+
+Eight scenarios, five iterations each, p50/p99 reported:
   1. single parquet, cold
   2. single parquet, warm (cache reuse)
   3. 10 parquets, parallel
   4. 10 parquets, sequential
-  5. 10 parquets, parallel + manifest-pruned
-  6. 30 parquets, parallel + manifest-pruned
+  5. 10 parquets, parallel + listing-pruned
+  6. 30 parquets, parallel + listing-pruned
+  7. manifest-pruned (currently broken — captures the gap for the record)
+  8. scroll-back UX simulation: 9 sequential 7-day windows
 
-Output: prints a markdown table; --out FILE writes it to disk.
-
-Run:
-  /path/to/venv/bin/python scripts/bench_candle_reads.py \\
-      --project-id central-element-323112 \\
-      --out /home/hk/.../benchmarks/price_chart_gcs_2026_04_29.md
+The corresponding **FE benchmark** lives at
+`unified-trading-system-ui/tests/e2e/widgets/price-chart-benchmark.spec.ts`.
+That one is CI-safe — it measures the FE↔BE round-trip only and runs
+fine against a mock-mode backend (no GCS, sub-second).
 """
 
 from __future__ import annotations
@@ -214,6 +231,69 @@ def scenario_multi(name: str, client, bucket: str, days: list[date],
     }
 
 
+def scenario_scrollback_chunks(
+    client,
+    bucket: str,
+    n_chunks: int = 9,
+    chunk_days: int = 7,
+    end_date: date = THIRTY_DAY_END,
+) -> dict:
+    """Simulate the UI's scroll-back UX.
+
+    The chart's loadMoreCandles fetches one chunk_days-window per scroll
+    pull, working backwards from anchor. Each chunk uses BatchCandleReader's
+    multi-day path (parallel reads within the chunk), but chunks themselves
+    are sequential — a user can only scroll one window at a time.
+
+    Measures wall-clock to load ~n_chunks*chunk_days days of history. This
+    is the "user pans the chart from now back to two months ago" scenario.
+    """
+    from unified_trading_api.services.batch_candles import BatchCandleReader
+
+    reader = BatchCandleReader(project_id=client._project_id if hasattr(client, "_project_id") else "central-element-323112")
+
+    chunk_results: list[dict] = []
+    walls: list[float] = []
+    for run in range(N_RUNS):
+        anchor = end_date
+        run_chunks: list[dict] = []
+        run_start = time.perf_counter()
+        for i in range(n_chunks):
+            to = anchor - timedelta(days=1) if i > 0 else anchor
+            frm = to - timedelta(days=chunk_days - 1)
+            t0 = time.perf_counter()
+            records = reader.get_candles(
+                venue=VENUE,
+                symbol=SYMBOL,
+                timeframe=TIMEFRAME,
+                limit=10_000,
+                from_date=frm,
+                to_date=to,
+            )
+            elapsed_ms = (time.perf_counter() - t0) * 1000
+            run_chunks.append({
+                "chunk": i + 1,
+                "from": frm.isoformat(),
+                "to": to.isoformat(),
+                "rows": len(records),
+                "ms": elapsed_ms,
+            })
+            anchor = frm
+        run_wall = (time.perf_counter() - run_start) * 1000
+        walls.append(run_wall)
+        if run == 0:
+            chunk_results = run_chunks
+    return {
+        "name": f"scroll-back {n_chunks}× {chunk_days}-day chunks",
+        "walls_ms": walls,
+        "n_files_attempted": n_chunks,
+        "n_files_ok": sum(1 for c in chunk_results if c["rows"] > 0),
+        "rows_total": sum(c["rows"] for c in chunk_results),
+        "bytes_total": 0,  # not tracked at chunk level
+        "chunk_breakdown": chunk_results,
+    }
+
+
 def _stats(values: list[float]) -> tuple[float, float]:
     if not values:
         return (0.0, 0.0)
@@ -340,7 +420,25 @@ def main() -> int:
             "rows_total": 0, "bytes_total": 0,
         }
 
-    md = render_markdown([s1, s2, s3, s4, s5, s6, s7], args.project_id)
+    # Scenario 8: scroll-back UX simulation (sequential 7-day chunks).
+    # Mirrors what the chart's loadMoreCandles does: 9 chunks × 7 days each =
+    # ~9 weeks of history loaded by panning the chart left. Each chunk goes
+    # through BatchCandleReader's full path (manifest prune + parallel multi-day
+    # reads within the window). Chunks themselves are sequential because a user
+    # can only scroll one window at a time.
+    print("→ Scenario 8: scroll-back UX (9× 7-day sequential chunks)", file=sys.stderr)
+    s8 = scenario_scrollback_chunks(client, bucket, n_chunks=9, chunk_days=7)
+
+    md = render_markdown([s1, s2, s3, s4, s5, s6, s7, s8], args.project_id)
+    # Scroll-back gets its own table since chunk_breakdown is a different shape.
+    md += "\n\n## Scroll-back chunk breakdown\n\n"
+    md += "| chunk | from | to | rows | ms |\n"
+    md += "|---|---|---|---|---|\n"
+    for c in s8.get("chunk_breakdown", []):
+        md += f"| {c['chunk']} | {c['from']} | {c['to']} | {c['rows']} | {c['ms']:.0f} |\n"
+    if s8["walls_ms"]:
+        s8_p50, s8_p99 = _stats(s8["walls_ms"])
+        md += f"\n**Total wall-clock per run** (5 runs): p50={s8_p50:.0f} ms, p99={s8_p99:.0f} ms — covers 9 weeks of 1m bars.\n"
     md += f"\n\n## Notes\n\n"
     md += f"- **Manifest pruning is non-functional today.** TRADFI MDPS rows in `_index/availability_index.parquet` only cover 2 dates (2026-01-02 + 2026-04-10) despite ~24 days of GCS parquet existing. MDPS writer is underfilling. Until fixed, **listing-pruning** (one `list_blobs` per candidate day) is the right interim approach — adds {list30_ms:.0f}ms for a 30-day window, well under the savings.\n"
     md += f"- Single-file cold p50 = {_stats([s['wall_ms'] for s in s1['samples']])[0]:.0f}ms is high vs parent-doc target (≤ 200ms cold). Likely region mismatch — bench ran from a workstation outside the bucket region. In a co-located backend (same region as the bucket), expect 50–100ms cold and 20–50ms warm.\n"
