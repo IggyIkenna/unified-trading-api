@@ -134,9 +134,11 @@ async def get_live_universe(
     """
     if get_mock_mode(request):
         # Mock seed has the full instrument list already; just return it.
+        # Envelope must match real-mode shape (asset_group, total) — see
+        # tests/unit/test_live_universe_schema.py for the parity contract.
         service = get_service(request)
         records = service.list("instruments", filters={"asset_group": asset_group})
-        return single_response(records, asset_group=asset_group)
+        return single_response(records, asset_group=asset_group, total=len(records))
 
     reader = _get_instruments_reader(request)
     if reader is None:
