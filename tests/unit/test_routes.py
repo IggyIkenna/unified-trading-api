@@ -462,7 +462,7 @@ class TestMarketDataRoutes:
         """Real mode without a venue param: empty + warning, not an error."""
         from unittest.mock import patch
         with patch(
-            "unified_trading_api.services.app_state.get_mock_mode",
+            "unified_trading_api.routes.market_data.get_mock_mode",
             return_value=False,
         ):
             resp = app_client.get("/market-data/candles?instrument=AAPL&timeframe=1m&mode=batch")
@@ -475,13 +475,18 @@ class TestMarketDataRoutes:
         self, app_client: TestClient
     ) -> None:
         """Real mode calls BatchCandleReader with the resolved project_id."""
+        import os
         from unittest.mock import MagicMock, patch
         mock_reader = MagicMock()
         mock_reader.get_candles.return_value = [
             {"time": 1, "open": 1, "high": 1, "low": 1, "close": 1, "volume": 1},
         ]
-        with patch(
-            "unified_trading_api.services.app_state.get_mock_mode",
+        # Route resolves project_id via app.state.service._project_id → env
+        # fallback → 503. The TestClient app uses an in-memory mock service
+        # without a _project_id attribute, so the env fallback is what
+        # answers in this test.
+        with patch.dict(os.environ, {"GCP_PROJECT_ID": "test-project"}, clear=False), patch(
+            "unified_trading_api.routes.market_data.get_mock_mode",
             return_value=False,
         ), patch(
             "unified_trading_api.routes.market_data.BatchCandleReader",
