@@ -191,7 +191,7 @@ class GcsDomainService:
 
         # Resolve bucket
         try:
-            bucket = build_bucket(dataset, project_id=self._project_id, category=self._category)
+            bucket = build_bucket(dataset, project_id=self._project_id, asset_group=self._category)
         except KeyError:
             logger.warning("Cannot build bucket for dataset '%s'", dataset)
             return []

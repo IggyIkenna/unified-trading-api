@@ -72,11 +72,18 @@ async def get_instruments(
 ) -> dict[str, object]:
     """Get instruments list.
 
-    In real mode with venue + asset_group: reads from the per-day GCS
-    instrument_availability parquet (1h cache). In mock mode or with missing
-    filters: returns the mock fixture list.
+    Real mode:
+      - With ``venue`` + ``asset_group``: reads one (date, venue) shard.
+      - With only ``asset_group``: fans out across all venues that
+        instruments-service published for the date (manifest-driven), in
+        parallel.
+      - With no filters: returns mock fixture list (the asset-group-less
+        case is rarely useful for real GCS reads — would touch all 5
+        buckets).
+
+    Mock mode: returns the mock fixture list.
     """
-    if get_mock_mode(request) or not (venue and asset_group):
+    if get_mock_mode(request) or not asset_group:
         service = get_service(request)
         records = service.list(
             "instruments",
@@ -87,8 +94,88 @@ async def get_instruments(
     reader = _get_instruments_reader(request)
     if reader is None:
         return paginated_response([], page, page_size)
-    records = reader.get_instruments(asset_group=asset_group, venue=venue, as_of=as_of)
-    return paginated_response(records, page, page_size)
+
+    if venue:
+        records = reader.get_instruments(asset_group=asset_group, venue=venue, as_of=as_of)
+    else:
+        records = reader.get_instruments_multi_venue(asset_group=asset_group, as_of=as_of)
+    # Dedupe by instrument_key — see /live-universe for context (upstream
+    # collapses fiat-quote variants to the same canonical key).
+    seen: set[str] = set()
+    deduped: list[dict[str, object]] = []
+    for r in records:
+        k = r.get("instrument_key")
+        if not isinstance(k, str) or not k or k in seen:
+            continue
+        seen.add(k)
+        deduped.append(r)
+    return paginated_response(deduped, page, page_size)
+
+
+@router.get("/live-universe")
+async def get_live_universe(
+    request: Request,
+    asset_group: str = Query(..., description="cefi | tradfi | defi (one per call)"),
+) -> dict[str, object]:
+    """Return the full live-tradeable universe for one asset_group.
+
+    One shipping payload per asset_group — UI fetches lazily (a TradFi-only
+    user never pays for CEFI's 6K rows). Cached 1h via the same
+    InstrumentsReader cache that backs ``/list``.
+
+    Live = ``available_to_datetime`` is null OR strictly in the future. Filters
+    out expired options/futures so the watchlist sees today's tradeable set
+    only. Batch mode (with explicit ``as_of``) goes through ``/list`` instead
+    — different access pattern, server-side filtering of the historical
+    universe.
+
+    Date selection: latest date in the manifest for this asset_group.
+    Falls back to yesterday (UTC) if the manifest can't help.
+    """
+    if get_mock_mode(request):
+        # Mock seed has the full instrument list already; just return it.
+        service = get_service(request)
+        records = service.list("instruments", filters={"asset_group": asset_group})
+        return single_response(records, asset_group=asset_group)
+
+    reader = _get_instruments_reader(request)
+    if reader is None:
+        return single_response([], asset_group=asset_group)
+
+    target_date = reader.latest_date_with_data(asset_group)
+    if target_date is None:
+        target_date = (datetime.now(UTC).date())
+    records = reader.get_instruments_multi_venue(
+        asset_group=asset_group,
+        as_of=target_date,
+    )
+    # Live filter: drop instruments whose available_to_datetime is in the past.
+    # Dedupe by instrument_key — instruments-service occasionally writes
+    # multiple rows per canonical key when distinct fiat-quote pairs (BTC-TRY,
+    # BTC-AUD, …) collapse to the same canonical USD-quoted key in UAC's
+    # build_instrument_id. That's an upstream bug; we keep the first row per
+    # key here so downstream React keys stay unique. Tracked separately as
+    # an instruments-service / UAC fix.
+    now_iso = datetime.now(UTC).isoformat()
+    live_records: list[dict[str, object]] = []
+    seen_keys: set[str] = set()
+    for r in records:
+        ato = r.get("available_to_datetime")
+        if ato is not None and not (isinstance(ato, str) and ato > now_iso):
+            continue
+        key = r.get("instrument_key")
+        if not isinstance(key, str) or not key:
+            continue
+        if key in seen_keys:
+            continue
+        seen_keys.add(key)
+        live_records.append(r)
+    return single_response(
+        live_records,
+        asset_group=asset_group,
+        as_of=target_date.isoformat(),
+        total=len(live_records),
+    )
 
 
 @router.get("/catalogue")

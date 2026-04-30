@@ -100,3 +100,33 @@ async def get_corporate_actions(
         count=len(records),
         filters={"tickers": tickers, "event_type": event_type, "days_forward": days_forward},
     )
+
+
+@router.get("/market-structure")
+async def get_market_structure_events(
+    request: Request,
+) -> dict[str, object]:
+    """Get market-structure events (early-close days, listing changes, etc.).
+
+    Mock mode: reads from MockStateStore (collection: calendar_market_structure).
+    Live mode: not yet wired — features-calendar-service hasn't published this
+    domain yet. Returns ``[]`` so the UI's empty state handles it gracefully
+    rather than 404.
+    """
+    service = get_service(request)
+    records: list[dict[str, object]] = service.list("calendar_market_structure")
+    return single_response(records, count=len(records))
+
+
+@router.get("/holidays")
+async def get_calendar_holidays(
+    request: Request,
+) -> dict[str, object]:
+    """Get exchange holiday calendar.
+
+    Mock mode: reads from MockStateStore (collection: calendar_holidays).
+    Live mode: not yet wired — same status as ``/market-structure``.
+    """
+    service = get_service(request)
+    records: list[dict[str, object]] = service.list("calendar_holidays")
+    return single_response(records, count=len(records))
