@@ -60,7 +60,22 @@ from unified_trading_api.middleware.entitlement import (  # noqa: qg-deep-import
     get_entitlement_context,
 )
 
+# Plan D Phase 3 — event emissions on subscription / version state changes.
+# Wrapped in a defensive helper because the events module raises
+# RuntimeError when ``setup_events()`` has not been called (e.g. unit tests
+# that bypass the FastAPI lifespan startup). UTA prod startup wires
+# ``setup_events`` so the live path always emits.
+from unified_trading_library import log_event as _log_event_unsafe  # noqa: E402
+
 logger = logging.getLogger(__name__)
+
+
+def _safe_log_event(name: str, details: dict[str, str]) -> None:
+    try:
+        details_obj: dict[str, object] = dict(details)
+        _log_event_unsafe(name, details=details_obj)
+    except RuntimeError:
+        logger.info("event-emit-skipped (events not initialised) name=%s", name)
 
 
 # ─── Feature flag ───────────────────────────────────────────────────────
@@ -363,6 +378,15 @@ def subscribe(
         created = store.create(sub)
     except ExclusiveLockViolation as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
+    _safe_log_event(
+        "STRATEGY_SUBSCRIPTION_CREATED",
+        {
+            "instance_id": created.instance_id,
+            "client_id": created.client_id,
+            "subscription_type": created.subscription_type.value,
+            "exclusive_lock": str(created.exclusive_lock),
+        },
+    )
     logger.info(
         "subscribe created instance=%s client=%s type=%s",
         created.instance_id,
@@ -400,6 +424,14 @@ def unsubscribe(
                 f"instance_id={instance_id} client_id={client_id}."
             ),
         )
+    _safe_log_event(
+        "STRATEGY_SUBSCRIPTION_RELEASED",
+        {
+            "instance_id": released.instance_id,
+            "client_id": released.client_id,
+            "reason": "client_unsubscribed",
+        },
+    )
     logger.info("unsubscribe instance=%s client=%s", instance_id, client_id)
     assert released.released_at is not None
     return UnsubscribeResponse(
@@ -455,6 +487,15 @@ def fork(
         config_diff=diff,
     )
     versions.put(draft)
+    _safe_log_event(
+        "STRATEGY_VERSION_DRAFT_CREATED",
+        {
+            "version_id": draft.version_id,
+            "parent_instance_id": draft.parent_instance_id,
+            "parent_version_id": parent.version_id,
+            "authored_by": payload.client_id,
+        },
+    )
     logger.info(
         "version draft created version_id=%s parent=%s author=%s",
         draft.version_id,
@@ -484,6 +525,15 @@ def request_approval(
         )
     updated = _replace_version(version, status=VersionStatus.PENDING_APPROVAL)
     versions.put(updated)
+    _safe_log_event(
+        "STRATEGY_VERSION_APPROVAL_REQUESTED",
+        {
+            "version_id": updated.version_id,
+            "instance_id": updated.parent_instance_id,
+            "authored_by": updated.authored_by,
+            "requested_at": datetime.now(UTC).isoformat(),
+        },
+    )
     logger.info("version approval requested version_id=%s", version_id)
     return _version_response(updated)
 
@@ -533,6 +583,15 @@ def approve(
         maturity_phase=payload.backtest_maturity,
     )
     versions.put(updated)
+    _safe_log_event(
+        "STRATEGY_VERSION_APPROVED",
+        {
+            "version_id": updated.version_id,
+            "approved_by": payload.approved_by,
+            "backtest_maturity": payload.backtest_maturity.value,
+            "backtest_series_ref": payload.backtest_series_ref,
+        },
+    )
     logger.info(
         "version approved version_id=%s approver=%s maturity=%s",
         version_id,
@@ -564,6 +623,14 @@ def reject(
         )
     updated = _replace_version(version, status=VersionStatus.REJECTED)
     versions.put(updated)
+    _safe_log_event(
+        "STRATEGY_VERSION_REJECTED",
+        {
+            "version_id": updated.version_id,
+            "rejected_by": payload.rejected_by,
+            "rejection_reason": payload.rejection_reason,
+        },
+    )
     logger.info(
         "version rejected version_id=%s rejector=%s reason=%s",
         version_id,
@@ -604,6 +671,15 @@ def rollout(
     if prior is not None and prior.version_id != updated.version_id:
         retired = _replace_version(prior, status=VersionStatus.RETIRED)
         versions.put(retired)
+    _safe_log_event(
+        "STRATEGY_VERSION_ROLLED_OUT",
+        {
+            "version_id": updated.version_id,
+            "instance_id": updated.parent_instance_id,
+            "supersedes_version_id": prior.version_id if prior is not None else "",
+            "rolled_out_at": now.isoformat(),
+        },
+    )
     logger.info(
         "version rolled out version_id=%s instance=%s supersedes=%s",
         version_id,
