@@ -99,6 +99,22 @@ async def get_stress_tests(
     )
 
 
+@router.get("/venue-circuit-breakers")
+async def list_venue_circuit_breakers(
+    request: Request,
+    mode: str = Query("live", pattern="^(live|batch)$"),
+) -> dict[str, object]:
+    """Per-venue circuit-breaker status for the risk dashboard.
+
+    Returns a list of venues with their armed/tripped status. Companion to
+    POST /circuit-breaker (per-strategy toggle) — this endpoint is the
+    read-side aggregate, scoped to venue-level rather than strategy-level.
+    """
+    service = get_service(request)
+    records = service.list("venue_circuit_breakers", filters={})
+    return single_response(records, mode=mode)
+
+
 @router.post("/circuit-breaker")
 async def toggle_circuit_breaker(
     request: Request,
