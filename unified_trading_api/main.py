@@ -50,7 +50,7 @@ from unified_trading_api.routes import (  # noqa: qg-deep-import — self-packag
     service_status,
     sports,
     strategy_performance,
-    # strategy_subscriptions,  # XXX local-dev: UAC missing ApprovalRecord/StrategyVersion/SubscriptionType — skip until UAC fixed
+    strategy_subscriptions,
     trading_analytics,
     users,
     websocket,
@@ -80,6 +80,15 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     cloud_config = UnifiedCloudConfig()
     app.state.mock_mode = cloud_config.is_mock_mode()
     app.state.disable_auth = cloud_config.disable_auth
+
+    # Plan D — feature flags. Local-dev override via DART_EXCLUSIVE_ENABLED env
+    # so Playwright/MCP browser sessions can exercise the strategy-subscriptions
+    # endpoints without waiting on the Phase 6 UnifiedCloudConfig wiring. Prod
+    # default stays False (see strategy_subscriptions._DART_EXCLUSIVE_ENABLED_DEFAULT).
+    app.state.feature_flags = {
+        "dart_exclusive_enabled": os.environ.get("DART_EXCLUSIVE_ENABLED", "").lower()  # config-bootstrap: dev-only flag override
+        in {"1", "true", "yes"},
+    }
 
     if app.state.mock_mode:
         mock_state_mode = os.environ.get("MOCK_STATE_MODE", "interactive")  # config-bootstrap:
@@ -188,12 +197,11 @@ def create_app() -> FastAPI:
         prefix="/api/v1",
         tags=["strategy-performance"],
     )
-    # XXX local-dev: strategy_subscriptions disabled until UAC re-exports ApprovalRecord/StrategyVersion/SubscriptionType
-    # app.include_router(
-    #     strategy_subscriptions.router,
-    #     prefix="/api/v1",
-    #     tags=["strategy-subscriptions"],
-    # )
+    app.include_router(
+        strategy_subscriptions.router,
+        prefix="/api/v1",
+        tags=["strategy-subscriptions"],
+    )
     app.include_router(defi_basis.router, prefix="/defi/basis", tags=["defi-basis"])
     app.include_router(defi_lending.router, prefix="/defi/lending", tags=["defi-lending"])
     app.include_router(
