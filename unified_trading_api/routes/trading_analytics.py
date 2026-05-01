@@ -382,7 +382,7 @@ async def get_strategy_catalog(
     catalog: list[dict[str, object]] = [
         {
             "id": s["strategy_id"],
-            "domain": str(s["category"]).lower(),
+            "domain": str(s["asset_group"]).lower(),
             "family": str(s["family"]).lower().replace("_", "-"),
             "label": s["name"],
             "params": [],

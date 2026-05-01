@@ -139,7 +139,6 @@ _CEFI_VENUES = [
     "bybit",
     "okx",
     "deribit",
-    "kraken_futures",
     "gate_io",
     "kucoin",
     "htx",

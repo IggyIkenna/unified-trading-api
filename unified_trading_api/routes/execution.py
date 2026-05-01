@@ -30,7 +30,9 @@ async def get_orders(
     venue: str = Query(None),
     status: str = Query(None),
     client_id: str = Query(None, description="Filter by client ID"),
-    category: str = Query(None, description="Filter by category (CEFI, DEFI, TRADFI, SPORTS)"),
+    asset_group: str = Query(
+        None, description="Filter by asset group (cefi, defi, tradfi, sports, prediction)"
+    ),
     strategy_family: str = Query(None, description="Filter by strategy family"),
     account_id: str = Query(None, description="Filter by account ID"),
     as_of: str = Query(None, description="T+1 reconciliation date for batch mode"),
@@ -46,7 +48,7 @@ async def get_orders(
             "venue": venue,
             "status": status,
             "client_id": client_id,
-            "category": category,
+            "asset_group": asset_group,
             "strategy_family": strategy_family,
             "account_id": account_id,
             "as_of": as_of,
@@ -62,7 +64,9 @@ async def get_fills(
     venue: str = Query(None),
     order_id: str = Query(None),
     client_id: str = Query(None, description="Filter by client ID"),
-    category: str = Query(None, description="Filter by category (CEFI, DEFI, TRADFI, SPORTS)"),
+    asset_group: str = Query(
+        None, description="Filter by asset group (cefi, defi, tradfi, sports, prediction)"
+    ),
     strategy_family: str = Query(None, description="Filter by strategy family"),
     account_id: str = Query(None, description="Filter by account ID"),
     as_of: str = Query(None, description="T+1 reconciliation date for batch mode"),
@@ -76,7 +80,7 @@ async def get_fills(
         "venue": venue,
         "order_id": order_id,
         "client_id": client_id,
-        "category": category,
+        "asset_group": asset_group,
         "strategy_family": strategy_family,
         "account_id": account_id,
         "as_of": as_of,
@@ -89,7 +93,7 @@ async def get_fills(
                 "venue": venue,
                 "order_id": order_id,
                 "client_id": client_id,
-                "category": category,
+                "asset_group": asset_group,
                 "strategy_family": strategy_family,
                 "account_id": account_id,
             },

@@ -53,19 +53,19 @@ from unified_api_contracts.strategy import (
     minimum_approval_maturity,
 )
 
+# Plan D Phase 3 — event emissions on subscription / version state changes.
+# Wrapped in a defensive helper because the events module raises
+# RuntimeError when ``setup_events()`` has not been called (e.g. unit tests
+# that bypass the FastAPI lifespan startup). UTA prod startup wires
+# ``setup_events`` so the live path always emits.
+from unified_trading_library import log_event as _log_event_unsafe
+
 from unified_trading_api.middleware.auth import (  # noqa: qg-deep-import — self-package
     verify_api_key,
 )
 from unified_trading_api.middleware.entitlement import (  # noqa: qg-deep-import — self-package
     get_entitlement_context,
 )
-
-# Plan D Phase 3 — event emissions on subscription / version state changes.
-# Wrapped in a defensive helper because the events module raises
-# RuntimeError when ``setup_events()`` has not been called (e.g. unit tests
-# that bypass the FastAPI lifespan startup). UTA prod startup wires
-# ``setup_events`` so the live path always emits.
-from unified_trading_library import log_event as _log_event_unsafe  # noqa: E402
 
 logger = logging.getLogger(__name__)
 

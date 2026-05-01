@@ -27,9 +27,9 @@ import httpx
 from unified_trading_api.routes.strategy_performance import (  # noqa: qg-deep-import — self-package
     PbmPerformanceClient,
     SynthPbmPerformanceClient,
+    _account_for_view,  # pyright: ignore[reportPrivateUsage]  # SAME-PACKAGE — co-located helper.
     _PerViewSeries,  # pyright: ignore[reportPrivateUsage]  # SAME-PACKAGE — co-located DTO until extraction completes (see route docstring §UTA-side ``HttpPbmPerformanceClient`` placement).
     _SeriesPoint,  # pyright: ignore[reportPrivateUsage]  # SAME-PACKAGE — co-located DTO.
-    _account_for_view,  # pyright: ignore[reportPrivateUsage]  # SAME-PACKAGE — co-located helper.
 )
 
 logger = logging.getLogger(__name__)
@@ -153,7 +153,7 @@ def make_pbm_performance_client(
         return SynthPbmPerformanceClient()
     try:
         return HttpPbmPerformanceClient(base_url=base_url)
-    except Exception as exc:  # noqa: BLE001 — defensive
+    except Exception as exc:
         if fall_back_to_synth:
             logger.warning("HttpPbmPerformanceClient init failed: %s; using synth", exc)
             return SynthPbmPerformanceClient()

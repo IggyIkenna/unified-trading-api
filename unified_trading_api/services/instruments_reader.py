@@ -15,7 +15,10 @@ from decimal import Decimal
 
 import pandas as pd
 import pyarrow.parquet as pq
-from unified_trading_library import build_bucket, get_storage_client  # pyright: ignore[reportPrivateImportUsage]
+from unified_trading_library import (  # pyright: ignore[reportPrivateImportUsage]
+    build_bucket,
+    get_storage_client,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -110,7 +113,9 @@ class InstrumentsReader:
             else:
                 # numpy scalar → python scalar via .item(). Skip for native Python types.
                 item_attr = getattr(value, "item", None)  # pyright: ignore[reportUnknownArgumentType]
-                if callable(item_attr) and not isinstance(value, (str, list, dict, bytes, tuple, bool, int, float)):
+                if callable(item_attr) and not isinstance(
+                    value, (str, list, dict, bytes, tuple, bool, int, float)
+                ):
                     result[key_str] = item_attr()  # pyright: ignore[reportAny]
                 else:
                     result[key_str] = value  # pyright: ignore[reportUnknownVariableType]

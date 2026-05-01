@@ -17,8 +17,8 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 from unified_trading_api.services.batch_candles import (  # noqa: qg-deep-import — self-package
-    BatchCandleReader,
     _TIMEFRAME_MAP,
+    BatchCandleReader,
     _venue_to_category,
 )
 
@@ -108,8 +108,11 @@ class TestGetCandles:
         ):
             reader = BatchCandleReader(project_id="p")
         bars = reader.get_candles(
-            venue="NASDAQ", symbol="AAPL", timeframe="5m",
-            limit=100, as_of=date(2026, 1, 15),
+            venue="NASDAQ",
+            symbol="AAPL",
+            timeframe="5m",
+            limit=100,
+            as_of=date(2026, 1, 15),
         )
         # Bars come back unchanged — no resampling, no aggregation
         assert len(bars) == 2
@@ -130,7 +133,10 @@ class TestGetCandles:
         ):
             reader = BatchCandleReader(project_id="p")
         bars = reader.get_candles(
-            venue="NASDAQ", symbol="AAPL", timeframe="5m",
-            limit=100, as_of=date(2099, 1, 1),
+            venue="NASDAQ",
+            symbol="AAPL",
+            timeframe="5m",
+            limit=100,
+            as_of=date(2099, 1, 1),
         )
         assert bars == []

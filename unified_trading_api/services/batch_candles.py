@@ -28,9 +28,14 @@ from datetime import UTC, date, datetime, timedelta
 
 import pandas as pd
 import pyarrow.parquet as pq
-from unified_trading_library import build_bucket, get_storage_client  # pyright: ignore[reportPrivateImportUsage]
+from unified_trading_library import (  # pyright: ignore[reportPrivateImportUsage]
+    build_bucket,
+    get_storage_client,
+)
 
-from unified_trading_api.config.curated_symbols import get_symbol_config  # noqa: qg-deep-import — self-package
+from unified_trading_api.config.curated_symbols import (
+    get_symbol_config,  # noqa: qg-deep-import — self-package
+)
 
 logger = logging.getLogger(__name__)
 
@@ -54,11 +59,25 @@ _TIMEFRAME_MAP: dict[str, str] = {
 }
 
 _CEFI_VENUE_PREFIXES: tuple[str, ...] = (
-    "BINANCE", "BYBIT", "DERIBIT", "OKX", "HYPERLIQUID", "COINBASE", "KRAKEN", "BITMEX",
+    "BINANCE",
+    "BYBIT",
+    "DERIBIT",
+    "OKX",
+    "HYPERLIQUID",
+    "COINBASE",
+    "KRAKEN",
+    "BITMEX",
 )
 _TRADFI_VENUE_PREFIXES: tuple[str, ...] = ("CME", "NYSE", "NASDAQ", "ICE", "CBOE", "FX")
 _DEFI_VENUE_PREFIXES: tuple[str, ...] = (
-    "UNISWAP", "AAVE", "CURVE", "LIDO", "MORPHO", "COMPOUND", "BALANCER", "SUSHI",
+    "UNISWAP",
+    "AAVE",
+    "CURVE",
+    "LIDO",
+    "MORPHO",
+    "COMPOUND",
+    "BALANCER",
+    "SUSHI",
 )
 
 

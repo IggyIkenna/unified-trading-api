@@ -15,7 +15,6 @@ They mutate the InstrumentGenerator's ad-hoc pool for scenario testing:
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from datetime import date as _Date
 from typing import cast
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -35,59 +34,21 @@ from unified_trading_api.services.app_state import (  # noqa: qg-deep-import —
     get_mock_mode,  # noqa: qg-deep-import — self-package
 )
 from unified_trading_api.services.factory import get_service  # noqa: qg-deep-import — self-package
-from unified_trading_api.services.instruments_reader import (  # noqa: qg-deep-import — self-package
-    InstrumentsReader,  # noqa: qg-deep-import — self-package
-)
 
 router = APIRouter(dependencies=[Depends(verify_api_key)])
-
-
-def _get_instruments_reader(request: Request) -> InstrumentsReader | None:
-    """Lazily create + cache the InstrumentsReader on app.state."""
-    existing = cast(
-        InstrumentsReader | None,
-        getattr(request.app.state, "_instruments_reader", None),  # pyright: ignore[reportAny]
-    )
-    if existing is not None:
-        return existing
-    project_id = cast(
-        str | None,
-        getattr(request.app.state.service, "_project_id", None),  # pyright: ignore[reportAny]
-    )
-    if not project_id:
-        return None
-    reader = InstrumentsReader(project_id=project_id)
-    request.app.state._instruments_reader = reader  # pyright: ignore[reportAny]
-    return reader
 
 
 @router.get("/list")
 async def get_instruments(
     request: Request,
-    venue: str | None = Query(None),
-    asset_group: str | None = Query(None),
-    as_of: _Date | None = Query(None, description="UTC date for instrument availability snapshot"),
+    venue: str = Query(None),
+    asset_group: str = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=200),
 ) -> dict[str, object]:
-    """Get instruments list.
-
-    In real mode with venue + asset_group: reads from the per-day GCS
-    instrument_availability parquet (1h cache). In mock mode or with missing
-    filters: returns the mock fixture list.
-    """
-    if get_mock_mode(request) or not (venue and asset_group):
-        service = get_service(request)
-        records = service.list(
-            "instruments",
-            filters={"venue": venue, "asset_group": asset_group},
-        )
-        return paginated_response(records, page, page_size)
-
-    reader = _get_instruments_reader(request)
-    if reader is None:
-        return paginated_response([], page, page_size)
-    records = reader.get_instruments(asset_group=asset_group, venue=venue, as_of=as_of)
+    """Get instruments list."""
+    service = get_service(request)
+    records = service.list("instruments", filters={"venue": venue, "asset_group": asset_group})
     return paginated_response(records, page, page_size)
 
 
@@ -104,7 +65,9 @@ async def get_catalogue(
 async def get_registry(
     request: Request,
     venue: str = Query(None, description="Filter by venue (e.g. binance, deribit)"),
-    asset_group: str = Query(None, description="Filter by asset group: cefi, defi, tradfi"),
+    asset_group: str = Query(
+        None, description="Filter by asset group: cefi, defi, tradfi, sports, prediction"
+    ),
     instrument_type: str = Query(
         None, description="Filter by type: spot, future, option, perp, lp_pool"
     ),
@@ -129,23 +92,6 @@ async def get_registry(
         },
     )
     return paginated_response(records, page, page_size)
-
-
-@router.get("/curated")
-async def get_curated_instruments(
-    asset_group: str | None = Query(None, description="Filter by asset group: cefi, defi, tradfi"),
-) -> dict[str, object]:
-    """Return curated instruments for the trading terminal watchlist.
-
-    These are the symbols with confirmed GCS market data coverage.
-    """
-    from unified_trading_api.config.curated_symbols import CURATED_SYMBOLS  # noqa: qg-deep-import — self-package
-
-    if asset_group:
-        data: dict[str, object] = {asset_group: CURATED_SYMBOLS.get(asset_group.lower(), [])}
-    else:
-        data = dict(CURATED_SYMBOLS)
-    return single_response(data)
 
 
 # ---------------------------------------------------------------------------

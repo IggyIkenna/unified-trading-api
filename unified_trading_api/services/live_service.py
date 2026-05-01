@@ -83,9 +83,9 @@ class GcsDomainService:
     5. Returns records as ``list[dict]``
     """
 
-    def __init__(self, project_id: str, category: str = "cefi") -> None:
+    def __init__(self, project_id: str, asset_group: str = "cefi") -> None:
         self._project_id = project_id
-        self._category = category
+        self._asset_group = asset_group
         self._storage = get_storage_client(project_id=project_id)
 
     @staticmethod
@@ -191,7 +191,9 @@ class GcsDomainService:
 
         # Resolve bucket
         try:
-            bucket = build_bucket(dataset, project_id=self._project_id, category=self._category)
+            bucket = build_bucket(
+                dataset, project_id=self._project_id, asset_group=self._asset_group
+            )
         except KeyError:
             logger.warning("Cannot build bucket for dataset '%s'", dataset)
             return []

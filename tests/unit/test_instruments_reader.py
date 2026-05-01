@@ -22,7 +22,9 @@ def _make_parquet_bytes(df: pd.DataFrame) -> bytes:
     return buf.getvalue()
 
 
-def _build_reader_with_parquet(parquet_bytes: bytes | Exception) -> tuple[InstrumentsReader, MagicMock]:
+def _build_reader_with_parquet(
+    parquet_bytes: bytes | Exception,
+) -> tuple[InstrumentsReader, MagicMock]:
     mock_storage = MagicMock()
     if isinstance(parquet_bytes, Exception):
         mock_storage.download_bytes.side_effect = parquet_bytes
@@ -38,11 +40,13 @@ def _build_reader_with_parquet(parquet_bytes: bytes | Exception) -> tuple[Instru
 
 class TestNormalisation:
     def test_timestamps_become_iso_strings(self) -> None:
-        df = pd.DataFrame({
-            "instrument_key": ["A:B:C"],
-            "available_from_datetime": [pd.Timestamp("2026-04-14T00:00:00", tz="UTC")],
-            "available_to_datetime": [pd.NaT],
-        })
+        df = pd.DataFrame(
+            {
+                "instrument_key": ["A:B:C"],
+                "available_from_datetime": [pd.Timestamp("2026-04-14T00:00:00", tz="UTC")],
+                "available_to_datetime": [pd.NaT],
+            }
+        )
         reader, _ = _build_reader_with_parquet(_make_parquet_bytes(df))
         records = reader.get_instruments(asset_group="cefi", venue="X", as_of=date(2026, 4, 14))
         assert len(records) == 1
@@ -53,11 +57,13 @@ class TestNormalisation:
         assert row["available_to_datetime"] is None
 
     def test_decimals_become_floats(self) -> None:
-        df = pd.DataFrame({
-            "instrument_key": ["A:B:C"],
-            "tick_size": [Decimal("0.01")],
-            "min_size": [Decimal("0.001")],
-        })
+        df = pd.DataFrame(
+            {
+                "instrument_key": ["A:B:C"],
+                "tick_size": [Decimal("0.01")],
+                "min_size": [Decimal("0.001")],
+            }
+        )
         reader, _ = _build_reader_with_parquet(_make_parquet_bytes(df))
         records = reader.get_instruments(asset_group="cefi", venue="X", as_of=date(2026, 4, 14))
         assert records[0]["tick_size"] == 0.01
