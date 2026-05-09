@@ -4,7 +4,7 @@ Covers feature-flag gating, exclusive-lock 409, fork 403-without-subscription,
 approve 412-below-backtest-floor, and the happy-path
 subscribe → fork → request-approval → approve → rollout loop.
 
-Integration matrix (client-entitlement × subscription-type × Firestore paths)
+Integration matrix (client-entitlement x subscription-type x Firestore paths)
 is tracked as follow-up ``p2-uta-feature-flag-and-tests`` once the Firestore
 store replaces the in-memory scaffold.
 """

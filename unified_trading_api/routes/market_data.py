@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import random as _rng
-from datetime import date as _Date
+from datetime import date as _Date  # noqa: N812
 
 from fastapi import APIRouter, Depends, Query, Request
 

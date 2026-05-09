@@ -159,7 +159,7 @@ class BatchCandleReader:
             )
         return records
 
-    def get_candles(
+    def get_candles(  # noqa: C901
         self,
         venue: str,
         symbol: str,
@@ -204,7 +204,7 @@ class BatchCandleReader:
             return []
 
         # Per-day GCS reads in parallel — they're independent and I/O-bound,
-        # so a small thread pool turns N×0.2s into ~0.2s for the whole window.
+        # so a small thread pool turns N x 0.2s into ~0.2s for the whole window.
         def _fetch(d: date) -> pd.DataFrame | None:
             blob = self._blob_path(venue, symbol, timeframe_partition, data_type, d)
             return self._read_df(bucket, blob)
