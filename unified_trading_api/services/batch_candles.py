@@ -186,7 +186,7 @@ class BatchCandleReader:
             logger.warning("Unsupported timeframe: %r", timeframe)
             return []
 
-        category = _venue_to_category(venue)
+        asset_group = _venue_to_category(venue)
         data_type = sym_config["data_type"]
 
         if as_of:
@@ -198,9 +198,11 @@ class BatchCandleReader:
             dates = [datetime.now(UTC).date() - timedelta(days=1)]
 
         try:
-            bucket = build_bucket("raw_tick_data", project_id=self._project_id, category=category)
+            bucket = build_bucket(
+                "raw_tick_data", project_id=self._project_id, asset_group=asset_group
+            )
         except KeyError:
-            logger.warning("Cannot build bucket for category '%s'", category)
+            logger.warning("Cannot build bucket for asset_group '%s'", asset_group)
             return []
 
         # Per-day GCS reads in parallel — they're independent and I/O-bound,

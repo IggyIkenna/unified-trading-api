@@ -52,11 +52,13 @@ class InstrumentsReader:
         self._cache[cache_key] = (now, records)
         return records
 
-    def _fetch(self, category: str, venue: str, target_date: date) -> list[dict[str, object]]:
+    def _fetch(self, asset_group: str, venue: str, target_date: date) -> list[dict[str, object]]:
         try:
-            bucket = build_bucket("instruments", project_id=self._project_id, category=category)
+            bucket = build_bucket(
+                "instruments", project_id=self._project_id, asset_group=asset_group
+            )
         except KeyError:
-            logger.warning("InstrumentsReader: unknown category '%s'", category)
+            logger.warning("InstrumentsReader: unknown asset_group '%s'", asset_group)
             return []
         blob = (
             f"instrument_availability/by_date/day={target_date.isoformat()}"
