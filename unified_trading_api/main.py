@@ -86,7 +86,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     # endpoints without waiting on the Phase 6 UnifiedCloudConfig wiring. Prod
     # default stays False (see strategy_subscriptions._DART_EXCLUSIVE_ENABLED_DEFAULT).
     app.state.feature_flags = {
-        "dart_exclusive_enabled": os.environ.get("DART_EXCLUSIVE_ENABLED", "").lower()  # config-bootstrap: dev-only flag override
+        "dart_exclusive_enabled": os.environ.get(
+            "DART_EXCLUSIVE_ENABLED", ""
+        ).lower()  # config-bootstrap: dev-only flag override
         in {"1", "true", "yes"},
     }
 
