@@ -211,7 +211,7 @@ def _ensure_id(domain: str, records: list[dict[str, object]]) -> list[dict[str, 
     return records
 
 
-def seed_all_domains(store: _Seedable | None = None) -> None:  # noqa: C901
+def seed_all_domains(store: _Seedable | None = None) -> None:
     """Populate every mock-store domain with synthetic records.
 
     Args:

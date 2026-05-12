@@ -58,7 +58,7 @@ class HttpPbmPerformanceClient(PbmPerformanceClient):
         self._timeout = timeout_seconds
         self._client = http_client or httpx.Client(timeout=timeout_seconds)
 
-    def get_series(  # noqa: C901
+    def get_series(
         self,
         *,
         account_id: str,

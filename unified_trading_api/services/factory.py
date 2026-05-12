@@ -29,13 +29,13 @@ def get_service(request: Request) -> DomainService:
     if persona_id and hasattr(service, "persona_org_id"):
         persona = next((p for p in PERSONAS if p["id"] == persona_id), None)
         if persona:
-            setattr(service, "persona_org_id", str(persona["org_id"]))  # noqa: B010
-            setattr(service, "persona_role", str(persona["role"]))  # noqa: B010
+            setattr(service, "persona_org_id", str(persona["org_id"]))
+            setattr(service, "persona_role", str(persona["role"]))
         else:
-            setattr(service, "persona_org_id", None)  # noqa: B010
-            setattr(service, "persona_role", None)  # noqa: B010
+            setattr(service, "persona_org_id", None)
+            setattr(service, "persona_role", None)
     elif hasattr(service, "persona_org_id"):
-        setattr(service, "persona_org_id", None)  # noqa: B010
-        setattr(service, "persona_role", None)  # noqa: B010
+        setattr(service, "persona_org_id", None)
+        setattr(service, "persona_role", None)
 
     return service

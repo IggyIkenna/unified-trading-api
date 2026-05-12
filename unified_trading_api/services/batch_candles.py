@@ -159,7 +159,7 @@ class BatchCandleReader:
             )
         return records
 
-    def get_candles(  # noqa: C901
+    def get_candles(
         self,
         venue: str,
         symbol: str,

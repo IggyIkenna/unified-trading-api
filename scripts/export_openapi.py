@@ -41,9 +41,7 @@ def main() -> int:
     """Entry point."""
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description="Export OpenAPI spec from unified-trading-api"
-    )
+    parser = argparse.ArgumentParser(description="Export OpenAPI spec from unified-trading-api")
     parser.add_argument(
         "--output",
         type=Path,

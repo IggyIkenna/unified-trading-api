@@ -521,7 +521,7 @@ def request_approval(
     if version.status is not VersionStatus.DRAFT:
         raise HTTPException(
             status_code=409,
-            detail=f"version_id={version_id} is {version.status.value}; only DRAFT → PENDING_APPROVAL.",  # noqa: E501
+            detail=f"version_id={version_id} is {version.status.value}; only DRAFT → PENDING_APPROVAL.",
         )
     updated = _replace_version(version, status=VersionStatus.PENDING_APPROVAL)
     versions.put(updated)
@@ -556,7 +556,7 @@ def approve(
     if version.status is not VersionStatus.PENDING_APPROVAL:
         raise HTTPException(
             status_code=409,
-            detail=f"version_id={version_id} is {version.status.value}; only PENDING_APPROVAL → APPROVED.",  # noqa: E501
+            detail=f"version_id={version_id} is {version.status.value}; only PENDING_APPROVAL → APPROVED.",
         )
     min_phase = minimum_approval_maturity()
     if maturity_phase_rank(payload.backtest_maturity) < maturity_phase_rank(min_phase):
@@ -619,7 +619,7 @@ def reject(
     if version.status is not VersionStatus.PENDING_APPROVAL:
         raise HTTPException(
             status_code=409,
-            detail=f"version_id={version_id} is {version.status.value}; only PENDING_APPROVAL → REJECTED.",  # noqa: E501
+            detail=f"version_id={version_id} is {version.status.value}; only PENDING_APPROVAL → REJECTED.",
         )
     updated = _replace_version(version, status=VersionStatus.REJECTED)
     versions.put(updated)
@@ -657,7 +657,7 @@ def rollout(
     if version.status is not VersionStatus.APPROVED:
         raise HTTPException(
             status_code=409,
-            detail=f"version_id={version_id} is {version.status.value}; only APPROVED → ROLLED_OUT.",  # noqa: E501
+            detail=f"version_id={version_id} is {version.status.value}; only APPROVED → ROLLED_OUT.",
         )
     now = datetime.now(UTC)
     prior = versions.active_for_instance(version.parent_instance_id)

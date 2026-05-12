@@ -110,9 +110,13 @@ def _validate_cross_api_alignment(
     api_only_personas = api_persona_ids - auth_user_ids
     auth_only_personas = auth_user_ids - api_persona_ids
     if api_only_personas:
-        errors.append(f"Personas in unified-trading-api but NOT auth-api: {sorted(api_only_personas)}")
+        errors.append(
+            f"Personas in unified-trading-api but NOT auth-api: {sorted(api_only_personas)}"
+        )
     if auth_only_personas:
-        errors.append(f"Personas in auth-api but NOT unified-trading-api: {sorted(auth_only_personas)}")
+        errors.append(
+            f"Personas in auth-api but NOT unified-trading-api: {sorted(auth_only_personas)}"
+        )
 
     # Per-persona field alignment
     for pid in sorted(api_persona_ids & auth_user_ids):
