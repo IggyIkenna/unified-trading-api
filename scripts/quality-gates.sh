@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Repo-specific settings only. Body: unified-trading-pm/scripts/quality-gates-base/base-service.sh
-# SSOT: unified-trading-codex/06-coding-standards/quality-gates-service-template.sh
+# SSOT: unified-trading-pm/codex/06-coding-standards/quality-gates-service-template.sh
 #
 # Instructions for a new service:
 #   1. Copy this to scripts/quality-gates.sh in your repo (rollout-quality-gates-unified.py does this)
