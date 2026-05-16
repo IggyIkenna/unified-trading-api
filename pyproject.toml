@@ -28,8 +28,6 @@ dependencies = [
     "prometheus-client>=0.20.0,<1.0.0",
     # HTTP client (proxy to deployment-api)
     "httpx>=0.28.1,<1.0.0",
-    # LLM — tiered help chatbot
-    "anthropic>=0.49.0,<1.0.0",
     # WebSocket
     "websockets>=14.0,<15.0.0",
     # Internal libraries
