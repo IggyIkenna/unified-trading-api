@@ -159,7 +159,48 @@ class BatchCandleReader:
             )
         return records
 
-    def get_candles(  # noqa: C901
+    @staticmethod
+    def _resolve_dates(
+        as_of: date | None, from_date: date | None, to_date: date | None
+    ) -> list[date]:
+        """Pick the date window per the precedence: as_of > from_date..to_date > yesterday."""
+        if as_of:
+            return [as_of]
+        if from_date and to_date:
+            delta = (to_date - from_date).days
+            return [from_date + timedelta(days=i) for i in range(delta + 1)]
+        return [datetime.now(UTC).date() - timedelta(days=1)]
+
+    def _fetch_frames(
+        self,
+        dates: list[date],
+        *,
+        bucket: str,
+        venue: str,
+        symbol: str,
+        timeframe_partition: str,
+        data_type: str,
+    ) -> list[pd.DataFrame]:
+        """Read one parquet per day, in parallel for multi-day windows. Drops empty/missing days."""
+
+        def _fetch(d: date) -> pd.DataFrame | None:
+            blob = self._blob_path(venue, symbol, timeframe_partition, data_type, d)
+            return self._read_df(bucket, blob)
+
+        frames: list[pd.DataFrame] = []
+        if len(dates) == 1:
+            df = _fetch(dates[0])
+            if df is not None and not df.empty:
+                frames.append(df)
+            return frames
+        workers = min(16, len(dates))
+        with ThreadPoolExecutor(max_workers=workers) as ex:
+            for df in ex.map(_fetch, dates):
+                if df is not None and not df.empty:
+                    frames.append(df)
+        return frames
+
+    def get_candles(
         self,
         venue: str,
         symbol: str,
@@ -188,14 +229,7 @@ class BatchCandleReader:
 
         asset_group = _venue_to_category(venue)
         data_type = sym_config["data_type"]
-
-        if as_of:
-            dates: list[date] = [as_of]
-        elif from_date and to_date:
-            delta = (to_date - from_date).days
-            dates = [from_date + timedelta(days=i) for i in range(delta + 1)]
-        else:
-            dates = [datetime.now(UTC).date() - timedelta(days=1)]
+        dates = self._resolve_dates(as_of, from_date, to_date)
 
         try:
             bucket = build_bucket("raw_tick_data", project_id=self._project_id, asset_group=asset_group)
@@ -203,24 +237,14 @@ class BatchCandleReader:
             logger.warning("Cannot build bucket for asset_group '%s'", asset_group)
             return []
 
-        # Per-day GCS reads in parallel — they're independent and I/O-bound,
-        # so a small thread pool turns N x 0.2s into ~0.2s for the whole window.
-        def _fetch(d: date) -> pd.DataFrame | None:
-            blob = self._blob_path(venue, symbol, timeframe_partition, data_type, d)
-            return self._read_df(bucket, blob)
-
-        frames: list[pd.DataFrame] = []
-        if len(dates) == 1:
-            df = _fetch(dates[0])
-            if df is not None and not df.empty:
-                frames.append(df)
-        else:
-            workers = min(16, len(dates))
-            with ThreadPoolExecutor(max_workers=workers) as ex:
-                for df in ex.map(_fetch, dates):
-                    if df is not None and not df.empty:
-                        frames.append(df)
-
+        frames = self._fetch_frames(
+            dates,
+            bucket=bucket,
+            venue=venue,
+            symbol=symbol,
+            timeframe_partition=timeframe_partition,
+            data_type=data_type,
+        )
         if not frames:
             return []
 

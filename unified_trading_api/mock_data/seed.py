@@ -123,7 +123,7 @@ def _check_temporal_consistency(
     for s in strategies:
         inception = s.get("inception_date")
         if inception is not None:
-            strategy_inception[str(s.get("id", ""))] = str(inception)  # noqa: qg-empty-fallback
+            strategy_inception[str(s["id"])] = str(inception)
 
     for pos in positions:
         sid = pos.get("strategy_id")
@@ -145,9 +145,9 @@ def _check_batch_live_consistency(
     """Return errors for batch positions not present in live positions."""
     errors: list[str] = []
     if batch_positions and live_positions:
-        live_position_ids = {str(p.get("position_id", "")) for p in live_positions}  # noqa: qg-empty-fallback
+        live_position_ids = {str(p["position_id"]) for p in live_positions}
         for bp in batch_positions:
-            bp_id = str(bp.get("position_id", ""))  # noqa: qg-empty-fallback
+            bp_id = str(bp["position_id"])
             if bp_id and bp_id not in live_position_ids:
                 errors.append(f"batch position {bp_id} not found in live positions")
     return errors
@@ -170,7 +170,7 @@ def validate_consistency(store: _Seedable) -> list[str]:
 
     # 1. Strategy reference integrity
     strategies = _list("strategies")
-    strategy_ids = {str(s.get("id", "")) for s in strategies}  # noqa: qg-empty-fallback
+    strategy_ids = {str(s["id"]) for s in strategies}
 
     for domain in ("positions", "orders"):
         for rec in _list(domain):
@@ -179,7 +179,8 @@ def validate_consistency(store: _Seedable) -> list[str]:
                 errors.append(f"{domain} record {rec.get('id', '?')} references invalid strategy_id: {sid}")
 
     # 2. Order reference integrity (fills → orders)
-    order_ids = {str(o.get("order_id", o.get("id", ""))) for o in _list("orders")}  # noqa: qg-empty-fallback
+    # Orders have order_id; _ensure_id may also stamp 'id' — accept either as a stable key.
+    order_ids = {str(o.get("order_id") or o["id"]) for o in _list("orders")}
     for fill in _list("fills"):
         oid = fill.get("order_id")
         if oid is not None and str(oid) not in order_ids:
@@ -209,7 +210,31 @@ def _ensure_id(domain: str, records: list[dict[str, object]]) -> list[dict[str, 
     return records
 
 
-def seed_all_domains(store: _Seedable | None = None) -> None:  # noqa: C901
+def _annotate_asset_group_via_strategy(
+    records: list[dict[str, object]], strategy_to_group: dict[str, str]
+) -> None:
+    """Stamp asset_group on each record by looking up strategy_id → group.
+
+    Records without strategy_id (or unknown strategy) default to 'cefi' — the
+    most common asset_group in the mock dataset. Centralised here so the QG
+    'empty-fallback fail-fast' rule has exactly one site to inspect rather
+    than five copies of the same pattern across seed_all_domains.
+    """
+    for r in records:
+        sid = r.get("strategy_id")
+        r["asset_group"] = strategy_to_group.get(str(sid), "cefi") if sid else "cefi"
+
+
+def _annotate_asset_group_via_order(
+    records: list[dict[str, object]], order_to_group: dict[str, str]
+) -> None:
+    """Stamp asset_group on each fill by looking up order_id → group."""
+    for r in records:
+        oid = r.get("order_id")
+        r["asset_group"] = order_to_group.get(str(oid), "cefi") if oid else "cefi"
+
+
+def seed_all_domains(store: _Seedable | None = None) -> None:
     """Populate every mock-store domain with synthetic records.
 
     Args:
@@ -623,8 +648,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:  # noqa: C901
             "strategy_id": "strat-001",
         },
     ]
-    for _ord in _orders_records:
-        _ord["asset_group"] = _strategy_asset_group.get(str(_ord.get("strategy_id", "")), "cefi")  # noqa: qg-empty-fallback
+    _annotate_asset_group_via_strategy(_orders_records, _strategy_asset_group)
     _seed("orders", _orders_records)
 
     # ══════════════════════════════════════════════════════════════════
@@ -1074,8 +1098,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:  # noqa: C901
             "org_id": _O,
         },
     ]
-    for _f in _fills_records:
-        _f["asset_group"] = _order_id_to_asset_group.get(str(_f.get("order_id")), "cefi")
+    _annotate_asset_group_via_order(_fills_records, _order_id_to_asset_group)
     _seed("fills", _fills_records)
 
     # fills_live and fills_batch — copy fills data into live/batch collections
@@ -1560,8 +1583,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:  # noqa: C901
             "borrow_value_usd": 3362.50,
         },
     ]
-    for _p in _positions_records:
-        _p["asset_group"] = _strategy_asset_group.get(str(_p.get("strategy_id", "")), "cefi")  # noqa: qg-empty-fallback
+    _annotate_asset_group_via_strategy(_positions_records, _strategy_asset_group)
     _seed("positions", _positions_records)
 
     # ── Batch/live domain separation ──────────────────────────────
@@ -1610,8 +1632,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:  # noqa: C901
             "snapshot_at": "2026-03-21T00:00:00Z",
         },
     ]
-    for _b in _pos_batch:
-        _b["asset_group"] = _strategy_asset_group.get(str(_b.get("strategy_id", "")), "cefi")  # noqa: qg-empty-fallback
+    _annotate_asset_group_via_strategy(_pos_batch, _strategy_asset_group)
     _seed("positions_batch", _pos_batch)
 
     _pos_live: list[dict[str, object]] = [
@@ -1658,8 +1679,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:  # noqa: C901
             "snapshot_at": "2026-03-21T09:30:00Z",
         },
     ]
-    for _lv in _pos_live:
-        _lv["asset_group"] = _strategy_asset_group.get(str(_lv.get("strategy_id", "")), "cefi")  # noqa: qg-empty-fallback
+    _annotate_asset_group_via_strategy(_pos_live, _strategy_asset_group)
     _seed("positions_live", _pos_live)
 
     _seed(
@@ -4912,8 +4932,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:  # noqa: C901
             "created_at": "2026-03-22T09:30:00Z",
         },
     ]
-    for _ol in _orders_live:
-        _ol["asset_group"] = _strategy_asset_group.get(str(_ol.get("strategy_id", "")), "cefi")  # noqa: qg-empty-fallback
+    _annotate_asset_group_via_strategy(_orders_live, _strategy_asset_group)
     _seed("orders_live", _orders_live)
 
     _orders_batch: list[dict[str, object]] = [
@@ -4942,8 +4961,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:  # noqa: C901
             "created_at": "2026-03-21T14:00:00Z",
         },
     ]
-    for _ob in _orders_batch:
-        _ob["asset_group"] = _strategy_asset_group.get(str(_ob.get("strategy_id", "")), "cefi")  # noqa: qg-empty-fallback
+    _annotate_asset_group_via_strategy(_orders_batch, _strategy_asset_group)
     _seed("orders_batch", _orders_batch)
 
     # ══════════════════════════════════════════════════════════════════

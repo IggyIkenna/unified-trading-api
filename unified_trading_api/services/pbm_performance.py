@@ -58,7 +58,76 @@ class HttpPbmPerformanceClient(PbmPerformanceClient):
         self._timeout = timeout_seconds
         self._client = http_client or httpx.Client(timeout=timeout_seconds)
 
-    def get_series(  # noqa: C901
+    def _fetch_series_payload(
+        self,
+        url: str,
+        params: dict[str, str],
+        *,
+        log_context: tuple[str, str, str],
+    ) -> dict[str, Any] | None:
+        """Fetch + JSON-decode the pnl-series payload. None on any non-2xx or transport error."""
+        account, instance, view = log_context
+        try:
+            response = self._client.get(url, params=params)
+        except httpx.HTTPError as exc:
+            logger.warning(
+                "PBM pnl-series fetch failed account=%s instance=%s view=%s: %s",
+                account,
+                instance,
+                view,
+                exc,
+            )
+            return None
+        if response.status_code == 404:
+            return None
+        if response.status_code >= 400:
+            logger.warning(
+                "PBM pnl-series HTTP %s account=%s instance=%s view=%s",
+                response.status_code,
+                account,
+                instance,
+                view,
+            )
+            return None
+        try:
+            return cast(dict[str, Any], response.json())
+        except ValueError as exc:
+            logger.warning("PBM pnl-series JSON decode failed: %s", exc)
+            return None
+
+    @staticmethod
+    def _series_list_from_payload(payload: dict[str, Any]) -> list[object] | None:
+        """Return the series list from a payload, or None if empty/malformed."""
+        series_obj: object = payload.get("series") or []
+        if not isinstance(series_obj, list):
+            return None
+        series_list: list[object] = cast(list[object], series_obj)
+        return series_list or None
+
+    @staticmethod
+    def _build_buckets(
+        series_list: list[object], per_venue: bool
+    ) -> tuple[list[_SeriesPoint], dict[str, list[_SeriesPoint]]]:
+        """Project the raw series list into an aggregate + optional per-venue buckets."""
+        aggregate: list[_SeriesPoint] = []
+        per_venue_buckets: dict[str, list[_SeriesPoint]] = {}
+        for entry in series_list:
+            if not isinstance(entry, dict):
+                continue
+            entry_dict = cast(dict[str, Any], entry)
+            ts: object = entry_dict.get("timestamp")
+            pnl: object = entry_dict.get("pnl")
+            venue_raw: object = entry_dict.get("venue")
+            if not isinstance(ts, str) or not isinstance(pnl, (int, float)):
+                continue
+            running = float(pnl)
+            point = _SeriesPoint(t=ts, pnl=running, equity=running)
+            aggregate.append(point)
+            if per_venue and isinstance(venue_raw, str):
+                per_venue_buckets.setdefault(venue_raw, []).append(point)
+        return aggregate, per_venue_buckets
+
+    def get_series(
         self,
         *,
         account_id: str,
@@ -78,57 +147,15 @@ class HttpPbmPerformanceClient(PbmPerformanceClient):
             "to": window_end.date().isoformat(),
             "per_venue": "true" if per_venue else "false",
         }
-        try:
-            response = self._client.get(url, params=params)
-        except httpx.HTTPError as exc:
-            # Network-class error — never raise; let the route fall back.
-            logger.warning(
-                "PBM pnl-series fetch failed account=%s instance=%s view=%s: %s",
-                resolved_account,
-                instance_id,
-                view,
-                exc,
-            )
+        payload = self._fetch_series_payload(
+            url, params, log_context=(resolved_account, instance_id, view)
+        )
+        if payload is None:
             return None
-        if response.status_code == 404:
+        series_list = self._series_list_from_payload(payload)
+        if series_list is None:
             return None
-        if response.status_code >= 500 or response.status_code >= 400:
-            logger.warning(
-                "PBM pnl-series HTTP %s account=%s instance=%s view=%s",
-                response.status_code,
-                resolved_account,
-                instance_id,
-                view,
-            )
-            return None
-        try:
-            payload = cast(dict[str, Any], response.json())
-        except ValueError as exc:
-            logger.warning("PBM pnl-series JSON decode failed: %s", exc)
-            return None
-        series_obj: object = payload.get("series") or []
-        if not isinstance(series_obj, list):
-            return None
-        series_list: list[object] = cast(list[object], series_obj)
-        if len(series_list) == 0:
-            return None
-        aggregate: list[_SeriesPoint] = []
-        per_venue_buckets: dict[str, list[_SeriesPoint]] = {}
-        running_pnl = 0.0
-        for entry in series_list:
-            if not isinstance(entry, dict):
-                continue
-            entry_dict = cast(dict[str, Any], entry)
-            ts: object = entry_dict.get("timestamp")
-            pnl: object = entry_dict.get("pnl")
-            venue_raw: object = entry_dict.get("venue")
-            if not isinstance(ts, str) or not isinstance(pnl, (int, float)):
-                continue
-            running_pnl = float(pnl)
-            point = _SeriesPoint(t=ts, pnl=running_pnl, equity=running_pnl)
-            aggregate.append(point)
-            if per_venue and isinstance(venue_raw, str):
-                per_venue_buckets.setdefault(venue_raw, []).append(point)
+        aggregate, per_venue_buckets = self._build_buckets(series_list, per_venue)
         if not aggregate:
             return None
         return _PerViewSeries(
