@@ -159,7 +159,7 @@ class BatchCandleReader:
             )
         return records
 
-    def get_candles(
+    def get_candles(  # noqa: C901
         self,
         venue: str,
         symbol: str,
@@ -198,9 +198,7 @@ class BatchCandleReader:
             dates = [datetime.now(UTC).date() - timedelta(days=1)]
 
         try:
-            bucket = build_bucket(
-                "raw_tick_data", project_id=self._project_id, asset_group=asset_group
-            )
+            bucket = build_bucket("raw_tick_data", project_id=self._project_id, asset_group=asset_group)
         except KeyError:
             logger.warning("Cannot build bucket for asset_group '%s'", asset_group)
             return []

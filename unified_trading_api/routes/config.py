@@ -115,9 +115,7 @@ async def get_fee_schedules(
 ) -> dict[str, object]:
     """Get fee schedules per venue/instrument type."""
     service = get_service(request)
-    records = service.list(
-        "fee_schedules", filters={"venue": venue, "instrument_type": instrument_type}
-    )
+    records = service.list("fee_schedules", filters={"venue": venue, "instrument_type": instrument_type})
     if records:
         return paginated_response(records, page, page_size)
     return paginated_response(

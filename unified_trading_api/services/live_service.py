@@ -191,9 +191,7 @@ class GcsDomainService:
 
         # Resolve bucket
         try:
-            bucket = build_bucket(
-                dataset, project_id=self._project_id, asset_group=self._asset_group
-            )
+            bucket = build_bucket(dataset, project_id=self._project_id, asset_group=self._asset_group)
         except KeyError:
             logger.warning("Cannot build bucket for dataset '%s'", dataset)
             return []
@@ -218,9 +216,7 @@ class GcsDomainService:
         logger.debug("Create not supported in GCS read mode for '%s'", collection)
         return data
 
-    def update(
-        self, collection: str, _record_id: str, data: dict[str, object]
-    ) -> dict[str, object] | None:
+    def update(self, collection: str, _record_id: str, data: dict[str, object]) -> dict[str, object] | None:
         """Write operations go through individual services, not the gateway."""
         logger.debug("Update not supported in GCS read mode for '%s'", collection)
         return data

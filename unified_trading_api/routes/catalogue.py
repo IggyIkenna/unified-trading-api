@@ -70,9 +70,7 @@ async def get_domain(domain: str) -> dict[str, object]:
 
 @router.get("/search")
 async def search_permissions(
-    q: str = Query(
-        ..., min_length=1, description="Search query (case-insensitive substring match)"
-    ),
+    q: str = Query(..., min_length=1, description="Search query (case-insensitive substring match)"),
 ) -> dict[str, object]:
     """Search permissions by key, label, or description."""
     query_lower = q.lower()

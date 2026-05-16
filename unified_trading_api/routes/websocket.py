@@ -185,9 +185,7 @@ def _recalc_positions(
         side_mult = 1.0 if side == "long" else -1.0
         fx_rate = float(str(pos.get("fx_rate_to_usd", 1.0)))
         unrealized_pnl = (current_price - entry_price) * quantity * side_mult * fx_rate
-        pnl_pct = (
-            ((current_price / entry_price) - 1.0) * 100 * side_mult if entry_price > 0 else 0.0
-        )
+        pnl_pct = ((current_price / entry_price) - 1.0) * 100 * side_mult if entry_price > 0 else 0.0
 
         pos_update: dict[str, object] = {
             "unrealized_pnl": round(unrealized_pnl, 2),
@@ -216,9 +214,7 @@ def _aggregate_strategy_pnl(store: MockStateStore) -> list[dict[str, object]]:
         pnl = float(str(pos.get("unrealized_pnl", 0)))
         strategy_pnl[sid] = strategy_pnl.get(sid, 0) + pnl
 
-    return [
-        {"strategy_id": sid, "unrealized_pnl": round(pnl, 2)} for sid, pnl in strategy_pnl.items()
-    ]
+    return [{"strategy_id": sid, "unrealized_pnl": round(pnl, 2)} for sid, pnl in strategy_pnl.items()]
 
 
 async def _emit_market_ticks(

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import random as _rng
-from datetime import date as _Date
+from datetime import date as _date
 
 from fastapi import APIRouter, Depends, Query, Request
 
@@ -38,9 +38,9 @@ async def get_candles(
     timeframe: str = Query("1H"),
     count: int = Query(200, ge=1, le=500),
     mode: str = Query("batch"),
-    as_of: _Date | None = Query(None),
-    from_date: _Date | None = Query(None),
-    to_date: _Date | None = Query(None),
+    as_of: _date | None = Query(None),
+    from_date: _date | None = Query(None),
+    to_date: _date | None = Query(None),
 ) -> dict[str, object]:
     """Get OHLCV candles for an instrument.
 

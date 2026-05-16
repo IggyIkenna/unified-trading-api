@@ -191,9 +191,7 @@ _SPORTS_VENUES = [
 _PREDICTION_VENUES = ["polymarket", "kalshi", "novig", "prophetx"]
 
 _VENUE_PERMS: list[CataloguePermission] = []
-for _venue in sorted(
-    set(_CEFI_VENUES + _TRADFI_VENUES + _DEFI_VENUES + _SPORTS_VENUES + _PREDICTION_VENUES)
-):
+for _venue in sorted(set(_CEFI_VENUES + _TRADFI_VENUES + _DEFI_VENUES + _SPORTS_VENUES + _PREDICTION_VENUES)):
     _VENUE_PERMS.append(
         _perm(
             _D.DATA_ACCESS,
@@ -209,18 +207,14 @@ _MARKET_CATEGORY_PERMS = [
     _perm(_D.DATA_ACCESS, "market_categories", "tradfi", "TradFi", "Traditional finance data"),
     _perm(_D.DATA_ACCESS, "market_categories", "defi", "DeFi", "Decentralised finance data"),
     _perm(_D.DATA_ACCESS, "market_categories", "sports", "Sports", "Sports betting data"),
-    _perm(
-        _D.DATA_ACCESS, "market_categories", "prediction", "Prediction", "Prediction market data"
-    ),
+    _perm(_D.DATA_ACCESS, "market_categories", "prediction", "Prediction", "Prediction market data"),
 ]
 
 _DATA_TYPE_PERMS = [
     _perm(_D.DATA_ACCESS, "data_types", "tick", "Tick Data", "Raw tick-level data"),
     _perm(_D.DATA_ACCESS, "data_types", "daily", "Daily Data", "End-of-day aggregations"),
     _perm(_D.DATA_ACCESS, "data_types", "order_book", "Order Book", "Level 2 order book snapshots"),
-    _perm(
-        _D.DATA_ACCESS, "data_types", "processed", "Processed Data", "Cleaned and normalised data"
-    ),
+    _perm(_D.DATA_ACCESS, "data_types", "processed", "Processed Data", "Cleaned and normalised data"),
     _perm(_D.DATA_ACCESS, "data_types", "features", "Features", "Computed feature data"),
 ]
 
@@ -232,9 +226,7 @@ _INSTRUMENT_TYPE_PERMS = [
     _perm(_D.DATA_ACCESS, "instrument_types", "equity", "Equity", "Equities and stocks"),
     _perm(_D.DATA_ACCESS, "instrument_types", "etf", "ETF", "Exchange-traded funds"),
     _perm(_D.DATA_ACCESS, "instrument_types", "lp_pool", "LP Pool", "Liquidity pool tokens"),
-    _perm(
-        _D.DATA_ACCESS, "instrument_types", "lending_pool", "Lending Pool", "Lending protocol pools"
-    ),
+    _perm(_D.DATA_ACCESS, "instrument_types", "lending_pool", "Lending Pool", "Lending protocol pools"),
     _perm(
         _D.DATA_ACCESS,
         "instrument_types",
@@ -242,9 +234,7 @@ _INSTRUMENT_TYPE_PERMS = [
         "Prediction Market",
         "Binary outcome markets",
     ),
-    _perm(
-        _D.DATA_ACCESS, "instrument_types", "exchange_odds", "Exchange Odds", "Sports exchange odds"
-    ),
+    _perm(_D.DATA_ACCESS, "instrument_types", "exchange_odds", "Exchange Odds", "Sports exchange odds"),
     _perm(_D.DATA_ACCESS, "instrument_types", "fixed_odds", "Fixed Odds", "Bookmaker fixed odds"),
 ]
 
@@ -287,9 +277,7 @@ _RESEARCH_PERMS = [
         "Model Registry",
         "Browse and manage model registry",
     ),
-    _perm(
-        _D.RESEARCH_ML, "registry", "deployment", "Model Deployment", "Deploy models to production"
-    ),
+    _perm(_D.RESEARCH_ML, "registry", "deployment", "Model Deployment", "Deploy models to production"),
     _perm(_D.RESEARCH_ML, "backtesting", "backtesting", "Backtesting", "Run strategy backtests"),
     _perm(
         _D.RESEARCH_ML,
@@ -299,12 +287,8 @@ _RESEARCH_PERMS = [
         "View backtest candidate strategies",
     ),
     _perm(_D.RESEARCH_ML, "backtesting", "comparison", "Comparison", "Compare backtest results"),
-    _perm(
-        _D.RESEARCH_ML, "backtesting", "handoff", "Handoff", "Promote backtested strategies to live"
-    ),
-    _perm(
-        _D.RESEARCH_ML, "signals", "signal_access", "Signal Access", "Access ML-generated signals"
-    ),
+    _perm(_D.RESEARCH_ML, "backtesting", "handoff", "Handoff", "Promote backtested strategies to live"),
+    _perm(_D.RESEARCH_ML, "signals", "signal_access", "Signal Access", "Access ML-generated signals"),
 ]
 
 _RESEARCH_DOMAIN = DomainNode(
@@ -361,9 +345,7 @@ _ALGO_PERMS = [
         "Passive-aggressive execution",
     ),
     _perm(_D.EXECUTION, "algos", "adaptive_twap", "AdaptiveTWAP", "Adaptive TWAP execution"),
-    _perm(
-        _D.EXECUTION, "algos", "almgren_chriss", "AlmgrenChriss", "Almgren-Chriss optimal execution"
-    ),
+    _perm(_D.EXECUTION, "algos", "almgren_chriss", "AlmgrenChriss", "Almgren-Chriss optimal execution"),
 ]
 
 _INSTRUCTION_TYPE_PERMS = [
@@ -377,9 +359,7 @@ _INSTRUCTION_TYPE_PERMS = [
         "Prediction Bet",
         "Prediction market bet",
     ),
-    _perm(
-        _D.EXECUTION, "instruction_types", "futures_roll", "Futures Roll", "Futures contract roll"
-    ),
+    _perm(_D.EXECUTION, "instruction_types", "futures_roll", "Futures Roll", "Futures contract roll"),
     _perm(
         _D.EXECUTION,
         "instruction_types",
@@ -436,9 +416,7 @@ _REPORTING_PERMS = [
         "P&L Attribution",
         "Profit and loss attribution reports",
     ),
-    _perm(
-        _D.REPORTING_REGULATORY, "reporting", "settlement", "Settlement", "Trade settlement reports"
-    ),
+    _perm(_D.REPORTING_REGULATORY, "reporting", "settlement", "Settlement", "Trade settlement reports"),
     _perm(
         _D.REPORTING_REGULATORY,
         "reporting",
@@ -576,12 +554,8 @@ _PROVISIONING_PERMS = [
         "Manage GCP IAM policies",
         is_internal_only=True,
     ),
-    _perm(
-        _D.INTERNAL_PROVISIONING, "aws", "iam", "AWS IAM", "Manage AWS IAM", is_internal_only=True
-    ),
-    _perm(
-        _D.INTERNAL_PROVISIONING, "aws", "sso", "AWS SSO", "Manage AWS SSO", is_internal_only=True
-    ),
+    _perm(_D.INTERNAL_PROVISIONING, "aws", "iam", "AWS IAM", "Manage AWS IAM", is_internal_only=True),
+    _perm(_D.INTERNAL_PROVISIONING, "aws", "sso", "AWS SSO", "Manage AWS SSO", is_internal_only=True),
 ]
 
 _PROVISIONING_DOMAIN = DomainNode(
@@ -648,9 +622,7 @@ _ORG_SCOPING_DOMAIN = DomainNode(
     label="Org-Level Scoping",
     description="Organisation-level access controls and limits",
     categories=[
-        _cat(
-            _D.ORG_SCOPING, "org", "Organisation", "Organisation-level controls", _ORG_SCOPING_PERMS
-        ),
+        _cat(_D.ORG_SCOPING, "org", "Organisation", "Organisation-level controls", _ORG_SCOPING_PERMS),
     ],
 )
 

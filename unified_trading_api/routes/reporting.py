@@ -238,9 +238,7 @@ async def download_report(
         return {"error": {"code": "NOT_FOUND", "message": "Report not found"}}
 
     # In mock mode, serve sample PDF
-    sample_pdf = (
-        Path(__file__).parent.parent / "mock_data" / "sample_reports" / "sample_pnl_report.pdf"
-    )
+    sample_pdf = Path(__file__).parent.parent / "mock_data" / "sample_reports" / "sample_pnl_report.pdf"
     if sample_pdf.exists():
         return FileResponse(
             sample_pdf,

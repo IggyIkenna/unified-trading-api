@@ -119,11 +119,7 @@ class _SubscriptionStore:
     def active_exclusive(self, instance_id: str) -> StrategyInstanceSubscription | None:
         with self._lock:
             for sub in self._by_key.values():
-                if (
-                    sub.instance_id == instance_id
-                    and sub.exclusive_lock
-                    and sub.released_at is None
-                ):
+                if sub.instance_id == instance_id and sub.exclusive_lock and sub.released_at is None:
                     return sub
         return None
 
@@ -201,10 +197,7 @@ class _VersionStore:
     def active_for_instance(self, instance_id: str) -> StrategyVersion | None:
         with self._lock:
             for version in self._by_id.values():
-                if (
-                    version.parent_instance_id == instance_id
-                    and version.status is VersionStatus.ROLLED_OUT
-                ):
+                if version.parent_instance_id == instance_id and version.status is VersionStatus.ROLLED_OUT:
                     return version
         return None
 
@@ -309,8 +302,7 @@ def _check_subscription_entitlement(request: Request, subscription_type: Subscri
     raise HTTPException(
         status_code=403,
         detail=(
-            f"Subscription type {subscription_type.value} requires one of "
-            f"{sorted(required)}; current tier={ctx.tier}."
+            f"Subscription type {subscription_type.value} requires one of {sorted(required)}; current tier={ctx.tier}."
         ),
     )
 
@@ -419,10 +411,7 @@ def unsubscribe(
     if released is None:
         raise HTTPException(
             status_code=404,
-            detail=(
-                f"No active DART_EXCLUSIVE subscription for "
-                f"instance_id={instance_id} client_id={client_id}."
-            ),
+            detail=(f"No active DART_EXCLUSIVE subscription for instance_id={instance_id} client_id={client_id}."),
         )
     _safe_log_event(
         "STRATEGY_SUBSCRIPTION_RELEASED",
@@ -563,8 +552,7 @@ def approve(
         raise HTTPException(
             status_code=412,
             detail=(
-                f"Approval requires backtest_maturity >= {min_phase.value}; "
-                f"got {payload.backtest_maturity.value}."
+                f"Approval requires backtest_maturity >= {min_phase.value}; got {payload.backtest_maturity.value}."
             ),
         )
     now = datetime.now(UTC)
@@ -737,8 +725,6 @@ def reset_stores_for_tests() -> None:
     _version_store.reset_for_tests()
 
 
-def set_feature_flag_for_tests(
-    app_state_setter: Callable[[dict[str, bool]], None], enabled: bool
-) -> None:
+def set_feature_flag_for_tests(app_state_setter: Callable[[dict[str, bool]], None], enabled: bool) -> None:
     """Test hook — toggle the feature flag via app state."""
     app_state_setter({"dart_exclusive_enabled": enabled})

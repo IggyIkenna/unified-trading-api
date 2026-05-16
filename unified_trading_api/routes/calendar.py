@@ -35,9 +35,7 @@ router = APIRouter(dependencies=[Depends(verify_api_key)])
 async def get_economic_results(
     request: Request,
     days_back: int = Query(30, ge=1, le=365, description="Days of history to return"),
-    event_types: str | None = Query(
-        None, description="Comma-separated event types to filter (e.g. NFP,CPI,FOMC)"
-    ),
+    event_types: str | None = Query(None, description="Comma-separated event types to filter (e.g. NFP,CPI,FOMC)"),
 ) -> dict[str, object]:
     """Get recent and upcoming macro economic event results.
 
@@ -65,15 +63,9 @@ async def get_economic_results(
 @router.get("/corporate-actions")
 async def get_corporate_actions(
     request: Request,
-    tickers: str | None = Query(
-        None, description="Comma-separated tickers to filter (e.g. AAPL,MSFT)"
-    ),
-    event_type: str | None = Query(
-        None, description="Filter by event type: dividend | earnings | split"
-    ),
-    days_forward: int = Query(
-        30, ge=1, le=365, description="Days forward to include upcoming events"
-    ),
+    tickers: str | None = Query(None, description="Comma-separated tickers to filter (e.g. AAPL,MSFT)"),
+    event_type: str | None = Query(None, description="Filter by event type: dividend | earnings | split"),
+    days_forward: int = Query(30, ge=1, le=365, description="Days forward to include upcoming events"),
 ) -> dict[str, object]:
     """Get corporate actions calendar — dividends, earnings, splits.
 

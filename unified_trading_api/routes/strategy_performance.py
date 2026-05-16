@@ -140,9 +140,7 @@ class PerformanceSeriesResponse(BaseModel):  # CORRECT-LOCAL: UTA performance tr
     model_config = ConfigDict(extra="forbid")
 
     instance_id: str
-    series: dict[str, _PerViewSeries] = Field(
-        description="Per-view series keyed on 'backtest' | 'paper' | 'live'."
-    )
+    series: dict[str, _PerViewSeries] = Field(description="Per-view series keyed on 'backtest' | 'paper' | 'live'.")
     transition_markers: _TransitionMarkers
     phase_annotations: list[_PhaseAnnotation]
 
@@ -265,10 +263,7 @@ def _check_performance_access(request: Request, instance_id: str) -> None:
     )
     raise HTTPException(
         status_code=403,
-        detail=(
-            "Performance series requires `reporting` entitlement or an active "
-            "subscription on this instance."
-        ),
+        detail=("Performance series requires `reporting` entitlement or an active subscription on this instance."),
     )
 
 
@@ -443,15 +438,11 @@ def _build_series(
 
     venues_bucket: dict[str, list[_SeriesPoint]] | None = None
     if per_venue and view != "backtest":
-        venues_bucket = _per_venue_slice(
-            aggregate, _venues_for_instance(instance_id), instance_id, view
-        )
+        venues_bucket = _per_venue_slice(aggregate, _venues_for_instance(instance_id), instance_id, view)
     return _PerViewSeries(aggregate=aggregate, per_venue=venues_bucket)
 
 
-def _resolve_transition_markers(
-    start: datetime, end: datetime
-) -> tuple[datetime | None, datetime | None]:
+def _resolve_transition_markers(start: datetime, end: datetime) -> tuple[datetime | None, datetime | None]:
     """Return (paper_started_at, live_started_at) deterministic placeholders.
 
     Replaced by real ``StrategyInstanceLifecycle.phase_history`` lookups once
@@ -574,13 +565,9 @@ def get_strategy_instance_performance(
 
     phase_annotations: list[_PhaseAnnotation] = []
     if paper_started_at is not None:
-        phase_annotations.append(
-            _PhaseAnnotation(phase="paper_1d", at=paper_started_at.isoformat())
-        )
+        phase_annotations.append(_PhaseAnnotation(phase="paper_1d", at=paper_started_at.isoformat()))
     if live_started_at is not None:
-        phase_annotations.append(
-            _PhaseAnnotation(phase="live_early", at=live_started_at.isoformat())
-        )
+        phase_annotations.append(_PhaseAnnotation(phase="live_early", at=live_started_at.isoformat()))
 
     logger.info(
         "GET /api/v1/strategy-instances/%s/performance views=%s per_venue=%s",

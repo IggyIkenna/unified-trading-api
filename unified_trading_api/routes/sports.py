@@ -71,9 +71,7 @@ def _ensure_mock_fixtures() -> list[dict[str, object]]:
         home_idx = (i * 2) % len(teams)
         away_idx = (i * 2 + 1) % len(teams)
         status = statuses[i % len(statuses)]
-        minute = (
-            random.randint(1, 90) if status in ("1H", "2H") else (45 if status == "HT" else None)
-        )  # nosec B311
+        minute = random.randint(1, 90) if status in ("1H", "2H") else (45 if status == "HT" else None)  # nosec B311
 
         fixture: dict[str, object] = {
             "fixture_id": f"SF-{1000 + i}",
@@ -337,11 +335,7 @@ async def get_fixture_results(
     home_goals = score.get("home", 0) if isinstance(score, dict) else 0
     away_goals = score.get("away", 0) if isinstance(score, dict) else 0
     total_goals = int(home_goals) + int(away_goals)
-    result = (
-        "home"
-        if int(home_goals) > int(away_goals)
-        else ("away" if int(away_goals) > int(home_goals) else "draw")
-    )
+    result = "home" if int(home_goals) > int(away_goals) else ("away" if int(away_goals) > int(home_goals) else "draw")
 
     prediction = {
         "home_win_prob": round(0.3 + random.random() * 0.3, 3),  # nosec B311
@@ -366,8 +360,7 @@ async def get_fixture_results(
                 "result": (result == "home" and prediction["home_win_prob"] > 0.4)
                 or (result == "draw" and prediction["draw_prob"] > 0.3)
                 or (result == "away" and prediction["away_win_prob"] > 0.4),
-                "btts": (int(home_goals) > 0 and int(away_goals) > 0)
-                == (prediction["btts_prob"] > 0.5),
+                "btts": (int(home_goals) > 0 and int(away_goals) > 0) == (prediction["btts_prob"] > 0.5),
                 "over_25": (total_goals > 2) == (prediction["over_25_prob"] > 0.5),
             },
             "pnl": {

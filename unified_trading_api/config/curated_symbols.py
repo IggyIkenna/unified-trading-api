@@ -192,9 +192,7 @@ CURATED_SYMBOLS: dict[str, list[dict[str, str]]] = {
 
 # O(1) lookup index: (VENUE_UPPER, SYMBOL_UPPER) → config dict
 _SYMBOL_INDEX: dict[tuple[str, str], dict[str, str]] = {
-    (entry["venue"].upper(), entry["symbol"].upper()): entry
-    for group in CURATED_SYMBOLS.values()
-    for entry in group
+    (entry["venue"].upper(), entry["symbol"].upper()): entry for group in CURATED_SYMBOLS.values() for entry in group
 }
 
 

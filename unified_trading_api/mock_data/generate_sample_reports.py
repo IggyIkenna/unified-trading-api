@@ -43,9 +43,7 @@ def _build_pdf(pages: list[list[str]]) -> bytes:
 
         # Content object
         objects_for_pages.append(
-            f"{content_obj_num} 0 obj\n"
-            f"<< /Length {len(stream)} >>\n"
-            f"stream\n{stream}\nendstream\nendobj"
+            f"{content_obj_num} 0 obj\n<< /Length {len(stream)} >>\nstream\n{stream}\nendstream\nendobj"
         )
 
         # Page object
@@ -59,9 +57,7 @@ def _build_pdf(pages: list[list[str]]) -> bytes:
         )
 
     # Font object
-    font_obj = (
-        f"{font_obj_num} 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj"
-    )
+    font_obj = f"{font_obj_num} 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj"
 
     all_objects = objects + objects_for_pages + [font_obj]
 

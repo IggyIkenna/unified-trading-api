@@ -98,9 +98,7 @@ async def get_current_user(
         persona = next((p for p in PERSONAS if p["id"] == persona_id), None)
         if persona:
             raw_ent = persona.get("entitlements", [])  # noqa: qg-empty-fallback
-            entitlements: list[str] = (
-                [str(e) for e in cast(list[object], raw_ent)] if isinstance(raw_ent, list) else []
-            )
+            entitlements: list[str] = [str(e) for e in cast(list[object], raw_ent)] if isinstance(raw_ent, list) else []
             return {
                 "user_id": str(persona["id"]),
                 "org_id": str(persona["org_id"]),
@@ -124,17 +122,13 @@ async def get_current_user(
                 if mock_mode
                 else _auth_cfg.get_secret("auth-api-jwt-secret")
             )
-            claims = cast(
-                dict[str, str | int | list[str]], pyjwt.decode(token, secret, algorithms=["HS256"])
-            )
+            claims = cast(dict[str, str | int | list[str]], pyjwt.decode(token, secret, algorithms=["HS256"]))
             raw_entitlements = claims.get("entitlements", [])  # noqa: qg-empty-fallback
             return {
                 "user_id": str(claims.get("sub", "")),  # noqa: qg-empty-fallback
                 "org_id": str(claims.get("org_id", "")),  # noqa: qg-empty-fallback
                 "role": str(claims.get("role", "")),  # noqa: qg-empty-fallback
-                "entitlements": list(raw_entitlements)
-                if isinstance(raw_entitlements, list)
-                else [],
+                "entitlements": list(raw_entitlements) if isinstance(raw_entitlements, list) else [],
                 "display_name": str(claims.get("name", claims.get("email", ""))),  # noqa: qg-empty-fallback
             }
         except Exception as exc:

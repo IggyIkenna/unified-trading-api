@@ -83,9 +83,7 @@ class MockDomainService:
             data["org_id"] = self.persona_org_id
         return self._store.create(collection, data)
 
-    def update(
-        self, collection: str, record_id: str, data: dict[str, object]
-    ) -> dict[str, object] | None:
+    def update(self, collection: str, record_id: str, data: dict[str, object]) -> dict[str, object] | None:
         """Update a record."""
         return self._store.update(collection, record_id, data)
 

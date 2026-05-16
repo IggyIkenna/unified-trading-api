@@ -30,9 +30,7 @@ class PaginationMeta(BaseModel):  # CORRECT-LOCAL: API response model
     has_next: bool
 
 
-def paginate(
-    records: Sequence[object], page: int = 1, page_size: int = 50
-) -> tuple[Sequence[object], PaginationMeta]:
+def paginate(records: Sequence[object], page: int = 1, page_size: int = 50) -> tuple[Sequence[object], PaginationMeta]:
     """Slice a list and return (page_data, pagination_meta)."""
     total = len(records)
     offset = (page - 1) * page_size

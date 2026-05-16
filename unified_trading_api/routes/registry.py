@@ -140,20 +140,14 @@ async def patch_strategy_instance_lifecycle(
     if body.maturity_phase is not None:
         prev_value = existing.get("maturity_phase")
         prev_phase = StrategyMaturityPhase(prev_value) if isinstance(prev_value, str) else None
-        if prev_phase is not None and not is_valid_maturity_transition(
-            prev_phase, body.maturity_phase
-        ):
+        if prev_phase is not None and not is_valid_maturity_transition(prev_phase, body.maturity_phase):
             raise HTTPException(
                 status_code=400,
-                detail=(
-                    f"Illegal maturity transition {prev_phase.value} -> {body.maturity_phase.value}"
-                ),
+                detail=(f"Illegal maturity transition {prev_phase.value} -> {body.maturity_phase.value}"),
             )
         update["maturity_phase"] = body.maturity_phase.value
         history_raw = existing.get("phase_history")
-        history: list[dict[str, object]] = (
-            list(history_raw) if isinstance(history_raw, list) else []
-        )
+        history: list[dict[str, object]] = list(history_raw) if isinstance(history_raw, list) else []
         history.append(
             {
                 "from_phase": prev_phase.value if prev_phase is not None else None,

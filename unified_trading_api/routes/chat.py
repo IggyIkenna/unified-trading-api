@@ -257,10 +257,7 @@ async def chat_message(request: Request, body: ChatRequest) -> StreamingResponse
 
     api_key = os.environ.get("ANTHROPIC_API_KEY", "")  # config-bootstrap:
 
-    if api_key:
-        stream = _stream_anthropic(system_prompt, messages, api_key)
-    else:
-        stream = _stream_mock(body.message)
+    stream = _stream_anthropic(system_prompt, messages, api_key) if api_key else _stream_mock(body.message)
 
     return StreamingResponse(
         stream,

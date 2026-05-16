@@ -162,8 +162,7 @@ def compute_multi_period_summary(
         periods = ["1d", "wtd", "mtd", "qtd", "ytd"]
 
     return {
-        p: compute_period_changes(snapshots, p, numeric_fields, as_of=as_of, date_field=date_field)
-        for p in periods
+        p: compute_period_changes(snapshots, p, numeric_fields, as_of=as_of, date_field=date_field) for p in periods
     }
 
 

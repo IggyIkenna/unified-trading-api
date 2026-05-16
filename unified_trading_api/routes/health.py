@@ -121,9 +121,7 @@ async def readiness(request: Request) -> dict[str, object]:
 
     if mock_mode:
         # Tier 1: in-process MockStateStore is always healthy
-        upstream_checks.append(
-            {"name": "mock-state-store", "required_for_tier": 1, "ok": True, "url": "in-process"}
-        )
+        upstream_checks.append({"name": "mock-state-store", "required_for_tier": 1, "ok": True, "url": "in-process"})
     else:
         # Tier 2: probe configured upstream service URLs
         for env_var, svc_name in _UPSTREAM_SERVICES.items():

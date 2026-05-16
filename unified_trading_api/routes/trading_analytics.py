@@ -42,9 +42,7 @@ async def get_pnl(
     """Get PnL breakdown with live/batch mode support."""
     service = get_service(request)
     collection = f"pnl_{mode}"
-    records = service.list(
-        collection, filters={"venue": venue, "strategy_id": strategy_id, "as_of": as_of}
-    )
+    records = service.list(collection, filters={"venue": venue, "strategy_id": strategy_id, "as_of": as_of})
     return paginated_response(records, page, page_size, mode=mode, as_of=as_of, period=period)
 
 
@@ -305,9 +303,7 @@ async def scale_strategy(
     scale_factor = float(str(body.get("scale_factor", 1.0)))
     updated = service.update("strategies", strategy_id, {"position_scale": scale_factor})
     if updated:
-        return single_response(
-            {"strategy": updated, "status": "scaled", "scale_factor": scale_factor}
-        )
+        return single_response({"strategy": updated, "status": "scaled", "scale_factor": scale_factor})
     return {"error": {"code": "NOT_FOUND", "message": f"Strategy {strategy_id} not found"}}
 
 

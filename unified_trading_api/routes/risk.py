@@ -32,9 +32,7 @@ async def get_risk_exposure(
     """Get risk exposure. mode=live for real-time, mode=batch for T+1."""
     service = get_service(request)
     collection = f"risk_{mode}"
-    records = service.list(
-        collection, filters={"strategy_id": strategy_id, "category": category, "as_of": as_of}
-    )
+    records = service.list(collection, filters={"strategy_id": strategy_id, "category": category, "as_of": as_of})
     return single_response(records, mode=mode, as_of=as_of)
 
 
@@ -94,9 +92,7 @@ async def get_stress_tests(
 ) -> dict[str, object]:
     """Get stress test results."""
     service = get_service(request)
-    return single_response(
-        service.list("stress_tests", filters={"as_of": as_of}), mode=mode, as_of=as_of
-    )
+    return single_response(service.list("stress_tests", filters={"as_of": as_of}), mode=mode, as_of=as_of)
 
 
 @router.get("/venue-circuit-breakers")
@@ -155,17 +151,11 @@ async def kill_switch(
         for s in strategies:
             sid = str(s.get("id", ""))  # noqa: qg-empty-fallback
             _ = service.update("strategies", sid, {"kill_switch_active": True, "status": "halted"})
-        return single_response(
-            {"scope": "global", "strategies_halted": len(strategies), "status": "ok"}
-        )
+        return single_response({"scope": "global", "strategies_halted": len(strategies), "status": "ok"})
     elif scope == "strategy":
-        updated = service.update(
-            "strategies", target_id, {"kill_switch_active": True, "status": "halted"}
-        )
+        updated = service.update("strategies", target_id, {"kill_switch_active": True, "status": "halted"})
         if updated:
-            return single_response(
-                {"scope": scope, "target_id": target_id, "strategy": updated, "status": "ok"}
-            )
+            return single_response({"scope": scope, "target_id": target_id, "strategy": updated, "status": "ok"})
         return {"error": {"code": "NOT_FOUND", "message": f"Strategy {target_id} not found"}}
     elif scope == "venue":
         strategies = service.list("strategies", filters={"venue": target_id})
@@ -254,9 +244,7 @@ async def get_defi_health(
     collateral vs. debt, liquidation thresholds, and real-time health status.
     """
     service = get_service(request)
-    records = service.list(
-        "defi_health", filters={"chain": chain, "protocol": protocol, "category": category}
-    )
+    records = service.list("defi_health", filters={"chain": chain, "protocol": protocol, "category": category})
     if records:
         return single_response(records)
     # Sensible defaults when no seeded data exists

@@ -34,9 +34,7 @@ class DomainService(Protocol):
         """Create a new record. Returns the created record with ID."""
         ...
 
-    def update(
-        self, collection: str, record_id: str, data: dict[str, object]
-    ) -> dict[str, object] | None:
+    def update(self, collection: str, record_id: str, data: dict[str, object]) -> dict[str, object] | None:
         """Update a record. Returns updated record or None if not found."""
         ...
 

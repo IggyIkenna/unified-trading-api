@@ -55,9 +55,7 @@ def get_entitlement_context(request: Request) -> EntitlementContext:
     # In real mode, extract from JWT (set by auth middleware upstream)
     auth_claims: dict[str, object] = getattr(request.state, "auth_claims", {})
     raw_venues = auth_claims.get("scoped_venues", [])  # noqa: qg-empty-fallback
-    venues_list: list[str] = (
-        [str(v) for v in cast(list[object], raw_venues)] if isinstance(raw_venues, list) else []
-    )
+    venues_list: list[str] = [str(v) for v in cast(list[object], raw_venues)] if isinstance(raw_venues, list) else []
     return EntitlementContext(
         org_id=str(auth_claims.get("org_id", "unknown")),
         org_type=OrgType(str(auth_claims.get("org_type", "external"))),

@@ -149,9 +149,7 @@ def _gen_risk_limits() -> list[dict[str, object]]:
     seen_ids: set[str] = set()
     for prof in profiles:
         raw_ids = prof["ids"]
-        ids: list[str] = (
-            [str(x) for x in cast(list[object], raw_ids)] if isinstance(raw_ids, list) else []
-        )
+        ids: list[str] = [str(x) for x in cast(list[object], raw_ids)] if isinstance(raw_ids, list) else []
         for sid in ids:
             seen_ids.add(sid)
             # Make strat-004 and strat-007 close to limit for demo impact
@@ -238,9 +236,7 @@ def _gen_options_chain() -> list[dict[str, object]]:
                             "spot_price": spot,
                             "strike": strike,
                             "expiry_days": exp_d,
-                            "expiry_date": (
-                                f"2026-{(3 + exp_d // 30):02d}-{min(22 + exp_d % 30, 28):02d}"
-                            ),
+                            "expiry_date": (f"2026-{(3 + exp_d // 30):02d}-{min(22 + exp_d % 30, 28):02d}"),
                             "option_type": "call" if is_call else "put",
                             "implied_volatility": iv,
                             "price": greeks["price"],
@@ -292,8 +288,7 @@ def _gen_vol_surfaces() -> list[dict[str, object]]:
             )
 
         term_structure: list[dict[str, float]] = [
-            {"expiry_days": float(d), "atm_iv": round(atm_iv * (1.0 + 0.002 * (d - 30)), 4)}
-            for d in expiry_slices
+            {"expiry_days": float(d), "atm_iv": round(atm_iv * (1.0 + 0.002 * (d - 30)), 4)} for d in expiry_slices
         ]
 
         surfaces.append(
@@ -419,9 +414,7 @@ def _gen_correlation_matrix() -> list[dict[str, object]]:
                 # Determine correlation based on category overlap
                 both_crypto = i in crypto_ids and j in crypto_ids
                 both_defi = i in defi_ids and j in defi_ids
-                crypto_defi = (i in crypto_ids and j in defi_ids) or (
-                    i in defi_ids and j in crypto_ids
-                )
+                crypto_defi = (i in crypto_ids and j in defi_ids) or (i in defi_ids and j in crypto_ids)
                 either_sports = i in sports_ids or j in sports_ids
                 either_tradfi = i in tradfi_ids or j in tradfi_ids
 

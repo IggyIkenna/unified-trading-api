@@ -176,9 +176,7 @@ def validate_consistency(store: _Seedable) -> list[str]:
         for rec in _list(domain):
             sid = rec.get("strategy_id")
             if sid is not None and str(sid) not in strategy_ids:
-                errors.append(
-                    f"{domain} record {rec.get('id', '?')} references invalid strategy_id: {sid}"
-                )
+                errors.append(f"{domain} record {rec.get('id', '?')} references invalid strategy_id: {sid}")
 
     # 2. Order reference integrity (fills → orders)
     order_ids = {str(o.get("order_id", o.get("id", ""))) for o in _list("orders")}
@@ -211,7 +209,7 @@ def _ensure_id(domain: str, records: list[dict[str, object]]) -> list[dict[str, 
     return records
 
 
-def seed_all_domains(store: _Seedable | None = None) -> None:
+def seed_all_domains(store: _Seedable | None = None) -> None:  # noqa: C901
     """Populate every mock-store domain with synthetic records.
 
     Args:
@@ -243,9 +241,7 @@ def seed_all_domains(store: _Seedable | None = None) -> None:
     _strategies = generate_strategies()
     _seed("strategies", _strategies)
 
-    _strategy_asset_group: dict[str, str] = {
-        str(s["id"]): str(s.get("asset_group", "cefi")) for s in _strategies
-    }
+    _strategy_asset_group: dict[str, str] = {str(s["id"]): str(s.get("asset_group", "cefi")) for s in _strategies}
 
     # Also seed strategy_configs for the config-driven expansion
     _strategy_configs = [

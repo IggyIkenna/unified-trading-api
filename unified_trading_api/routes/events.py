@@ -175,12 +175,8 @@ async def get_event_predictions(
 @router.get("/news")
 async def get_events_news(
     request: Request,
-    sentiment: str | None = Query(
-        None, description="Filter by sentiment: bullish | bearish | neutral"
-    ),
-    category: str | None = Query(
-        None, description="Filter by category (e.g. macro, on-chain, governance)"
-    ),
+    sentiment: str | None = Query(None, description="Filter by sentiment: bullish | bearish | neutral"),
+    category: str | None = Query(None, description="Filter by category (e.g. macro, on-chain, governance)"),
     limit: int = Query(50, ge=1, le=200, description="Max items to return"),
 ) -> dict[str, object]:
     """Get recent news feed items and macro announcements.

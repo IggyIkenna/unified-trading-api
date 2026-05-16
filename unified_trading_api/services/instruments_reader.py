@@ -54,16 +54,11 @@ class InstrumentsReader:
 
     def _fetch(self, asset_group: str, venue: str, target_date: date) -> list[dict[str, object]]:
         try:
-            bucket = build_bucket(
-                "instruments", project_id=self._project_id, asset_group=asset_group
-            )
+            bucket = build_bucket("instruments", project_id=self._project_id, asset_group=asset_group)
         except KeyError:
             logger.warning("InstrumentsReader: unknown asset_group '%s'", asset_group)
             return []
-        blob = (
-            f"instrument_availability/by_date/day={target_date.isoformat()}"
-            f"/venue={venue}/instruments.parquet"
-        )
+        blob = f"instrument_availability/by_date/day={target_date.isoformat()}/venue={venue}/instruments.parquet"
         try:
             raw = self._storage.download_bytes(bucket=bucket, blob_path=blob)
         except Exception as exc:
@@ -115,9 +110,7 @@ class InstrumentsReader:
             else:
                 # numpy scalar → python scalar via .item(). Skip for native Python types.
                 item_attr = getattr(value, "item", None)  # pyright: ignore[reportUnknownArgumentType]
-                if callable(item_attr) and not isinstance(
-                    value, (str, list, dict, bytes, tuple, bool, int, float)
-                ):
+                if callable(item_attr) and not isinstance(value, (str, list, dict, bytes, tuple, bool, int, float)):
                     result[key_str] = item_attr()  # pyright: ignore[reportAny]
                 else:
                     result[key_str] = value  # pyright: ignore[reportUnknownVariableType]
