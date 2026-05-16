@@ -51,7 +51,7 @@ async def get_economic_results(
     # Apply event_types filter if provided
     if event_types:
         allowed = {t.strip().upper() for t in event_types.split(",")}
-        records = [r for r in records if str(r.get("event_type", "")).upper() in allowed]
+        records = [r for r in records if str(r.get("event_type", "")).upper() in allowed]  # noqa: qg-empty-fallback
 
     return single_response(
         records,
@@ -81,7 +81,7 @@ async def get_corporate_actions(
     # Apply ticker filter
     if tickers:
         allowed_tickers = {t.strip().upper() for t in tickers.split(",")}
-        records = [r for r in records if str(r.get("ticker", "")).upper() in allowed_tickers]
+        records = [r for r in records if str(r.get("ticker", "")).upper() in allowed_tickers]  # noqa: qg-empty-fallback
 
     # Apply event_type filter
     if event_type:

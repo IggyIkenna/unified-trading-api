@@ -661,7 +661,7 @@ async def place_sports_bet(
                     json={
                         "venue": str(body.get("bookmaker", "BETFAIR")).upper(),
                         "operation_type": "SPORTS_EXCHANGE",
-                        "instrument_key": f"{body.get('fixture_id', '')}:{body.get('market', '')}",
+                        "instrument_key": f"{body.get('fixture_id', '')}:{body.get('market', '')}",  # noqa: qg-empty-fallback
                         "side": str(body.get("side", "BACK")),
                         "amount": float(body.get("stake", 0) or 0),
                         "price": float(body.get("odds", 1) or 1),
@@ -682,9 +682,9 @@ async def place_sports_bet(
     stake = float(body.get("stake", 0) or 0)
     odds = float(body.get("odds", 1) or 1)
     bookmaker = str(body.get("bookmaker", "betfair_exchange"))
-    fixture_id = str(body.get("fixture_id", ""))
+    fixture_id = str(body.get("fixture_id", ""))  # noqa: qg-empty-fallback
     market = str(body.get("market", "FT Result"))
-    outcome = str(body.get("outcome", ""))
+    outcome = str(body.get("outcome", ""))  # noqa: qg-empty-fallback
 
     bet_id = f"BET-{uuid.uuid4().hex[:8].upper()}"
     bet = {

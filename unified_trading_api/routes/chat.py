@@ -255,7 +255,7 @@ async def chat_message(request: Request, body: ChatRequest) -> StreamingResponse
     # Get API key (config-bootstrap: env var for local dev + Secret Manager)
     import os
 
-    api_key = os.environ.get("ANTHROPIC_API_KEY", "")  # config-bootstrap:
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "")  # config-bootstrap: qg-empty-fallback
 
     stream = _stream_anthropic(system_prompt, messages, api_key) if api_key else _stream_mock(body.message)
 

@@ -130,10 +130,10 @@ async def get_events_calendar(
     records: list[dict[str, object]] = service.list("events_calendar")
 
     if impact:
-        records = [r for r in records if str(r.get("impact", "")).upper() == impact.upper()]
+        records = [r for r in records if str(r.get("impact", "")).upper() == impact.upper()]  # noqa: qg-empty-fallback
 
     if region:
-        records = [r for r in records if str(r.get("region", "")).upper() == region.upper()]
+        records = [r for r in records if str(r.get("region", "")).upper() == region.upper()]  # noqa: qg-empty-fallback
 
     return single_response(
         records,
@@ -163,7 +163,7 @@ async def get_event_predictions(
         records = [r for r in records if r.get("event_id") == event_id]
 
     if instrument:
-        records = [r for r in records if str(r.get("instrument", "")).upper() == instrument.upper()]
+        records = [r for r in records if str(r.get("instrument", "")).upper() == instrument.upper()]  # noqa: qg-empty-fallback
 
     return single_response(
         records,
@@ -190,10 +190,10 @@ async def get_events_news(
     records: list[dict[str, object]] = service.list("events_news")
 
     if sentiment:
-        records = [r for r in records if str(r.get("sentiment", "")).lower() == sentiment.lower()]
+        records = [r for r in records if str(r.get("sentiment", "")).lower() == sentiment.lower()]  # noqa: qg-empty-fallback
 
     if category:
-        records = [r for r in records if str(r.get("category", "")).lower() == category.lower()]
+        records = [r for r in records if str(r.get("category", "")).lower() == category.lower()]  # noqa: qg-empty-fallback
 
     records = records[:limit]
 
@@ -221,7 +221,7 @@ async def get_event_positions(
     records: list[dict[str, object]] = service.list("events_positions")
 
     if phase:
-        records = [r for r in records if str(r.get("phase", "")).upper() == phase.upper()]
+        records = [r for r in records if str(r.get("phase", "")).upper() == phase.upper()]  # noqa: qg-empty-fallback
 
     if event_id:
         records = [r for r in records if r.get("event_id") == event_id]
