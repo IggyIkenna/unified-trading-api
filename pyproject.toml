@@ -15,6 +15,8 @@ dependencies = [
     "cryptography>=46.0.7,<47.0.0",
     "urllib3>=2.7.0,<3.0.0",
     "python-dotenv>=1.2.2,<2.0.0",
+    # Lazy-imported in routes/chat.py; pinned for CVE-2026-{34450,34452}
+    "anthropic>=0.87.0,<1.0.0",
     # Web framework
     "fastapi<1.0.0,>=0.115.0",
     "uvicorn[standard]>=0.27.0,<1.0.0",
