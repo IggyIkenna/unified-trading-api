@@ -221,13 +221,13 @@ def _get_version_store() -> _VersionStore:
 # ─── Request / response DTOs (HTTP transport only) ──────────────────────
 
 
-class SubscribeRequest(BaseModel):
+class SubscribeRequest(BaseModel):  # CORRECT-LOCAL: HTTP request/response DTO
     model_config = ConfigDict(extra="forbid")
     client_id: str = Field(min_length=1)
     subscription_type: SubscriptionType
 
 
-class SubscribeResponse(BaseModel):
+class SubscribeResponse(BaseModel):  # CORRECT-LOCAL: HTTP request/response DTO
     model_config = ConfigDict(extra="forbid")
     instance_id: str
     client_id: str
@@ -237,21 +237,21 @@ class SubscribeResponse(BaseModel):
     exclusive_lock: bool
 
 
-class UnsubscribeResponse(BaseModel):
+class UnsubscribeResponse(BaseModel):  # CORRECT-LOCAL: HTTP request/response DTO
     model_config = ConfigDict(extra="forbid")
     instance_id: str
     client_id: str
     released_at: str
 
 
-class ForkRequest(BaseModel):
+class ForkRequest(BaseModel):  # CORRECT-LOCAL: HTTP request/response DTO
     model_config = ConfigDict(extra="forbid")
     client_id: str = Field(min_length=1)
     changed_fields: list[tuple[str, str, str]] = Field(default_factory=list)
     unchanged_fingerprint: str = Field(default="")
 
 
-class VersionResponse(BaseModel):
+class VersionResponse(BaseModel):  # CORRECT-LOCAL: HTTP request/response DTO
     model_config = ConfigDict(extra="forbid")
     version_id: str
     parent_instance_id: str
@@ -261,7 +261,7 @@ class VersionResponse(BaseModel):
     authored_by: str
 
 
-class ApproveRequest(BaseModel):
+class ApproveRequest(BaseModel):  # CORRECT-LOCAL: HTTP request/response DTO
     model_config = ConfigDict(extra="forbid")
     approved_by: str = Field(min_length=1)
     backtest_series_ref: str = Field(min_length=1)
@@ -269,7 +269,7 @@ class ApproveRequest(BaseModel):
     review_notes: str | None = None
 
 
-class RejectRequest(BaseModel):
+class RejectRequest(BaseModel):  # CORRECT-LOCAL: HTTP request/response DTO
     model_config = ConfigDict(extra="forbid")
     rejected_by: str = Field(min_length=1)
     rejection_reason: str = Field(min_length=1)
