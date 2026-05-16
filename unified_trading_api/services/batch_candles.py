@@ -200,6 +200,15 @@ class BatchCandleReader:
                     frames.append(df)
         return frames
 
+    def _resolve_bucket(self, asset_group: str) -> str | None:
+        """Build the raw-tick-data bucket name for ``asset_group``; log + return
+        ``None`` when no mapping exists so the caller treats the read as empty."""
+        try:
+            return build_bucket("raw_tick_data", project_id=self._project_id, asset_group=asset_group)
+        except KeyError:
+            logger.warning("Cannot build bucket for asset_group '%s'", asset_group)
+            return None
+
     def get_candles(
         self,
         venue: str,
@@ -213,44 +222,28 @@ class BatchCandleReader:
         """Return processed OHLCV candles for (venue, symbol, timeframe).
 
         Date precedence: as_of (single day) > from_date..to_date > yesterday.
-        Reads one parquet per day. No raw aggregation. Empty result is a
-        valid signal that the processing pipeline hasn't backfilled the
-        requested window.
+        Reads one parquet per day. No raw aggregation. Empty result signals the
+        processing pipeline hasn't backfilled the requested window.
         """
         sym_config = get_symbol_config(venue, symbol)
         if sym_config is None:
             logger.warning("Symbol not in curated list: %s / %s", venue, symbol)
             return []
-
         timeframe_partition = _TIMEFRAME_MAP.get(timeframe)
         if timeframe_partition is None:
             logger.warning("Unsupported timeframe: %r", timeframe)
             return []
-
         asset_group = _venue_to_category(venue)
-        data_type = sym_config["data_type"]
-        dates = self._resolve_dates(as_of, from_date, to_date)
-
-        try:
-            bucket = build_bucket("raw_tick_data", project_id=self._project_id, asset_group=asset_group)
-        except KeyError:
-            logger.warning("Cannot build bucket for asset_group '%s'", asset_group)
+        bucket = self._resolve_bucket(asset_group)
+        if bucket is None:
             return []
 
         frames = self._fetch_frames(
-            dates,
-            bucket=bucket,
-            venue=venue,
-            symbol=symbol,
-            timeframe_partition=timeframe_partition,
-            data_type=data_type,
+            self._resolve_dates(as_of, from_date, to_date),
+            bucket=bucket, venue=venue, symbol=symbol,
+            timeframe_partition=timeframe_partition, data_type=sym_config["data_type"],
         )
         if not frames:
             return []
-
-        merged = pd.concat(frames, ignore_index=True)
-        records = self._frame_to_records(merged)
-        # Apply limit — keep the most recent `limit` bars
-        if len(records) > limit:
-            records = records[-limit:]
-        return records
+        records = self._frame_to_records(pd.concat(frames, ignore_index=True))
+        return records[-limit:] if len(records) > limit else records
