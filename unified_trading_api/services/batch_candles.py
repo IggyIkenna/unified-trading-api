@@ -33,8 +33,8 @@ from unified_trading_library import (  # pyright: ignore[reportPrivateImportUsag
     get_storage_client,
 )
 
-from unified_trading_api.config.curated_symbols import (
-    get_symbol_config,  # noqa: qg-deep-import — self-package
+from unified_trading_api.config.curated_symbols import (  # noqa: qg-deep-import — self-package
+    get_symbol_config,
 )
 
 logger = logging.getLogger(__name__)

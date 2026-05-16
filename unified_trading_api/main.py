@@ -85,11 +85,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     # so Playwright/MCP browser sessions can exercise the strategy-subscriptions
     # endpoints without waiting on the Phase 6 UnifiedCloudConfig wiring. Prod
     # default stays False (see strategy_subscriptions._DART_EXCLUSIVE_ENABLED_DEFAULT).
+    _dart_flag = os.environ.get("DART_EXCLUSIVE_ENABLED", "").lower()  # config-bootstrap: dev-only flag override
     app.state.feature_flags = {
-        "dart_exclusive_enabled": os.environ.get(
-            "DART_EXCLUSIVE_ENABLED", ""
-        ).lower()  # config-bootstrap: dev-only flag override
-        in {"1", "true", "yes"},
+        "dart_exclusive_enabled": _dart_flag in {"1", "true", "yes"},
     }
 
     if app.state.mock_mode:

@@ -55,7 +55,7 @@ from unified_api_contracts.strategy import (
 
 # Plan D Phase 3 — event emissions on subscription / version state changes.
 # Wrapped in a defensive helper because the events module raises
-# RuntimeError when ``setup_events()`` has not been called (e.g. unit tests
+# RuntimeError when ``setup_events`` has not been called (e.g. unit tests
 # that bypass the FastAPI lifespan startup). UTA prod startup wires
 # ``setup_events`` so the live path always emits.
 from unified_trading_library import log_event as _log_event_unsafe
