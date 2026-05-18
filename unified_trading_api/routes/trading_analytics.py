@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
+from typing import cast
 
 from fastapi import APIRouter, Depends, Query, Request
 from unified_api_contracts.strategy import (  # noqa: qg-deep-import — UAC internal facade
@@ -374,7 +375,7 @@ async def get_strategy_catalog(
     Data sourced from the UAC StrategyRegistry singleton.
     """
     registry_data = STRATEGY_REGISTRY.to_dict()
-    raw_strategies: list[dict[str, object]] = registry_data.get("strategies", [])  # type: ignore[assignment]
+    raw_strategies = cast("list[dict[str, object]]", registry_data.get("strategies", []))
     catalog: list[dict[str, object]] = [
         {
             "id": s["strategy_id"],

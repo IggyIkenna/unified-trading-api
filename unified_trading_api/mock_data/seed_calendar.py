@@ -203,11 +203,11 @@ def generate_corporate_actions() -> list[dict[str, object]]:
 
 def seed_calendar(store: object) -> None:
     """Seed calendar domain into MockStateStore."""
-    from typing import Protocol
+    from typing import Protocol, cast
 
     class _Seedable(Protocol):
         def seed(self, collection: str, items: list[dict[str, object]]) -> None: ...
 
-    _store: _Seedable = store  # type: ignore[assignment]
+    _store = cast("_Seedable", store)
     _store.seed("calendar_economic_results", generate_economic_results())
     _store.seed("calendar_corporate_actions", generate_corporate_actions())

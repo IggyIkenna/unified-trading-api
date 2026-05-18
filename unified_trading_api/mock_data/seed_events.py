@@ -10,7 +10,7 @@ Seeded into collections:
 
 from __future__ import annotations
 
-from typing import Protocol
+from typing import Protocol, cast
 
 
 def generate_events_calendar() -> list[dict[str, object]]:
@@ -571,7 +571,7 @@ def seed_events(store: object) -> None:
     class _Seedable(Protocol):
         def seed(self, collection: str, items: list[dict[str, object]]) -> None: ...
 
-    _store: _Seedable = store  # type: ignore[assignment]
+    _store = cast("_Seedable", store)
     _store.seed("events_calendar", generate_events_calendar())
     _store.seed("events_predictions", generate_events_predictions())
     _store.seed("events_news", generate_events_news())
