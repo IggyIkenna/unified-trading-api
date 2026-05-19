@@ -160,9 +160,7 @@ class BatchCandleReader:
         return records
 
     @staticmethod
-    def _resolve_dates(
-        as_of: date | None, from_date: date | None, to_date: date | None
-    ) -> list[date]:
+    def _resolve_dates(as_of: date | None, from_date: date | None, to_date: date | None) -> list[date]:
         """Pick the date window per the precedence: as_of > from_date..to_date > yesterday."""
         if as_of:
             return [as_of]
@@ -240,8 +238,11 @@ class BatchCandleReader:
 
         frames = self._fetch_frames(
             self._resolve_dates(as_of, from_date, to_date),
-            bucket=bucket, venue=venue, symbol=symbol,
-            timeframe_partition=timeframe_partition, data_type=sym_config["data_type"],
+            bucket=bucket,
+            venue=venue,
+            symbol=symbol,
+            timeframe_partition=timeframe_partition,
+            data_type=sym_config["data_type"],
         )
         if not frames:
             return []

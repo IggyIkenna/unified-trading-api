@@ -210,9 +210,7 @@ def _ensure_id(domain: str, records: list[dict[str, object]]) -> list[dict[str, 
     return records
 
 
-def _annotate_asset_group_via_strategy(
-    records: list[dict[str, object]], strategy_to_group: dict[str, str]
-) -> None:
+def _annotate_asset_group_via_strategy(records: list[dict[str, object]], strategy_to_group: dict[str, str]) -> None:
     """Stamp asset_group on each record by looking up strategy_id → group.
 
     Records without strategy_id (or unknown strategy) default to 'cefi' — the
@@ -225,9 +223,7 @@ def _annotate_asset_group_via_strategy(
         r["asset_group"] = strategy_to_group.get(str(sid), "cefi") if sid else "cefi"
 
 
-def _annotate_asset_group_via_order(
-    records: list[dict[str, object]], order_to_group: dict[str, str]
-) -> None:
+def _annotate_asset_group_via_order(records: list[dict[str, object]], order_to_group: dict[str, str]) -> None:
     """Stamp asset_group on each fill by looking up order_id → group."""
     for r in records:
         oid = r.get("order_id")

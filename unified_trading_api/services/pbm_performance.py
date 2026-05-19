@@ -147,9 +147,7 @@ class HttpPbmPerformanceClient(PbmPerformanceClient):
             "to": window_end.date().isoformat(),
             "per_venue": "true" if per_venue else "false",
         }
-        payload = self._fetch_series_payload(
-            url, params, log_context=(resolved_account, instance_id, view)
-        )
+        payload = self._fetch_series_payload(url, params, log_context=(resolved_account, instance_id, view))
         if payload is None:
             return None
         series_list = self._series_list_from_payload(payload)
