@@ -1,7 +1,9 @@
 {
   "pythonVersion": "3.13",
   "typeCheckingMode": "strict",
-  "include": ["unified_trading_api"],
+  "include": [
+    "unified_trading_api"
+  ],
   "reportAny": "error",
   "reportMissingTypeStubs": false,
   "reportUnknownMemberType": "error",
@@ -10,5 +12,12 @@
   "reportUnknownParameterType": "error",
   "reportUnusedFunction": "none",
   "reportUnusedImport": "none",
-  "reportCallInDefaultInitializer": "none"
+  "reportCallInDefaultInitializer": "none",
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    ".venv*",
+    "**/__pycache__"
+  ]
 }
