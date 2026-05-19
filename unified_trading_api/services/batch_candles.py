@@ -154,7 +154,7 @@ class BatchCandleReader:
                     "high": float(row["high"]),  # pyright: ignore[reportAny]
                     "low": float(row["low"]),  # pyright: ignore[reportAny]
                     "close": float(row["close"]),  # pyright: ignore[reportAny]
-                    "volume": float(row.get("volume", 0.0)),  # type: ignore[call-overload]
+                    "volume": float(row.get("volume", 0.0)),  # pyright: ignore[reportAny]
                 }
             )
         return records

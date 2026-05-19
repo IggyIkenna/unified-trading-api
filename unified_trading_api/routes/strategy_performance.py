@@ -80,7 +80,7 @@ import hashlib
 import logging
 import math
 import time
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -386,7 +386,7 @@ def _cache_ttl(view: str) -> float:
 
 def _cached_series(
     key: _CacheKey,
-    produce: callable[[], _PerViewSeries],  # type: ignore[name-defined]
+    produce: Callable[[], _PerViewSeries],
 ) -> _PerViewSeries:
     view = key[1]
     now = time.monotonic()
