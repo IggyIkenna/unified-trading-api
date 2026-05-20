@@ -65,8 +65,12 @@ async def get_catalogue(
 async def get_registry(
     request: Request,
     venue: str = Query(None, description="Filter by venue (e.g. binance, deribit)"),
-    asset_group: str = Query(None, description="Filter by asset group: cefi, defi, tradfi, sports, prediction"),
-    instrument_type: str = Query(None, description="Filter by type: spot, future, option, perp, lp_pool"),
+    asset_group: str = Query(
+        None, description="Filter by asset group: cefi, defi, tradfi, sports, prediction"
+    ),
+    instrument_type: str = Query(
+        None, description="Filter by type: spot, future, option, perp, lp_pool"
+    ),
     status: str = Query(None, description="Filter by status: active, delisted, expired"),
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=200),
@@ -98,7 +102,9 @@ async def get_registry(
 def _require_mock_mode(request: Request) -> None:
     """Raise 403 if not in mock mode."""
     if not get_mock_mode(request):
-        raise HTTPException(status_code=403, detail="Mock instrument endpoints only available in mock mode")
+        raise HTTPException(
+            status_code=403, detail="Mock instrument endpoints only available in mock mode"
+        )
 
 
 def _get_generator(request: Request) -> InstrumentGenerator:

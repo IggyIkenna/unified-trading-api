@@ -30,7 +30,9 @@ async def get_orders(
     venue: str = Query(None),
     status: str = Query(None),
     client_id: str = Query(None, description="Filter by client ID"),
-    asset_group: str = Query(None, description="Filter by asset group (cefi, defi, tradfi, sports, prediction)"),
+    asset_group: str = Query(
+        None, description="Filter by asset group (cefi, defi, tradfi, sports, prediction)"
+    ),
     strategy_family: str = Query(None, description="Filter by strategy family"),
     account_id: str = Query(None, description="Filter by account ID"),
     as_of: str = Query(None, description="T+1 reconciliation date for batch mode"),
@@ -62,7 +64,9 @@ async def get_fills(
     venue: str = Query(None),
     order_id: str = Query(None),
     client_id: str = Query(None, description="Filter by client ID"),
-    asset_group: str = Query(None, description="Filter by asset group (cefi, defi, tradfi, sports, prediction)"),
+    asset_group: str = Query(
+        None, description="Filter by asset group (cefi, defi, tradfi, sports, prediction)"
+    ),
     strategy_family: str = Query(None, description="Filter by strategy family"),
     account_id: str = Query(None, description="Filter by account ID"),
     as_of: str = Query(None, description="T+1 reconciliation date for batch mode"),
@@ -554,7 +558,9 @@ async def create_order(
         "entry_price": round(entry_price, 2),
         "current_price": round(current_price, 2),
         "pnl": unrealised,
-        "pnl_pct": round((current_price - entry_price) / entry_price * 100, 2) if entry_price > 0 else 0,
+        "pnl_pct": round((current_price - entry_price) / entry_price * 100, 2)
+        if entry_price > 0
+        else 0,
         "unrealized_pnl": unrealised,
         "margin": round(qty * entry_price * 0.1, 2),
         "leverage": 10,
@@ -661,7 +667,7 @@ async def place_sports_bet(
                     json={
                         "venue": str(body.get("bookmaker", "BETFAIR")).upper(),
                         "operation_type": "SPORTS_EXCHANGE",
-                        "instrument_key": f"{body.get('fixture_id', '')}:{body.get('market', '')}",  # noqa: qg-empty-fallback
+                        "instrument_key": f"{body.get('fixture_id', '')}:{body.get('market', '')}",
                         "side": str(body.get("side", "BACK")),
                         "amount": float(body.get("stake", 0) or 0),
                         "price": float(body.get("odds", 1) or 1),
@@ -682,9 +688,9 @@ async def place_sports_bet(
     stake = float(body.get("stake", 0) or 0)
     odds = float(body.get("odds", 1) or 1)
     bookmaker = str(body.get("bookmaker", "betfair_exchange"))
-    fixture_id = str(body.get("fixture_id", ""))  # noqa: qg-empty-fallback
+    fixture_id = str(body.get("fixture_id", ""))
     market = str(body.get("market", "FT Result"))
-    outcome = str(body.get("outcome", ""))  # noqa: qg-empty-fallback
+    outcome = str(body.get("outcome", ""))
 
     bet_id = f"BET-{uuid.uuid4().hex[:8].upper()}"
     bet = {
@@ -785,7 +791,11 @@ async def execute_defi_operation(
         "gas_used": random.randint(50000, 300000),
         "gas_price_gwei": round(random.uniform(5, 50), 1),
         "executed_at": now,
-        **{k: v for k, v in body.items() if k not in ("operation", "protocol", "chain", "token", "amount")},
+        **{
+            k: v
+            for k, v in body.items()
+            if k not in ("operation", "protocol", "chain", "token", "amount")
+        },
     }
     service.create("defi_operations", operation)
 
@@ -819,7 +829,9 @@ async def execute_defi_operation(
         "strategy_id": f"defi-{op_type.lower()}",
         "strategy_name": f"{op_type}: {token} on {protocol}",
         "updated_at": now,
-        "health_factor": round(random.uniform(1.2, 2.5), 2) if op_type in ("LEND", "BORROW") else None,
+        "health_factor": round(random.uniform(1.2, 2.5), 2)
+        if op_type in ("LEND", "BORROW")
+        else None,
     }
     service.create("positions_live", position)
 
