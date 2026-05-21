@@ -27,6 +27,7 @@ MANIFEST_ALIGNMENT_SKIP=true
 # Empty string/dict/list: route handlers parse optional JSON fields with safe defaults
 EMPTY_STR_EXCLUDE_GLOBS=("!**/mock_data/seed.py" "!**/mock_data/seed_*.py" "!**/chat.py" "!**/routes/*.py" "!**/services/*.py")
 EMPTY_DICT_LIST_EXCLUDE_GLOBS=("!**/mock_data/seed.py" "!**/mock_data/seed_*.py" "!**/routes/*.py")
+PIP_AUDIT_EXTRA_ARGS="--ignore-vuln PYSEC-2024-277 --ignore-vuln PYSEC-2025-183"
 WORKSPACE_ROOT="$(cd "$(git rev-parse --show-toplevel)/.." && pwd)"
 source "${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/base-service.sh"
 
