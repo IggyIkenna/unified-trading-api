@@ -16,7 +16,7 @@ class TestDefiLpPositionRange:
             [
                 {
                     "pool": "ETH/USDC",
-                    "venue_id": "UNISWAPV3-ETHEREUM",
+                    "venue_id": "UNISWAP_V3-ETHEREUM",
                     "current_tick": 200500,
                     "tick_lower": 195000,
                     "tick_upper": 205000,
@@ -33,7 +33,7 @@ class TestDefiLpPositionRange:
     ) -> None:
         mock_service.seed(
             "defi_lp_position_range",
-            [{"pool": "ETH/USDC", "venue_id": "UNISWAPV3-ETHEREUM"}],
+            [{"pool": "ETH/USDC", "venue_id": "UNISWAP_V3-ETHEREUM"}],
         )
         resp = app_client.get("/defi/lp/position-range")
         data = resp.json()

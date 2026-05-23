@@ -148,7 +148,7 @@ CURATED_SYMBOLS: dict[str, list[dict[str, str]]] = {
     ],
     "defi": [
         {
-            "venue": "UNISWAPV3-ETHEREUM",
+            "venue": "UNISWAP_V3-ETHEREUM",
             "symbol": "WETH-USDC-500",
             "display_name": "WETH/USDC (0.05%)",
             "instrument_type": "lp_pool",
@@ -158,7 +158,7 @@ CURATED_SYMBOLS: dict[str, list[dict[str, str]]] = {
             "chain": "ethereum",
         },
         {
-            "venue": "UNISWAPV3-ETHEREUM",
+            "venue": "UNISWAP_V3-ETHEREUM",
             "symbol": "WETH-USDT-500",
             "display_name": "WETH/USDT (0.05%)",
             "instrument_type": "lp_pool",
@@ -168,7 +168,7 @@ CURATED_SYMBOLS: dict[str, list[dict[str, str]]] = {
             "chain": "ethereum",
         },
         {
-            "venue": "AAVEV3-ETHEREUM",
+            "venue": "AAVE_V3-ETHEREUM",
             "symbol": "WETH",
             "display_name": "AAVE WETH Lending",
             "instrument_type": "lending_pool",

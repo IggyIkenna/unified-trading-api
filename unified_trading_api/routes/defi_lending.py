@@ -31,7 +31,7 @@ _SEED_RATES: list[dict[str, object]] = [
     # Aave V3
     {
         "protocol": "Aave V3",
-        "venue_id": "AAVEV3-ETHEREUM",
+        "venue_id": "AAVE_V3-ETHEREUM",
         "chain": "ETHEREUM",
         "token": "USDC",
         "supply_apy_pct": 4.2,
@@ -42,7 +42,7 @@ _SEED_RATES: list[dict[str, object]] = [
     },
     {
         "protocol": "Aave V3",
-        "venue_id": "AAVEV3-ETHEREUM",
+        "venue_id": "AAVE_V3-ETHEREUM",
         "chain": "ETHEREUM",
         "token": "USDT",
         "supply_apy_pct": 4.0,
@@ -53,7 +53,7 @@ _SEED_RATES: list[dict[str, object]] = [
     },
     {
         "protocol": "Aave V3",
-        "venue_id": "AAVEV3-ETHEREUM",
+        "venue_id": "AAVE_V3-ETHEREUM",
         "chain": "ETHEREUM",
         "token": "WETH",
         "supply_apy_pct": 1.8,
@@ -64,7 +64,7 @@ _SEED_RATES: list[dict[str, object]] = [
     },
     {
         "protocol": "Aave V3",
-        "venue_id": "AAVEV3-ETHEREUM",
+        "venue_id": "AAVE_V3-ETHEREUM",
         "chain": "ETHEREUM",
         "token": "DAI",
         "supply_apy_pct": 3.9,
@@ -121,7 +121,7 @@ _SEED_RATES: list[dict[str, object]] = [
     # Compound V3
     {
         "protocol": "Compound V3",
-        "venue_id": "COMPOUNDV3-ETHEREUM",
+        "venue_id": "COMPOUND_V3-ETHEREUM",
         "chain": "ETHEREUM",
         "token": "USDC",
         "supply_apy_pct": 3.8,
@@ -132,7 +132,7 @@ _SEED_RATES: list[dict[str, object]] = [
     },
     {
         "protocol": "Compound V3",
-        "venue_id": "COMPOUNDV3-ETHEREUM",
+        "venue_id": "COMPOUND_V3-ETHEREUM",
         "chain": "ETHEREUM",
         "token": "USDT",
         "supply_apy_pct": 3.5,
@@ -143,7 +143,7 @@ _SEED_RATES: list[dict[str, object]] = [
     },
     {
         "protocol": "Compound V3",
-        "venue_id": "COMPOUNDV3-ETHEREUM",
+        "venue_id": "COMPOUND_V3-ETHEREUM",
         "chain": "ETHEREUM",
         "token": "WETH",
         "supply_apy_pct": 1.5,
@@ -154,7 +154,7 @@ _SEED_RATES: list[dict[str, object]] = [
     },
     {
         "protocol": "Compound V3",
-        "venue_id": "COMPOUNDV3-ETHEREUM",
+        "venue_id": "COMPOUND_V3-ETHEREUM",
         "chain": "ETHEREUM",
         "token": "DAI",
         "supply_apy_pct": 3.4,
@@ -169,7 +169,7 @@ _SEED_POSITIONS: list[dict[str, object]] = [
     {
         "id": "pos-la-001",
         "borrow_protocol": "Compound V3",
-        "borrow_venue_id": "COMPOUNDV3-ETHEREUM",
+        "borrow_venue_id": "COMPOUND_V3-ETHEREUM",
         "lend_protocol": "Morpho Blue",
         "lend_venue_id": "MORPHO-ETHEREUM",
         "token": "USDC",
@@ -183,7 +183,7 @@ _SEED_POSITIONS: list[dict[str, object]] = [
     {
         "id": "pos-la-002",
         "borrow_protocol": "Compound V3",
-        "borrow_venue_id": "COMPOUNDV3-ETHEREUM",
+        "borrow_venue_id": "COMPOUND_V3-ETHEREUM",
         "lend_protocol": "Morpho Blue",
         "lend_venue_id": "MORPHO-ETHEREUM",
         "token": "USDT",
@@ -197,7 +197,7 @@ _SEED_POSITIONS: list[dict[str, object]] = [
     {
         "id": "pos-la-003",
         "borrow_protocol": "Aave V3",
-        "borrow_venue_id": "AAVEV3-ETHEREUM",
+        "borrow_venue_id": "AAVE_V3-ETHEREUM",
         "lend_protocol": "Morpho Blue",
         "lend_venue_id": "MORPHO-ETHEREUM",
         "token": "WETH",
@@ -211,9 +211,9 @@ _SEED_POSITIONS: list[dict[str, object]] = [
     {
         "id": "pos-la-004",
         "borrow_protocol": "Compound V3",
-        "borrow_venue_id": "COMPOUNDV3-ETHEREUM",
+        "borrow_venue_id": "COMPOUND_V3-ETHEREUM",
         "lend_protocol": "Aave V3",
-        "lend_venue_id": "AAVEV3-ETHEREUM",
+        "lend_venue_id": "AAVE_V3-ETHEREUM",
         "token": "DAI",
         "chain": "ETHEREUM",
         "notional_usd": 800_000,
@@ -225,7 +225,7 @@ _SEED_POSITIONS: list[dict[str, object]] = [
     {
         "id": "pos-la-005",
         "borrow_protocol": "Aave V3",
-        "borrow_venue_id": "AAVEV3-ETHEREUM",
+        "borrow_venue_id": "AAVE_V3-ETHEREUM",
         "lend_protocol": "Morpho Blue",
         "lend_venue_id": "MORPHO-ETHEREUM",
         "token": "USDC",

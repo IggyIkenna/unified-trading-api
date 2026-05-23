@@ -36,7 +36,7 @@ async def get_position_range(request: Request) -> dict[str, object]:
     return single_response(
         {
             "pool": "ETH/USDC",
-            "venue_id": "UNISWAPV3-ETHEREUM",
+            "venue_id": "UNISWAP_V3-ETHEREUM",
             "token0": "ETH",
             "token1": "USDC",
             "fee_tier": 0.05,

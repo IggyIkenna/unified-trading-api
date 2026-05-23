@@ -39,7 +39,7 @@ class TestVenueToCategory:
         assert _venue_to_category("NYSE") == "tradfi"
 
     def test_defi_venues(self) -> None:
-        assert _venue_to_category("UNISWAPV3-ETHEREUM") == "defi"
+        assert _venue_to_category("UNISWAP_V3-ETHEREUM") == "defi"
 
 
 class TestTimeframeMap:
