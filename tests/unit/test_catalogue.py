@@ -29,9 +29,7 @@ class TestCatalogueData:
     def test_every_category_has_permissions(self) -> None:
         for domain_node in PERMISSION_CATALOGUE.domains:
             for cat in domain_node.categories:
-                assert len(cat.permissions) > 0, (
-                    f"Category {cat.key} in {domain_node.domain} has no permissions"
-                )
+                assert len(cat.permissions) > 0, f"Category {cat.key} in {domain_node.domain} has no permissions"
 
     def test_permission_keys_unique(self) -> None:
         keys: list[str] = []
@@ -47,9 +45,7 @@ class TestCatalogueData:
             if domain_node.domain == PermissionDomain.INTERNAL_PROVISIONING:
                 for cat in domain_node.categories:
                     for perm in cat.permissions:
-                        assert perm.is_internal_only, (
-                            f"Provisioning perm {perm.key} should be internal-only"
-                        )
+                        assert perm.is_internal_only, f"Provisioning perm {perm.key} should be internal-only"
 
     def test_platform_internal_perms_flagged(self) -> None:
         """Platform internal tools should be flagged internal-only."""
@@ -58,9 +54,7 @@ class TestCatalogueData:
                 for cat in domain_node.categories:
                     if cat.key == "internal":
                         for perm in cat.permissions:
-                            assert perm.is_internal_only, (
-                                f"Platform internal perm {perm.key} should be internal-only"
-                            )
+                            assert perm.is_internal_only, f"Platform internal perm {perm.key} should be internal-only"
 
     def test_entitlement_perms_sourced_from_uac(self) -> None:
         """Feature subscriptions entitlements should match UAC Entitlement enum count."""

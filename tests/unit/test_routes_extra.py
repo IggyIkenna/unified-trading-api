@@ -28,9 +28,7 @@ class TestReportingRoutes:
         resp = app_client.get("/reporting/settlements")
         assert resp.status_code == 200
 
-    def test_get_reconciliation(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_reconciliation(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("reconciliation", [{"id": "rec1"}])
         resp = app_client.get("/reporting/reconciliation")
         assert resp.status_code == 200
@@ -50,9 +48,7 @@ class TestReportingRoutes:
         assert resp.status_code == 200
         assert "error" in resp.json()
 
-    def test_download_report_found(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_download_report_found(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("generated_reports", [{"id": "rpt1", "title": "Test"}])
         resp = app_client.get("/reporting/download/rpt1")
         assert resp.status_code == 200
@@ -67,16 +63,12 @@ class TestReportingRoutes:
         resp = app_client.get("/reporting/schedules")
         assert resp.status_code == 200
 
-    def test_get_pnl_attribution(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_pnl_attribution(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("pnl_attribution", [{"id": "pa1", "period": "1d"}])
         resp = app_client.get("/reporting/pnl-attribution")
         assert resp.status_code == 200
 
-    def test_get_executive_summary(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_executive_summary(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("executive_summary", [{"id": "es1", "period": "1d", "aum": 1000000}])
         resp = app_client.get("/reporting/executive-summary")
         assert resp.status_code == 200
@@ -98,9 +90,7 @@ class TestReportingRoutes:
 
 
 class TestMLRoutes:
-    def test_get_model_families(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_model_families(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("model_families", [{"id": "mf1"}])
         resp = app_client.get("/ml/model-families")
         assert resp.status_code == 200
@@ -115,16 +105,12 @@ class TestMLRoutes:
         resp = app_client.get("/ml/training-runs")
         assert resp.status_code == 200
 
-    def test_get_model_versions(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_model_versions(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("model_versions", [{"id": "mv1"}])
         resp = app_client.get("/ml/versions")
         assert resp.status_code == 200
 
-    def test_get_model_deployments(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_model_deployments(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("model_deployments", [{"id": "md1"}])
         resp = app_client.get("/ml/deployments")
         assert resp.status_code == 200
@@ -149,16 +135,12 @@ class TestMLRoutes:
         assert resp.status_code == 200
         assert resp.json()["data"]["status"] == "created"
 
-    def test_get_validation_results(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_validation_results(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("validation_results", [{"id": "vr1"}])
         resp = app_client.get("/ml/validation-results")
         assert resp.status_code == 200
 
-    def test_promote_model_found(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_promote_model_found(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("model_versions", [{"id": "mv1", "status": "staging"}])
         resp = app_client.post("/ml/models/mv1/promote")
         assert resp.status_code == 200
@@ -190,9 +172,7 @@ class TestConfigRoutes:
         resp = app_client.put("/config/system", json={"theme": "dark"})
         assert resp.status_code == 200
 
-    def test_update_system_config_update(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_update_system_config_update(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("system_config", [{"id": "", "mode": "mock"}])
         resp = app_client.put("/config/system", json={"mode": "real"})
         assert resp.status_code == 200
@@ -268,9 +248,7 @@ class TestDocumentRoutes:
         assert resp.status_code == 200
         assert "upload_url" in resp.json()["data"]
 
-    def test_get_download_url_found(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_download_url_found(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("documents", [{"id": "doc1", "name": "report.pdf"}])
         resp = app_client.get("/documents/download-url?document_id=doc1")
         assert resp.status_code == 200
@@ -286,9 +264,7 @@ class TestDocumentRoutes:
         resp = app_client.get("/documents/list")
         assert resp.status_code == 200
 
-    def test_delete_document_found(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_delete_document_found(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("documents", [{"id": "doc1"}])
         resp = app_client.delete("/documents/doc1")
         assert resp.status_code == 200
@@ -316,9 +292,7 @@ class TestDerivativesRoutes:
         resp = app_client.get("/derivatives/vol-surface")
         assert resp.status_code == 200
 
-    def test_get_portfolio_greeks_with_data(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_portfolio_greeks_with_data(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("portfolio_greeks", [{"id": "pg1", "delta": 0.5}])
         resp = app_client.get("/derivatives/portfolio-greeks")
         assert resp.status_code == 200
@@ -367,16 +341,12 @@ class TestComplianceRoutes:
 
 
 class TestServiceStatusRoutes:
-    def test_get_service_health(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_service_health(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("service_health", [{"id": "sh1", "service": "execution"}])
         resp = app_client.get("/service-status/health")
         assert resp.status_code == 200
 
-    def test_get_feature_freshness(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_feature_freshness(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("feature_freshness", [{"id": "ff1"}])
         resp = app_client.get("/service-status/feature-freshness")
         assert resp.status_code == 200

@@ -30,9 +30,7 @@ class TestAlertRoutes:
         assert data["mode"] == "live"
         assert len(data["data"]) == 2
 
-    def test_get_alerts_with_filters(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_alerts_with_filters(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "alerts_live",
             [
@@ -50,9 +48,7 @@ class TestAlertRoutes:
         assert resp.status_code == 200
         assert "data" in resp.json()
 
-    def test_acknowledge_alert_found(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_acknowledge_alert_found(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "alerts_live",
             [
@@ -71,9 +67,7 @@ class TestAlertRoutes:
         assert "error" in resp.json()
         assert resp.json()["error"]["code"] == "NOT_FOUND"
 
-    def test_escalate_alert_found(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_escalate_alert_found(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "alerts_live",
             [
@@ -101,9 +95,7 @@ class TestAlertRoutes:
         resp = app_client.get("/alerts/active")
         assert resp.status_code == 200
 
-    def test_get_active_alerts_acknowledged_filter(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_active_alerts_acknowledged_filter(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "alerts_live",
             [
@@ -114,9 +106,7 @@ class TestAlertRoutes:
         resp = app_client.get("/alerts/active?acknowledged=false")
         assert resp.status_code == 200
 
-    def test_resolve_alert_found(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_resolve_alert_found(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "alerts_live",
             [
@@ -150,9 +140,7 @@ class TestInstrumentRoutes:
         assert resp.status_code == 200
         assert len(resp.json()["data"]) == 1
 
-    def test_get_instruments_with_filter(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_instruments_with_filter(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "instruments",
             [
@@ -225,9 +213,7 @@ class TestTradingAnalyticsRoutes:
         assert data["mode"] == "live"
         assert data["period"] == "1d"
 
-    def test_get_pnl_batch_mode(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_pnl_batch_mode(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("pnl_batch", [{"id": "p1", "pnl": 200}])
         resp = app_client.get("/analytics/pnl?mode=batch")
         assert resp.status_code == 200
@@ -257,9 +243,7 @@ class TestTradingAnalyticsRoutes:
         resp = app_client.get("/analytics/settlements")
         assert resp.status_code == 200
 
-    def test_get_analytics_instruments(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_analytics_instruments(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("analytics_instruments", [{"id": "ai1", "asset_group": "crypto"}])
         resp = app_client.get("/analytics/instruments")
         assert resp.status_code == 200
@@ -294,9 +278,7 @@ class TestTradingAnalyticsRoutes:
         resp = app_client.get("/analytics/strategies")
         assert resp.status_code == 200
 
-    def test_get_strategy_detail_found(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_strategy_detail_found(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("strategies", [{"id": "s1", "name": "Alpha"}])
         resp = app_client.get("/analytics/strategies/s1")
         assert resp.status_code == 200
@@ -308,9 +290,7 @@ class TestTradingAnalyticsRoutes:
         assert resp.status_code == 200
         assert "error" in resp.json()
 
-    def test_promote_strategy_found(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_promote_strategy_found(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("strategies", [{"id": "s1", "status": "staging"}])
         resp = app_client.post("/analytics/strategies/s1/promote")
         assert resp.status_code == 200
@@ -321,9 +301,7 @@ class TestTradingAnalyticsRoutes:
         assert resp.status_code == 200
         assert "error" in resp.json()
 
-    def test_reject_strategy_found(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_reject_strategy_found(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("strategies", [{"id": "s1", "status": "staging"}])
         resp = app_client.post("/analytics/strategies/s1/reject")
         assert resp.status_code == 200
@@ -342,15 +320,11 @@ class TestTradingAnalyticsRoutes:
         assert resp.json()["data"]["scale_factor"] == 1.5
 
     def test_scale_strategy_not_found(self, app_client: TestClient) -> None:
-        resp = app_client.post(
-            "/analytics/strategies/nonexistent/scale", json={"scale_factor": 2.0}
-        )
+        resp = app_client.post("/analytics/strategies/nonexistent/scale", json={"scale_factor": 2.0})
         assert resp.status_code == 200
         assert "error" in resp.json()
 
-    def test_get_strategy_configs(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_strategy_configs(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("strategies", [{"id": "s1"}])
         resp = app_client.get("/analytics/strategy-configs")
         assert resp.status_code == 200
@@ -374,9 +348,7 @@ class TestExecutionRoutes:
         resp = app_client.get("/execution/fills")
         assert resp.status_code == 200
 
-    def test_get_fills_fallback(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_fills_fallback(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         """When fills_live is empty, falls back to 'fills' collection."""
         mock_service.seed("fills", [{"id": "f1"}])
         resp = app_client.get("/execution/fills")
@@ -415,17 +387,13 @@ class TestExecutionRoutes:
 
 
 class TestPositionRoutes:
-    def test_get_active_positions(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_active_positions(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("positions_live", [{"id": "p1", "venue": "binance"}])
         resp = app_client.get("/positions/active")
         assert resp.status_code == 200
         assert resp.json()["mode"] == "live"
 
-    def test_get_position_summary(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_position_summary(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("position_summary", [{"total_value": 1000}])
         resp = app_client.get("/positions/summary")
         assert resp.status_code == 200
@@ -449,9 +417,7 @@ class TestMarketDataRoutes:
         data = resp.json()
         assert data["instrument"] == "BTC-PERP"
 
-    def test_get_candles_different_interval(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_candles_different_interval(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("candles_4h", [{"id": "c1", "instrument": "BTC-PERP"}])
         resp = app_client.get("/market-data/candles?instrument=BTC-PERP&interval=4h")
         assert resp.status_code == 200
@@ -481,9 +447,7 @@ class TestMarketDataRoutes:
         resp = app_client.get("/market-data/tickers?venue=binance")
         assert resp.status_code == 200
 
-    def test_get_fx_rates_with_data(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_fx_rates_with_data(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("fx_rates", [{"id": "fx1", "pair": "BTC/USD", "rate": 67000}])
         resp = app_client.get("/market-data/fx-rates")
         assert resp.status_code == 200
@@ -529,23 +493,15 @@ class TestRiskRoutes:
         resp = app_client.get("/risk/stress")
         assert resp.status_code == 200
 
-    def test_circuit_breaker_trip(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_circuit_breaker_trip(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("strategies", [{"id": "s1", "status": "active"}])
-        resp = app_client.post(
-            "/risk/circuit-breaker", json={"strategy_id": "s1", "action": "trip"}
-        )
+        resp = app_client.post("/risk/circuit-breaker", json={"strategy_id": "s1", "action": "trip"})
         assert resp.status_code == 200
         assert resp.json()["data"]["status"] == "ok"
 
-    def test_circuit_breaker_reset(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_circuit_breaker_reset(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("strategies", [{"id": "s1", "status": "tripped"}])
-        resp = app_client.post(
-            "/risk/circuit-breaker", json={"strategy_id": "s1", "action": "reset"}
-        )
+        resp = app_client.post("/risk/circuit-breaker", json={"strategy_id": "s1", "action": "reset"})
         assert resp.status_code == 200
 
     def test_circuit_breaker_not_found(self, app_client: TestClient) -> None:
@@ -553,24 +509,18 @@ class TestRiskRoutes:
         assert resp.status_code == 200
         assert "error" in resp.json()
 
-    def test_kill_switch_strategy(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_kill_switch_strategy(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("strategies", [{"id": "s1", "status": "live"}])
         resp = app_client.post("/risk/kill-switch", json={"scope": "strategy", "target_id": "s1"})
         assert resp.status_code == 200
         assert resp.json()["data"]["status"] == "ok"
 
     def test_kill_switch_strategy_not_found(self, app_client: TestClient) -> None:
-        resp = app_client.post(
-            "/risk/kill-switch", json={"scope": "strategy", "target_id": "nonexistent"}
-        )
+        resp = app_client.post("/risk/kill-switch", json={"scope": "strategy", "target_id": "nonexistent"})
         assert resp.status_code == 200
         assert "error" in resp.json()
 
-    def test_kill_switch_global(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_kill_switch_global(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "strategies",
             [
@@ -607,16 +557,12 @@ class TestRiskRoutes:
         resp = app_client.get("/risk/stress-test")
         assert resp.status_code == 200
 
-    def test_get_correlation_matrix(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_correlation_matrix(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("correlation_matrix", [{"id": "cm1"}])
         resp = app_client.get("/risk/correlation-matrix")
         assert resp.status_code == 200
 
-    def test_get_regime_with_data(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_regime_with_data(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("regime", [{"id": "r1", "regime": "high_vol", "multiplier": 1.5}])
         resp = app_client.get("/risk/regime")
         assert resp.status_code == 200

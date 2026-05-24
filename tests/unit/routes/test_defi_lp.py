@@ -8,9 +8,7 @@ from tests.unit.conftest import InMemoryService
 
 
 class TestDefiLpPositionRange:
-    def test_get_position_range_returns_200(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_position_range_returns_200(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "defi_lp_position_range",
             [
@@ -28,9 +26,7 @@ class TestDefiLpPositionRange:
         resp = app_client.get("/defi/lp/position-range")
         assert resp.status_code == 200
 
-    def test_get_position_range_response_shape(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_position_range_response_shape(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "defi_lp_position_range",
             [{"pool": "ETH/USDC", "venue_id": "UNISWAP_V3-ETHEREUM"}],
@@ -54,9 +50,7 @@ class TestDefiLpPositionRange:
 
 
 class TestDefiLpImpermanentLoss:
-    def test_get_impermanent_loss_returns_200(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_impermanent_loss_returns_200(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "defi_lp_impermanent_loss",
             [{"timestamp": "2026-04-10", "il_pct": -0.42, "lp_value_usd": 248_000}],
@@ -64,9 +58,7 @@ class TestDefiLpImpermanentLoss:
         resp = app_client.get("/defi/lp/impermanent-loss")
         assert resp.status_code == 200
 
-    def test_get_impermanent_loss_response_shape(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_impermanent_loss_response_shape(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("defi_lp_impermanent_loss", [{"timestamp": "2026-04-10"}])
         resp = app_client.get("/defi/lp/impermanent-loss")
         data = resp.json()
@@ -75,9 +67,7 @@ class TestDefiLpImpermanentLoss:
 
 
 class TestDefiLpRebalanceHistory:
-    def test_get_rebalance_history_returns_200(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_rebalance_history_returns_200(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "defi_lp_rebalance_history",
             [
@@ -94,9 +84,7 @@ class TestDefiLpRebalanceHistory:
 
 
 class TestDefiLpMlConfidence:
-    def test_get_ml_confidence_returns_200(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_ml_confidence_returns_200(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "defi_lp_ml_confidence",
             [
@@ -111,9 +99,7 @@ class TestDefiLpMlConfidence:
         resp = app_client.get("/defi/lp/ml-confidence")
         assert resp.status_code == 200
 
-    def test_get_ml_confidence_response_shape(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_ml_confidence_response_shape(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "defi_lp_ml_confidence",
             [{"recommended_action": "HOLD", "confidence": 0.43}],
@@ -123,9 +109,7 @@ class TestDefiLpMlConfidence:
         assert "recommended_action" in result
         assert "confidence" in result
 
-    def test_get_ml_confidence_fallback_when_empty(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_ml_confidence_fallback_when_empty(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("defi_lp_ml_confidence", [])
         resp = app_client.get("/defi/lp/ml-confidence")
         assert resp.status_code == 200
@@ -136,9 +120,7 @@ class TestDefiLpMlConfidence:
 
 
 class TestDefiLpFeeRevenue:
-    def test_get_fee_revenue_returns_200(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_fee_revenue_returns_200(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "defi_lp_fee_revenue",
             [{"fees_24h_usd": 142.50, "fees_7d_usd": 987.30, "fee_apr_7d": 20.6}],
@@ -146,9 +128,7 @@ class TestDefiLpFeeRevenue:
         resp = app_client.get("/defi/lp/fee-revenue")
         assert resp.status_code == 200
 
-    def test_get_fee_revenue_fallback_when_empty(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_fee_revenue_fallback_when_empty(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("defi_lp_fee_revenue", [])
         resp = app_client.get("/defi/lp/fee-revenue")
         assert resp.status_code == 200

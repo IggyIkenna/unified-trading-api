@@ -8,9 +8,7 @@ from tests.unit.conftest import InMemoryService
 
 
 class TestEventsCalendar:
-    def test_get_calendar_returns_200(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_calendar_returns_200(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "events_calendar",
             [
@@ -29,18 +27,14 @@ class TestEventsCalendar:
         resp = app_client.get("/events/calendar")
         assert resp.status_code == 200
 
-    def test_get_calendar_response_shape(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_calendar_response_shape(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("events_calendar", [{"id": "ev-1", "impact": "HIGH", "region": "US"}])
         resp = app_client.get("/events/calendar")
         data = resp.json()
         assert "data" in data
         assert "count" in data
 
-    def test_get_calendar_filter_by_impact(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_calendar_filter_by_impact(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "events_calendar",
             [
@@ -53,9 +47,7 @@ class TestEventsCalendar:
         records = resp.json()["data"]
         assert all(str(r.get("impact", "")).upper() == "HIGH" for r in records)
 
-    def test_get_calendar_filter_by_region(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_calendar_filter_by_region(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "events_calendar",
             [
@@ -70,9 +62,7 @@ class TestEventsCalendar:
 
 
 class TestEventsPredictions:
-    def test_get_predictions_returns_200(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_predictions_returns_200(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "events_predictions",
             [
@@ -88,9 +78,7 @@ class TestEventsPredictions:
         resp = app_client.get("/events/predictions")
         assert resp.status_code == 200
 
-    def test_get_predictions_filter_by_event_id(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_predictions_filter_by_event_id(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "events_predictions",
             [
@@ -103,9 +91,7 @@ class TestEventsPredictions:
         records = resp.json()["data"]
         assert all(r["event_id"] == "ev-1" for r in records)
 
-    def test_get_predictions_filter_by_instrument(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_predictions_filter_by_instrument(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "events_predictions",
             [
@@ -120,9 +106,7 @@ class TestEventsPredictions:
 
 
 class TestEventsNews:
-    def test_get_news_returns_200(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_news_returns_200(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "events_news",
             [
@@ -139,9 +123,7 @@ class TestEventsNews:
         resp = app_client.get("/events/news")
         assert resp.status_code == 200
 
-    def test_get_news_filter_by_sentiment(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_news_filter_by_sentiment(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "events_news",
             [
@@ -154,9 +136,7 @@ class TestEventsNews:
         records = resp.json()["data"]
         assert all(str(r.get("sentiment", "")).lower() == "bullish" for r in records)
 
-    def test_get_news_filter_by_category(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_news_filter_by_category(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "events_news",
             [
@@ -169,9 +149,7 @@ class TestEventsNews:
         records = resp.json()["data"]
         assert all(str(r.get("category", "")).lower() == "macro" for r in records)
 
-    def test_get_news_respects_limit(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_news_respects_limit(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "events_news",
             [{"id": f"news-{i}", "sentiment": "neutral", "category": "macro"} for i in range(10)],
@@ -183,9 +161,7 @@ class TestEventsNews:
 
 
 class TestEventsPositions:
-    def test_get_positions_returns_200(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_positions_returns_200(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "events_positions",
             [
@@ -206,9 +182,7 @@ class TestEventsPositions:
         resp = app_client.get("/events/positions")
         assert resp.status_code == 200
 
-    def test_get_positions_filter_by_phase(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_positions_filter_by_phase(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "events_positions",
             [
@@ -221,9 +195,7 @@ class TestEventsPositions:
         records = resp.json()["data"]
         assert all(str(r.get("phase", "")).upper() == "PRE_EVENT" for r in records)
 
-    def test_get_positions_filter_by_event_id(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_positions_filter_by_event_id(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "events_positions",
             [
@@ -236,9 +208,7 @@ class TestEventsPositions:
         records = resp.json()["data"]
         assert all(r["event_id"] == "ev-1" for r in records)
 
-    def test_get_positions_response_shape(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_positions_response_shape(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("events_positions", [{"id": "epos-1", "event_id": "ev-1"}])
         resp = app_client.get("/events/positions")
         data = resp.json()

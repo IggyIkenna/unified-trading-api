@@ -37,9 +37,7 @@ class TestPatchLifecycleValidation:
         )
         assert resp.status_code == 404
 
-    def test_400_when_body_empty(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_400_when_body_empty(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         _seed_instance(mock_service)
         resp = app_client.patch(
             "/api/v1/registry/strategy-instances/elysium-base-btc/lifecycle",
@@ -47,9 +45,7 @@ class TestPatchLifecycleValidation:
         )
         assert resp.status_code == 400
 
-    def test_422_when_unknown_maturity_phase(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_422_when_unknown_maturity_phase(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         _seed_instance(mock_service)
         resp = app_client.patch(
             "/api/v1/registry/strategy-instances/elysium-base-btc/lifecycle",
@@ -57,9 +53,7 @@ class TestPatchLifecycleValidation:
         )
         assert resp.status_code == 422
 
-    def test_422_when_extra_fields(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_422_when_extra_fields(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         _seed_instance(mock_service)
         resp = app_client.patch(
             "/api/v1/registry/strategy-instances/elysium-base-btc/lifecycle",
@@ -69,9 +63,7 @@ class TestPatchLifecycleValidation:
 
 
 class TestPatchLifecycleTransitions:
-    def test_forward_maturity_transition_succeeds(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_forward_maturity_transition_succeeds(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         _seed_instance(mock_service, maturity_phase="paper_1d")
         resp = app_client.patch(
             "/api/v1/registry/strategy-instances/elysium-base-btc/lifecycle",
@@ -86,9 +78,7 @@ class TestPatchLifecycleTransitions:
         assert history[0]["to_phase"] == "paper_14d"
         assert history[0]["rationale"] == "stabilised"
 
-    def test_backward_maturity_transition_rejected(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_backward_maturity_transition_rejected(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         _seed_instance(mock_service, maturity_phase="paper_14d")
         resp = app_client.patch(
             "/api/v1/registry/strategy-instances/elysium-base-btc/lifecycle",
@@ -97,9 +87,7 @@ class TestPatchLifecycleTransitions:
         assert resp.status_code == 400
         assert "Illegal maturity transition" in resp.json()["detail"]
 
-    def test_retirement_from_any_phase_allowed(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_retirement_from_any_phase_allowed(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         _seed_instance(mock_service, maturity_phase="paper_1d")
         resp = app_client.patch(
             "/api/v1/registry/strategy-instances/elysium-base-btc/lifecycle",
@@ -108,9 +96,7 @@ class TestPatchLifecycleTransitions:
         assert resp.status_code == 200
         assert resp.json()["data"]["maturity_phase"] == "retired"
 
-    def test_transition_out_of_retired_rejected(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_transition_out_of_retired_rejected(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         _seed_instance(mock_service, maturity_phase="retired")
         resp = app_client.patch(
             "/api/v1/registry/strategy-instances/elysium-base-btc/lifecycle",
@@ -118,9 +104,7 @@ class TestPatchLifecycleTransitions:
         )
         assert resp.status_code == 400
 
-    def test_product_routing_only_update(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_product_routing_only_update(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         _seed_instance(mock_service)
         resp = app_client.patch(
             "/api/v1/registry/strategy-instances/elysium-base-btc/lifecycle",
@@ -133,9 +117,7 @@ class TestPatchLifecycleTransitions:
         assert record["maturity_phase"] == "paper_1d"
         assert "phase_history" not in record or record.get("phase_history") in ([], None)
 
-    def test_combined_phase_plus_routing(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_combined_phase_plus_routing(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         _seed_instance(mock_service, maturity_phase="paper_1d", product_routing="dart_only")
         resp = app_client.patch(
             "/api/v1/registry/strategy-instances/elysium-base-btc/lifecycle",
@@ -148,9 +130,7 @@ class TestPatchLifecycleTransitions:
 
 
 class TestGetLifecycle:
-    def test_get_single_returns_record(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_single_returns_record(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         _seed_instance(mock_service, maturity_phase="paper_14d")
         resp = app_client.get(
             "/api/v1/registry/strategy-instances/elysium-base-btc/lifecycle",
@@ -166,9 +146,7 @@ class TestGetLifecycle:
         )
         assert resp.status_code == 404
 
-    def test_list_returns_all_records(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_list_returns_all_records(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "strategy_instance_lifecycle",
             [

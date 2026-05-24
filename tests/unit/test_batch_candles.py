@@ -63,9 +63,7 @@ class TestBlobPath:
             target_date=date(2026, 1, 15),
         )
         assert path == (
-            "processed_candles/by_date/day=2026-01-15"
-            "/timeframe=5m/data_type=ohlcv_1m"
-            "/venue=NASDAQ/AAPL.parquet"
+            "processed_candles/by_date/day=2026-01-15/timeframe=5m/data_type=ohlcv_1m/venue=NASDAQ/AAPL.parquet"
         )
 
 

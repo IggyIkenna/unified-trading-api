@@ -49,12 +49,8 @@ class TestPerformanceEndpointBasics:
 
     def test_deterministic_between_calls(self, app_client: TestClient) -> None:
         # Pin the window so two calls don't differ purely on `now` drift.
-        a = _get(
-            app_client, **{"from": "2025-01-01T00:00:00+00:00", "to": "2025-06-01T00:00:00+00:00"}
-        )
-        b = _get(
-            app_client, **{"from": "2025-01-01T00:00:00+00:00", "to": "2025-06-01T00:00:00+00:00"}
-        )
+        a = _get(app_client, **{"from": "2025-01-01T00:00:00+00:00", "to": "2025-06-01T00:00:00+00:00"})
+        b = _get(app_client, **{"from": "2025-01-01T00:00:00+00:00", "to": "2025-06-01T00:00:00+00:00"})
         assert a["series"]["backtest"]["aggregate"] == b["series"]["backtest"]["aggregate"]
 
 
@@ -72,9 +68,7 @@ class TestPerformanceEndpointPerVenue:
         # Backtest does not surface a per-venue breakdown.
         assert data["series"]["backtest"].get("per_venue") in (None, {})
 
-    def test_per_venue_slices_sum_to_aggregate_pnl_within_tolerance(
-        self, app_client: TestClient
-    ) -> None:
+    def test_per_venue_slices_sum_to_aggregate_pnl_within_tolerance(self, app_client: TestClient) -> None:
         data = _get(app_client, per_venue=True)
         live = data["series"]["live"]
         aggregate_last = live["aggregate"][-1]

@@ -63,9 +63,7 @@ class TestAuthEventLogging:
             calls = [c for c in mock_log_event.call_args_list if c.args[0] == "AUTH_FAILURE"]
             assert len(calls) >= 1
             call_kwargs = calls[0].kwargs if calls[0].kwargs else {}
-            call_details = call_kwargs.get("details") or (
-                calls[0].args[2] if len(calls[0].args) > 2 else {}
-            )
+            call_details = call_kwargs.get("details") or (calls[0].args[2] if len(calls[0].args) > 2 else {})
             # The details dict should include reason
             assert call_details.get("reason") == "missing_key"
 
@@ -93,9 +91,7 @@ class TestAuthEventLogging:
             assert response.status_code == 200
 
             # AUTH_FAILURE should NOT have been emitted
-            failure_calls = [
-                c for c in mock_log_event.call_args_list if c.args and c.args[0] == "AUTH_FAILURE"
-            ]
+            failure_calls = [c for c in mock_log_event.call_args_list if c.args and c.args[0] == "AUTH_FAILURE"]
             assert len(failure_calls) == 0
 
 
