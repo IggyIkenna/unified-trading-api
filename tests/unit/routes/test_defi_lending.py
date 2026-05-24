@@ -103,9 +103,7 @@ class TestDefiLendingSimulateRateImpact:
         assert "rate_delta_supply_bps" in result
         assert "rate_delta_borrow_bps" in result
 
-    def test_simulate_rate_impact_larger_amount_has_bigger_impact(
-        self, app_client: TestClient
-    ) -> None:
+    def test_simulate_rate_impact_larger_amount_has_bigger_impact(self, app_client: TestClient) -> None:
         small = app_client.post(
             "/defi/lending/simulate-rate-impact",
             json={"protocol": "Aave V3", "token": "USDC", "amount_usd": 100_000},

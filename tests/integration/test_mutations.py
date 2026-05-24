@@ -78,9 +78,7 @@ class TestOrgScoping:
         assert r.status_code == 200
         data = r.json()["data"]
         for order in data:
-            assert order.get("org_id") == "acme", (
-                f"Client-full should only see acme data, got {order.get('org_id')}"
-            )
+            assert order.get("org_id") == "acme", f"Client-full should only see acme data, got {order.get('org_id')}"
 
     def test_data_only_client_sees_own_org(self, client: TestClient) -> None:
         r = client.get(

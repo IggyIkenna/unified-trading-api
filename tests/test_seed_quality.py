@@ -47,9 +47,7 @@ class TestOrgIdPresence:
         records = seeded_store.list(domain)
         assert len(records) > 0, f"Domain {domain} is empty"
         for i, record in enumerate(records):
-            assert "org_id" in record, (
-                f"Record {i} in {domain} missing org_id: {record.get('id', 'no-id')}"
-            )
+            assert "org_id" in record, f"Record {i} in {domain} missing org_id: {record.get('id', 'no-id')}"
 
     def test_org_filtering_acme_only(self, seeded_store: MockStateStore) -> None:
         """Client-full persona (acme) should only see acme data."""
@@ -82,9 +80,7 @@ class TestReferenceIntegrity:
         for order in orders:
             sid = order.get("strategy_id")
             if sid is not None:
-                assert str(sid) in strategy_ids, (
-                    f"Order {order.get('order_id')} references invalid strategy_id: {sid}"
-                )
+                assert str(sid) in strategy_ids, f"Order {order.get('order_id')} references invalid strategy_id: {sid}"
 
     def test_fill_order_ids_valid(self, seeded_store: MockStateStore) -> None:
         orders = seeded_store.list("orders")
@@ -93,9 +89,7 @@ class TestReferenceIntegrity:
         for fill in fills:
             oid = fill.get("order_id")
             if oid is not None:
-                assert str(oid) in order_ids, (
-                    f"Fill {fill.get('fill_id')} references invalid order_id: {oid}"
-                )
+                assert str(oid) in order_ids, f"Fill {fill.get('fill_id')} references invalid order_id: {oid}"
 
 
 class TestBatchLiveSeparation:
@@ -120,9 +114,7 @@ class TestBatchLiveSeparation:
         # Batch and live should have same instruments but different prices
         batch_instruments = {str(t.get("instrument")) for t in batch}
         live_instruments = {str(t.get("instrument")) for t in live}
-        assert batch_instruments == live_instruments, (
-            "Batch and live tickers should cover same instruments"
-        )
+        assert batch_instruments == live_instruments, "Batch and live tickers should cover same instruments"
 
     def test_pnl_timeseries_batch_vs_live(self, seeded_store: MockStateStore) -> None:
         batch = seeded_store.list("pnl_timeseries_batch")

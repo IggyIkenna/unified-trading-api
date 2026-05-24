@@ -32,9 +32,7 @@ class TestDefiLiquidationCascadeRisk:
 
 
 class TestDefiLiquidationEvents:
-    def test_get_events_returns_200(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_events_returns_200(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "liquidation_events",
             [
@@ -51,9 +49,7 @@ class TestDefiLiquidationEvents:
         resp = app_client.get("/defi/liquidation/events")
         assert resp.status_code == 200
 
-    def test_get_events_response_shape(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_events_response_shape(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "liquidation_events",
             [{"id": "liq-1", "protocol": "AAVE_V3", "chain": "ETHEREUM"}],
@@ -63,9 +59,7 @@ class TestDefiLiquidationEvents:
         assert "data" in data
         assert "mode" in data
 
-    def test_get_events_filter_by_protocol(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_events_filter_by_protocol(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "liquidation_events",
             [
@@ -76,9 +70,7 @@ class TestDefiLiquidationEvents:
         resp = app_client.get("/defi/liquidation/events?protocol=AAVE_V3")
         assert resp.status_code == 200
 
-    def test_get_events_filter_by_chain(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_events_filter_by_chain(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "liquidation_events",
             [
@@ -89,9 +81,7 @@ class TestDefiLiquidationEvents:
         resp = app_client.get("/defi/liquidation/events?chain=ETHEREUM")
         assert resp.status_code == 200
 
-    def test_get_events_mode_param(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_events_mode_param(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("liquidation_events", [])
         resp = app_client.get("/defi/liquidation/events?mode=batch")
         assert resp.status_code == 200
@@ -103,9 +93,7 @@ class TestDefiLiquidationEvents:
 
 
 class TestDefiLiquidationCapturedPositions:
-    def test_get_captured_positions_returns_200(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_captured_positions_returns_200(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "captured_positions",
             [{"id": "cap-1", "status": "ACTIVE", "profit_usd": 12_000}],
@@ -126,18 +114,14 @@ class TestDefiLiquidationCapturedPositions:
         resp = app_client.get("/defi/liquidation/captured-positions?status=ACTIVE")
         assert resp.status_code == 200
 
-    def test_get_captured_positions_response_shape(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_captured_positions_response_shape(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("captured_positions", [{"id": "cap-1", "status": "ACTIVE"}])
         resp = app_client.get("/defi/liquidation/captured-positions")
         data = resp.json()
         assert "data" in data
         assert "mode" in data
 
-    def test_get_captured_positions_mode_param(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_captured_positions_mode_param(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("captured_positions", [])
         resp = app_client.get("/defi/liquidation/captured-positions?mode=batch")
         assert resp.status_code == 200

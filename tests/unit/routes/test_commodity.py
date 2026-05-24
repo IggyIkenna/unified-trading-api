@@ -8,9 +8,7 @@ from tests.unit.conftest import InMemoryService
 
 
 class TestCommodityRegimeState:
-    def test_get_regime_state_returns_200(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_regime_state_returns_200(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "commodity_regime_state",
             [
@@ -27,9 +25,7 @@ class TestCommodityRegimeState:
         resp = app_client.get("/commodity/regime-state")
         assert resp.status_code == 200
 
-    def test_get_regime_state_response_shape(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_regime_state_response_shape(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "commodity_regime_state",
             [{"regime": "TRENDING", "confidence": 0.87}],
@@ -42,9 +38,7 @@ class TestCommodityRegimeState:
         assert "regime" in result
         assert "confidence" in result
 
-    def test_get_regime_state_fallback_when_empty(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_regime_state_fallback_when_empty(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("commodity_regime_state", [])
         resp = app_client.get("/commodity/regime-state")
         assert resp.status_code == 200
@@ -54,9 +48,7 @@ class TestCommodityRegimeState:
 
 
 class TestCommodityFactors:
-    def test_get_factors_returns_200(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_factors_returns_200(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "commodity_factors",
             [
@@ -67,18 +59,14 @@ class TestCommodityFactors:
         resp = app_client.get("/commodity/factors")
         assert resp.status_code == 200
 
-    def test_get_factors_response_shape(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_factors_response_shape(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("commodity_factors", [{"name": "Rig Count"}])
         resp = app_client.get("/commodity/factors")
         data = resp.json()
         assert "data" in data
         assert "mode" in data
 
-    def test_get_factors_returns_list(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_factors_returns_list(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "commodity_factors",
             [
@@ -94,9 +82,7 @@ class TestCommodityFactors:
 
 
 class TestCommodityCotPositioning:
-    def test_get_cot_positioning_returns_200(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_cot_positioning_returns_200(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "commodity_cot_positioning",
             [
@@ -111,9 +97,7 @@ class TestCommodityCotPositioning:
         resp = app_client.get("/commodity/cot-positioning")
         assert resp.status_code == 200
 
-    def test_get_cot_positioning_response_shape(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_cot_positioning_response_shape(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed("commodity_cot_positioning", [{"date": "2026-04-08"}])
         resp = app_client.get("/commodity/cot-positioning")
         data = resp.json()
@@ -122,9 +106,7 @@ class TestCommodityCotPositioning:
 
 
 class TestCommodityRegimeHistory:
-    def test_get_regime_history_returns_200(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_regime_history_returns_200(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "commodity_regime_history",
             [
@@ -141,9 +123,7 @@ class TestCommodityRegimeHistory:
 
 
 class TestCommodityPositions:
-    def test_get_positions_returns_200(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_positions_returns_200(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "commodity_positions",
             [
@@ -160,9 +140,7 @@ class TestCommodityPositions:
         resp = app_client.get("/commodity/positions")
         assert resp.status_code == 200
 
-    def test_get_positions_response_shape(
-        self, app_client: TestClient, mock_service: InMemoryService
-    ) -> None:
+    def test_get_positions_response_shape(self, app_client: TestClient, mock_service: InMemoryService) -> None:
         mock_service.seed(
             "commodity_positions",
             [{"commodity": "WTI Crude", "direction": "LONG"}],

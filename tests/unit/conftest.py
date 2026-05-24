@@ -67,9 +67,7 @@ class InMemoryService:
         self._data.setdefault(collection, []).append(record)
         return record
 
-    def update(
-        self, collection: str, record_id: str, data: dict[str, object]
-    ) -> dict[str, object] | None:
+    def update(self, collection: str, record_id: str, data: dict[str, object]) -> dict[str, object] | None:
         for record in self._data.get(collection, []):
             if record.get("id") == record_id:
                 record.update(data)
