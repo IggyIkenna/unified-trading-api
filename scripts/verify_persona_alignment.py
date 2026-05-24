@@ -63,14 +63,123 @@ def _validate_internal_consistency(
     return errors
 
 
+def _check_org_alignment(
+    api_org_ids: set[str],
+    auth_org_ids: set[str],
+    api_org_names: dict[str, str],
+    auth_org_names: dict[str, str],
+) -> list[str]:
+    errors: list[str] = []
+    api_only = api_org_ids - auth_org_ids
+    auth_only = auth_org_ids - api_org_ids
+    if api_only:
+        errors.append(f"Orgs in unified-trading-api but NOT auth-api: {sorted(api_only)}")
+    if auth_only:
+        errors.append(f"Orgs in auth-api but NOT unified-trading-api: {sorted(auth_only)}")
+    for oid in api_org_ids & auth_org_ids:
+        api_name = api_org_names.get(oid, "")
+        auth_name = auth_org_names.get(oid, "")
+        if api_name != auth_name:
+            errors.append(f"Org '{oid}' name mismatch: api='{api_name}', auth='{auth_name}'")
+    return errors
+
+
+def _check_persona_fields(
+    pid: str,
+    api_persona_orgs: dict[str, str],
+    auth_user_orgs: dict[str, str],
+    api_persona_emails: dict[str, str],
+    auth_user_emails: dict[str, str],
+    api_persona_names: dict[str, str],
+    auth_user_names: dict[str, str],
+    api_persona_roles: dict[str, str],
+    auth_user_roles: dict[str, str],
+) -> list[str]:
+    errors: list[str] = []
+    api_org, auth_org = api_persona_orgs.get(pid, ""), auth_user_orgs.get(pid, "")
+    if api_org != auth_org:
+        errors.append(f"Persona '{pid}' org_id mismatch: api='{api_org}', auth='{auth_org}'")
+    api_email, auth_email = api_persona_emails.get(pid, ""), auth_user_emails.get(pid, "")
+    if api_email != auth_email:
+        errors.append(f"Persona '{pid}' email mismatch: api='{api_email}', auth='{auth_email}'")
+    api_dname, auth_name = api_persona_names.get(pid, ""), auth_user_names.get(pid, "")
+    if api_dname != auth_name:
+        errors.append(f"Persona '{pid}' name mismatch: api='{api_dname}', auth='{auth_name}'")
+    api_role, auth_role = api_persona_roles.get(pid, ""), auth_user_roles.get(pid, "")
+    if api_role != auth_role:
+        errors.append(f"Persona '{pid}' role mismatch: api='{api_role}', auth='{auth_role}'")
+    return errors
+
+
+def _check_persona_alignment(
+    api_persona_ids: set[str],
+    auth_user_ids: set[str],
+    api_persona_orgs: dict[str, str],
+    auth_user_orgs: dict[str, str],
+    api_persona_emails: dict[str, str],
+    auth_user_emails: dict[str, str],
+    api_persona_names: dict[str, str],
+    auth_user_names: dict[str, str],
+    api_persona_roles: dict[str, str],
+    auth_user_roles: dict[str, str],
+) -> list[str]:
+    errors: list[str] = []
+    api_only = api_persona_ids - auth_user_ids
+    auth_only = auth_user_ids - api_persona_ids
+    if api_only:
+        errors.append(f"Personas in unified-trading-api but NOT auth-api: {sorted(api_only)}")
+    if auth_only:
+        errors.append(f"Personas in auth-api but NOT unified-trading-api: {sorted(auth_only)}")
+    for pid in sorted(api_persona_ids & auth_user_ids):
+        errors.extend(_check_persona_fields(
+            pid, api_persona_orgs, auth_user_orgs,
+            api_persona_emails, auth_user_emails,
+            api_persona_names, auth_user_names,
+            api_persona_roles, auth_user_roles,
+        ))
+    return errors
+
+
+def _collect_org_persona_entitlements(oid: str, personas: list[dict[str, object]]) -> set[str]:
+    result: set[str] = set()
+    for p in personas:
+        if str(p["org_id"]) == oid:
+            p_ents = p.get("entitlements", [])
+            if isinstance(p_ents, list):
+                result.update(str(e) for e in p_ents)
+    return result
+
+
+def _check_entitlement_alignment(
+    api_org_ids: set[str],
+    auth_org_ids: set[str],
+    personas: list[dict[str, object]],
+    auth_org_entitlements: dict[str, set[str]],
+) -> list[str]:
+    errors: list[str] = []
+    for oid in sorted(api_org_ids & auth_org_ids):
+        auth_ents = auth_org_entitlements.get(oid, set())
+        api_org_persona_ents = _collect_org_persona_entitlements(oid, personas)
+        if "*" in api_org_persona_ents and "*" in auth_ents:
+            continue
+        if "*" in api_org_persona_ents or "*" in auth_ents:
+            continue
+        if auth_ents != api_org_persona_ents:
+            missing_in_auth = api_org_persona_ents - auth_ents
+            if missing_in_auth:
+                errors.append(
+                    f"Org '{oid}' entitlements: personas need {sorted(missing_in_auth)} "
+                    f"but auth-api org only grants {sorted(auth_ents)}"
+                )
+    return errors
+
+
 def _validate_cross_api_alignment(
     organizations: list[dict[str, object]],
     personas: list[dict[str, object]],
     entitlements: dict[str, dict[str, object]],
 ) -> list[str]:
     """Compare persona data between unified-trading-api and auth-api."""
-    errors: list[str] = []
-
     from auth_api.mock_data import MOCK_ORGS, MOCK_USERS
 
     api_org_ids = {str(o["id"]) for o in organizations}
@@ -81,7 +190,6 @@ def _validate_cross_api_alignment(
     api_persona_names = {str(p["id"]): str(p["display_name"]) for p in personas}
     api_persona_roles = {str(p["id"]): str(p["role"]) for p in personas}
 
-    # Build auth-api lookups
     auth_org_ids = {org.id for org in MOCK_ORGS}
     auth_org_names = {org.id: org.name for org in MOCK_ORGS}
     auth_org_entitlements = {org.id: set(org.entitlements) for org in MOCK_ORGS}
@@ -91,87 +199,16 @@ def _validate_cross_api_alignment(
     auth_user_names = {u.id: u.name for u in MOCK_USERS}
     auth_user_roles = {u.id: u.role.value for u in MOCK_USERS}
 
-    # --- Org alignment ---
-    api_only_orgs = api_org_ids - auth_org_ids
-    auth_only_orgs = auth_org_ids - api_org_ids
-    if api_only_orgs:
-        errors.append(f"Orgs in unified-trading-api but NOT auth-api: {sorted(api_only_orgs)}")
-    if auth_only_orgs:
-        errors.append(f"Orgs in auth-api but NOT unified-trading-api: {sorted(auth_only_orgs)}")
-
-    # Org name alignment
-    for oid in api_org_ids & auth_org_ids:
-        api_name = api_org_names.get(oid, "")
-        auth_name = auth_org_names.get(oid, "")
-        if api_name != auth_name:
-            errors.append(f"Org '{oid}' name mismatch: api='{api_name}', auth='{auth_name}'")
-
-    # --- Persona/user alignment ---
-    api_only_personas = api_persona_ids - auth_user_ids
-    auth_only_personas = auth_user_ids - api_persona_ids
-    if api_only_personas:
-        errors.append(f"Personas in unified-trading-api but NOT auth-api: {sorted(api_only_personas)}")
-    if auth_only_personas:
-        errors.append(f"Personas in auth-api but NOT unified-trading-api: {sorted(auth_only_personas)}")
-
-    # Per-persona field alignment
-    for pid in sorted(api_persona_ids & auth_user_ids):
-        # org_id
-        api_org = api_persona_orgs.get(pid, "")
-        auth_org = auth_user_orgs.get(pid, "")
-        if api_org != auth_org:
-            errors.append(f"Persona '{pid}' org_id mismatch: api='{api_org}', auth='{auth_org}'")
-
-        # email
-        api_email = api_persona_emails.get(pid, "")
-        auth_email = auth_user_emails.get(pid, "")
-        if api_email != auth_email:
-            errors.append(f"Persona '{pid}' email mismatch: api='{api_email}', auth='{auth_email}'")
-
-        # display_name vs name
-        api_dname = api_persona_names.get(pid, "")
-        auth_name = auth_user_names.get(pid, "")
-        if api_dname != auth_name:
-            errors.append(f"Persona '{pid}' name mismatch: api='{api_dname}', auth='{auth_name}'")
-
-        # role
-        api_role = api_persona_roles.get(pid, "")
-        auth_role = auth_user_roles.get(pid, "")
-        if api_role != auth_role:
-            errors.append(f"Persona '{pid}' role mismatch: api='{api_role}', auth='{auth_role}'")
-
-    # --- Entitlement alignment ---
-    # For each org present in both, check that auth-api org entitlements match
-    # the entitlements declared on personas belonging to that org in trading-api.
-    # Auth-api stores entitlements on the org; trading-api stores them on personas.
-    for oid in sorted(api_org_ids & auth_org_ids):
-        auth_ents = auth_org_entitlements.get(oid, set())
-        # Collect entitlements from all trading-api personas in this org
-        api_org_persona_ents: set[str] = set()
-        for p in personas:
-            if str(p["org_id"]) == oid:
-                p_ents = p.get("entitlements", [])
-                if isinstance(p_ents, list):
-                    for e in p_ents:
-                        api_org_persona_ents.add(str(e))
-
-        # Wildcard means all entitlements -- skip comparison for wildcard orgs
-        if "*" in api_org_persona_ents and "*" in auth_ents:
-            continue
-        if "*" in api_org_persona_ents or "*" in auth_ents:
-            # One side has wildcard, other doesn't -- that's fine if both internal
-            continue
-
-        # Compare the superset of entitlements the org grants vs what personas use
-        if auth_ents != api_org_persona_ents:
-            # Only warn if the auth-api doesn't cover all persona entitlements
-            missing_in_auth = api_org_persona_ents - auth_ents
-            if missing_in_auth:
-                errors.append(
-                    f"Org '{oid}' entitlements: personas need {sorted(missing_in_auth)} "
-                    f"but auth-api org only grants {sorted(auth_ents)}"
-                )
-
+    errors: list[str] = []
+    errors.extend(_check_org_alignment(api_org_ids, auth_org_ids, api_org_names, auth_org_names))
+    errors.extend(_check_persona_alignment(
+        api_persona_ids, auth_user_ids,
+        api_persona_orgs, auth_user_orgs,
+        api_persona_emails, auth_user_emails,
+        api_persona_names, auth_user_names,
+        api_persona_roles, auth_user_roles,
+    ))
+    errors.extend(_check_entitlement_alignment(api_org_ids, auth_org_ids, personas, auth_org_entitlements))
     return errors
 
 
