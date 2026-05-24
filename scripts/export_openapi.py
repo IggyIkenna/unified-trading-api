@@ -12,7 +12,6 @@ Usage:
 from __future__ import annotations
 
 import json
-import os
 import sys
 from pathlib import Path
 
@@ -21,6 +20,8 @@ _repo_root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_repo_root))
 
 # Set mock mode so the app can be constructed without cloud credentials
+import os
+
 os.environ.setdefault("CLOUD_PROVIDER", "local")  # config-bootstrap:
 os.environ.setdefault("CLOUD_MOCK_MODE", "true")  # config-bootstrap:
 os.environ.setdefault("DISABLE_AUTH", "true")  # config-bootstrap:
