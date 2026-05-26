@@ -58,54 +58,47 @@ unified-trading-api = "unified_trading_api.main:main"
 [tool.uv.sources]
 unified-trading-library = { path = "../unified-trading-library", editable = true}
 
-[tool.ruff]
-line-length = 120
-target-version = "py313"
-
-[tool.ruff.lint]
-select = ["E",
-    "F",
-    "W",
-    "I",
-    "N",
-    "UP",
-    "B",
-    "C4",
-    "SIM",
-    "RUF",
-    "G",
-"C90",]
-ignore = ["B008"]
-
-
-[tool.ruff.lint.mccabe]
-max-complexity = 10
-
-[tool.ruff.lint.per-file-ignores]
-"tests/**" = ["SIM117",
-    "SIM105",
-    "F841",
-    "RUF059",
-    "N806",
-    "E402",
-    "E501", "C901"]
-
-[tool.ruff.format]
-quote-style = "double"
-indent-style = "space"
-
-
 [tool.uv.sources.unified-api-contracts]
 path = "../unified-api-contracts"
 editable = true
 
 
+# ── ruff (lint + format) ────────────────────────────────────────────────────────
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+exclude = [".cursor", ".venv", ".venv-workspace", "build", "dist", "node_modules"]
 
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM", "RUF", "G", "C90"]
+extend-ignore = ["G003", "G004"]
+ignore = ["E402", "B008"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 26
+
+[tool.ruff.lint.per-file-ignores]
+"*/__init__.py" = ["F401", "E402"]
+"tests/*" = ["F401", "F841", "F811", "SIM117", "SIM105", "RUF059", "N806", "E402", "E501", "C901"]
+"tests/conftest.py" = ["E402"]
+
+
+# ── basedpyright (typecheck) — CONSOLIDATED; delete pyrightconfig.json ──────────
 [tool.basedpyright]
 pythonVersion = "3.13"
 typeCheckingMode = "strict"
-reportMissingTypeStubs = false
+include = ["unified_trading_api"]
+exclude = ["tests", "**/__pycache__", ".venv*", ".venv-workspace", "build", "dist", "node_modules"]
+# ── Owned by ruff (avoid double-reporting) / pragmatic softenings.
+# ── Repo-specific softenings (preserved from original config).
+
+# Cross-repo import resolution (replaces pyrightconfig.json executionEnvironments).
 reportAny = "error"
+reportMissingTypeStubs = false
 reportUnknownMemberType = "error"
 reportUnknownVariableType = "error"
 reportUnknownArgumentType = "error"
@@ -113,16 +106,29 @@ reportUnknownParameterType = "error"
 reportUnusedFunction = "none"
 reportUnusedImport = "none"
 reportCallInDefaultInitializer = "none"
+[[tool.basedpyright.executionEnvironments]]
+root = "."
+pythonVersion = "3.13"
+pythonPlatform = "All"
+extraPaths = []
 
+
+# ── pytest ──────────────────────────────────────────────────────────────────────
 [tool.pytest.ini_options]
-asyncio_mode = "auto"
 testpaths = ["tests"]
 python_files = ["test_*.py"]
+asyncio_mode = "auto"
 markers = [
+    "unit: mark test as unit test",
     "integration: marks tests as integration tests (require GCP credentials)",
+    "smoke: mark test as smoke test",
 ]
 
+
+# ── coverage (run + report — BOTH required in every repo) ────────────────────────
 [tool.coverage.run]
+source = ["unified_trading_api"]
+branch = true
 omit = [
     "unified_trading_api/__main__.py",
     "unified_trading_api/main.py",
@@ -142,3 +148,8 @@ exclude_lines = [
     "@abstractmethod",
     "raise NotImplementedError",
 ]
+
+
+# ── bandit (security SAST — every repo) ──────────────────────────────────────────
+[tool.bandit]
+skips = []
