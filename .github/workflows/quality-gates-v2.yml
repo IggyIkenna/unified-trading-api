@@ -33,9 +33,9 @@ name: quality-gates-v2
 
 on:
   push:
-    branches: [main, staging]
+    branches: [main, staging, live-defi-rollout]
   pull_request:
-    branches: [main, staging]
+    branches: [main, staging, live-defi-rollout]
   workflow_dispatch:
 
 # Concurrency: cancel in-progress runs for the same ref on new push (saves Action minutes during
