@@ -24,25 +24,27 @@ never a real client's flow.
 
 Runtime source resolution:
 
-1. Attempts a real query against position-balance-monitor-service via
-   :class:`PbmPerformanceClient` (HTTP; endpoint contract declared below).
-2. Falls back to the deterministic synthesiser when PBM is unavailable,
+1. Attempts a real query against the strategy-service ``pnl-series`` endpoint
+   via :class:`PbmPerformanceClient` (HTTP; endpoint contract declared below).
+2. Falls back to the deterministic synthesiser when the endpoint is unavailable,
    returns 404 (instance not yet onboarded to odum-paper), or when running
    in mock mode (``CLOUD_MOCK_MODE=true``).
 
-PBM endpoint contract (prereq follow-up — see Plan C p1-pbm-endpoint-delivery):
-    Lives at ``position-balance-monitor-service/position_balance_monitor_service/
-    api/routes/pnl_series.py`` (matches the existing
+pnl-series endpoint contract:
+    Lives at ``strategy-service/strategy_service/position/api/routes/
+    pnl_series.py``, mounted at ``/api/v1`` (matches the existing
     ``aggregated.py``/``nav_snapshot.py``/``reconciliation.py``/``risk.py``/
-    ``trades.py``/``treasury.py`` route file pattern).
-    ``GET <pbm>/api/v1/accounts/{account_id}/pnl-series``
-    Query: ``instance_id`` (required), ``from`` (ISO-8601 or ``Nd`` rolling),
-    ``to`` (ISO-8601 or ``now``), ``per_venue`` (bool).
-    Returns the same shape as :class:`_PerViewSeries`.
+    ``trades.py``/``treasury.py`` route file pattern). It re-exports the
+    position-balance-monitor PnL ledger.
+    ``GET <strategy-service>/api/v1/accounts/{account_id}/pnl-series``
+    Query: ``instance_id`` (required), ``from`` (ISO-8601 date),
+    ``to`` (ISO-8601 date), ``per_venue`` (bool).
+    Returns ``{account_id, instance_id, series:[{timestamp, pnl, venue}]}``,
+    which the adapter projects into :class:`_PerViewSeries`.
 
 Plan C p1-pbm-wiring-followup closure (2026-04-22): entitlement gate + typed
-PBM adapter with fallback shipped. PBM endpoint itself is a separate PBM-repo
-follow-up (Plan C p1-pbm-endpoint-delivery).
+PBM adapter with fallback shipped. Endpoint repoint to strategy-service +
+``LIVE_SERVICE_STRATEGY_URL`` wiring shipped (Item 9).
 
 UTA-side ``HttpPbmPerformanceClient`` placement (2026-04-25 placement audit):
 when the real implementation lands, extract it to
@@ -79,12 +81,14 @@ from __future__ import annotations
 import hashlib
 import logging
 import math
+import os
 import time
 from collections.abc import Callable, Iterable
 from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, ConfigDict, Field
+from unified_trading_library import UnifiedCloudConfig
 
 from unified_trading_api.middleware.auth import (  # noqa: qg-deep-import — self-package
     verify_api_key,  # noqa: qg-deep-import — self-package
@@ -150,11 +154,14 @@ class PerformanceSeriesResponse(BaseModel):  # CORRECT-LOCAL: UTA performance tr
 # The UTA side of the Plan C wire is in place: an entitlement gate +
 # a typed PBM-client adapter with fallback to deterministic synthesis.
 #
-# The real PBM ``/api/v1/accounts/{account_id}/pnl-series`` endpoint is a
-# separate position-balance-monitor-service delivery tracked as Plan C
-# follow-up todo ``p1-pbm-endpoint-delivery``. When PBM ships that route,
-# wire ``HttpPbmPerformanceClient`` against it and remove the
-# ``CLOUD_MOCK_MODE`` short-circuit below.
+# The real ``/api/v1/accounts/{account_id}/pnl-series`` endpoint now ships
+# inside strategy-service (``strategy_service/position/api/routes/pnl_series.py``,
+# mounted at ``/api/v1``), which re-exports the position-balance-monitor PnL
+# ledger. ``_get_pbm_client`` resolves the strategy-service base URL from
+# ``LIVE_SERVICE_STRATEGY_URL`` (the same env slot ``routes/health.py`` probes)
+# and constructs ``HttpPbmPerformanceClient`` against it when live + configured;
+# otherwise it falls back to ``SynthPbmPerformanceClient`` (mock mode or no URL).
+# The legacy ``http://position-balance-monitor:8080`` host is retired.
 
 
 class PbmPerformanceClient:
@@ -205,10 +212,37 @@ class SynthPbmPerformanceClient(PbmPerformanceClient):
 
 _default_client: PbmPerformanceClient = SynthPbmPerformanceClient()
 
+# Env slot for the strategy-service base URL (no trailing slash required).
+# Reuses the same variable ``routes/health.py`` probes for the strategy-service
+# upstream — strategy-service owns the ``/api/v1/accounts/{id}/pnl-series`` route
+# that re-exports the position-balance-monitor PnL ledger.
+_STRATEGY_SERVICE_URL_ENV = "LIVE_SERVICE_STRATEGY_URL"
+
+
+def _resolve_pbm_client() -> PbmPerformanceClient:
+    """Pick the live HTTP client when configured, else the synth fallback.
+
+    Live HTTP client requires (1) not in mock mode and (2) a strategy-service
+    base URL in ``LIVE_SERVICE_STRATEGY_URL``. Either missing → synth fallback,
+    matching the deterministic-overlay behaviour the route handler expects.
+    """
+    if UnifiedCloudConfig().is_mock_mode():
+        return _default_client
+    base_url = os.environ.get(_STRATEGY_SERVICE_URL_ENV)  # config-bootstrap:
+    if not base_url:
+        return _default_client
+    # Imported lazily to avoid a circular import: ``services/pbm_performance.py``
+    # imports the ABC + DTOs from this module.
+    from unified_trading_api.services.pbm_performance import (  # noqa: qg-deep-import — self-package
+        make_pbm_performance_client,
+    )
+
+    return make_pbm_performance_client(base_url=base_url)
+
 
 def _get_pbm_client() -> PbmPerformanceClient:
     """FastAPI dependency — override in tests via ``dependency_overrides``."""
-    return _default_client
+    return _resolve_pbm_client()
 
 
 def _account_for_view(view: str) -> str:

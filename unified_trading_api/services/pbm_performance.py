@@ -1,7 +1,12 @@
-"""Plan C — HTTP-backed PBM performance client (real PBM endpoint).
+"""Plan C — HTTP-backed PBM performance client (real PnL-series endpoint).
 
-Couples to the position-balance-monitor-service ``pnl-series`` endpoint
-shipped at ``/api/v1/accounts/{account_id}/pnl-series``.
+Couples to the ``pnl-series`` endpoint shipped at
+``/api/v1/accounts/{account_id}/pnl-series``. That route now lives in
+strategy-service (``strategy_service/position/api/routes/pnl_series.py``,
+mounted at ``/api/v1``) and re-exports the position-balance-monitor PnL ledger,
+so the ``base_url`` is the strategy-service base URL — resolved by the route
+handler from ``LIVE_SERVICE_STRATEGY_URL``. The legacy
+``http://position-balance-monitor:8080`` host is retired.
 
 Selection between the synthesised and real client happens in the route
 handler (``routes/strategy_performance.py`` — ``_get_pbm_client``); this
@@ -38,12 +43,13 @@ DEFAULT_TIMEOUT_SECONDS = 5.0
 
 
 class HttpPbmPerformanceClient(PbmPerformanceClient):
-    """Real PBM-backed implementation.
+    """Real PnL-series-backed implementation.
 
-    Construction::
+    Construction (``base_url`` is the strategy-service base URL, resolved by the
+    route handler from ``LIVE_SERVICE_STRATEGY_URL``)::
 
         client = HttpPbmPerformanceClient(
-            base_url="http://position-balance-monitor:8080",
+            base_url="http://strategy-service:8080",
         )
     """
 
