@@ -7,6 +7,8 @@ Validates the contract:
   * 5xx → returns None (no raise)
   * Network exception → returns None (no raise)
   * per_venue=True populates per_venue dict
+  * make_pbm_performance_client factory → HttpPbmPerformanceClient for strategy-service URL
+  * make_pbm_performance_client factory → SynthPbmPerformanceClient when base_url is None
 """
 
 from __future__ import annotations
@@ -16,8 +18,12 @@ from datetime import UTC, datetime
 import httpx
 import pytest
 
+from unified_trading_api.routes.strategy_performance import (  # noqa: qg-deep-import — self-package
+    SynthPbmPerformanceClient,
+)
 from unified_trading_api.services.pbm_performance import (
     HttpPbmPerformanceClient,
+    make_pbm_performance_client,
 )
 
 
@@ -220,3 +226,59 @@ def test_get_series_returns_none_on_4xx_does_not_raise(status: int) -> None:
         per_venue=False,
     )
     assert series is None
+
+
+# ─── make_pbm_performance_client factory tests ────────────────────────────
+# The factory wires to GET /api/v1/accounts/{account_id}/pnl-series on the
+# strategy-service base URL (retired: http://position-balance-monitor:8080).
+
+
+def test_factory_returns_http_client_when_base_url_provided() -> None:
+    """Factory must produce HttpPbmPerformanceClient pointing at strategy-service."""
+    client = make_pbm_performance_client(base_url="http://strategy-service:8080")
+    assert isinstance(client, HttpPbmPerformanceClient)
+    # The stored URL must be the strategy-service base (no trailing slash).
+    assert client._base_url == "http://strategy-service:8080"  # pyright: ignore[reportPrivateUsage]
+
+
+def test_factory_returns_synth_client_when_base_url_is_none() -> None:
+    """Factory falls back to SynthPbmPerformanceClient when no URL is provided."""
+    client = make_pbm_performance_client(base_url=None)
+    assert isinstance(client, SynthPbmPerformanceClient)
+
+
+def test_factory_http_client_calls_strategy_service_pnl_route() -> None:
+    """End-to-end: factory-built client hits /api/v1/accounts/{id}/pnl-series."""
+    captured_paths: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured_paths.append(request.url.path)
+        return httpx.Response(
+            200,
+            json={
+                "series": [
+                    {"timestamp": "2026-04-25T12:00:00+00:00", "pnl": 42.0, "venue": None},
+                ],
+            },
+        )
+
+    transport = httpx.MockTransport(handler)
+    mock_http = httpx.Client(transport=transport, base_url="http://strategy-service:8080")
+    client = make_pbm_performance_client(base_url="http://strategy-service:8080")
+    # Inject the mock transport so the real HTTP call is intercepted.
+    assert isinstance(client, HttpPbmPerformanceClient)
+    client._client = mock_http  # pyright: ignore[reportPrivateUsage]
+
+    series = client.get_series(
+        account_id="odum-paper",
+        instance_id="inst_beta",
+        view="paper",
+        window_start=WINDOW_START,
+        window_end=WINDOW_END,
+        per_venue=False,
+    )
+    assert series is not None
+    assert len(series.aggregate) == 1
+    assert series.aggregate[0].pnl == 42.0
+    # Confirm the route path matches the strategy-service contract.
+    assert captured_paths == ["/api/v1/accounts/odum-paper/pnl-series"]
