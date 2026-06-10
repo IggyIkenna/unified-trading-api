@@ -252,10 +252,8 @@ async def chat_message(request: Request, body: ChatRequest) -> StreamingResponse
         messages.append({"role": msg.role, "content": msg.content})
     messages.append({"role": "user", "content": body.message})
 
-    # Get API key (config-bootstrap: env var for local dev + Secret Manager)
-    import os
-
-    api_key = os.environ.get("ANTHROPIC_API_KEY", "")  # config-bootstrap: qg-empty-fallback
+    # Get API key from Secret Manager via UnifiedCloudConfig.
+    api_key: str = _cloud_cfg.get_secret("anthropic-api-key") or ""
 
     stream = _stream_anthropic(system_prompt, messages, api_key) if api_key else _stream_mock(body.message)
 
