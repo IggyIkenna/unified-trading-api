@@ -1,0 +1,50 @@
+[
+  {
+    "timestamp": "2026-03-21T00:00:00Z",
+    "equity": 87500.0,
+    "drawdown": -0.012,
+    "org_id": "odum-internal"
+  },
+  {
+    "timestamp": "2026-03-21T04:00:00Z",
+    "equity": 87820.0,
+    "drawdown": -0.008,
+    "org_id": "odum-internal"
+  },
+  {
+    "timestamp": "2026-03-21T08:00:00Z",
+    "equity": 88200.0,
+    "drawdown": 0.0,
+    "org_id": "odum-internal"
+  },
+  {
+    "timestamp": "2026-03-21T12:00:00Z",
+    "equity": 88050.0,
+    "drawdown": -0.002,
+    "org_id": "odum-internal"
+  },
+  {
+    "timestamp": "2026-03-21T00:00:00Z",
+    "equity": 14200.0,
+    "drawdown": -0.005,
+    "org_id": "acme"
+  },
+  {
+    "timestamp": "2026-03-21T04:00:00Z",
+    "equity": 14280.0,
+    "drawdown": -0.002,
+    "org_id": "acme"
+  },
+  {
+    "timestamp": "2026-03-21T08:00:00Z",
+    "equity": 14350.0,
+    "drawdown": 0.0,
+    "org_id": "acme"
+  },
+  {
+    "timestamp": "2026-03-21T12:00:00Z",
+    "equity": 14320.0,
+    "drawdown": -0.002,
+    "org_id": "acme"
+  }
+]

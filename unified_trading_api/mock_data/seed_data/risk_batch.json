@@ -1,0 +1,29 @@
+[
+  {
+    "id": "risk-b-001",
+    "strategy_id": "strat-001",
+    "exposure_usd": 230000,
+    "max_exposure": 500000,
+    "utilization_pct": 46.0,
+    "var_99": 11800,
+    "org_id": "odum-internal"
+  },
+  {
+    "id": "risk-b-002",
+    "strategy_id": "strat-002",
+    "exposure_usd": 850000,
+    "max_exposure": 1000000,
+    "utilization_pct": 85.0,
+    "var_99": 43000,
+    "org_id": "acme"
+  },
+  {
+    "id": "risk-b-003",
+    "strategy_id": "strat-003",
+    "exposure_usd": 140000,
+    "max_exposure": 300000,
+    "utilization_pct": 46.7,
+    "var_99": 7500,
+    "org_id": "odum-internal"
+  }
+]

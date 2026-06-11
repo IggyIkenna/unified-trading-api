@@ -1,0 +1,74 @@
+[
+  {
+    "venue": "binance",
+    "currency": "USDT",
+    "available": 48250.0,
+    "locked": 10087.5,
+    "total": 58337.5,
+    "org_id": "odum-internal"
+  },
+  {
+    "venue": "binance",
+    "currency": "BTC",
+    "available": 0.5,
+    "locked": 0.0,
+    "total": 0.5,
+    "org_id": "odum-internal"
+  },
+  {
+    "venue": "hyperliquid",
+    "currency": "USDC",
+    "available": 22100.0,
+    "locked": 7265.0,
+    "total": 29365.0,
+    "org_id": "odum-internal"
+  },
+  {
+    "venue": "deribit",
+    "currency": "ETH",
+    "available": 10.0,
+    "locked": 5.0,
+    "total": 15.0,
+    "org_id": "odum-internal"
+  },
+  {
+    "venue": "uniswap_v3",
+    "currency": "WETH",
+    "available": 4.0,
+    "locked": 3.0,
+    "total": 7.0,
+    "org_id": "odum-internal"
+  },
+  {
+    "venue": "aave_v3",
+    "currency": "WETH",
+    "available": 0.0,
+    "locked": 5.0,
+    "total": 5.0,
+    "org_id": "odum-internal"
+  },
+  {
+    "venue": "binance",
+    "currency": "USDT",
+    "available": 12000.0,
+    "locked": 2500.0,
+    "total": 14500.0,
+    "org_id": "acme"
+  },
+  {
+    "venue": "binance",
+    "currency": "USDT",
+    "available": 8000.0,
+    "locked": 1500.0,
+    "total": 9500.0,
+    "org_id": "vertex"
+  },
+  {
+    "venue": "binance",
+    "currency": "USDT",
+    "available": 3000.0,
+    "locked": 500.0,
+    "total": 3500.0,
+    "org_id": "beta"
+  }
+]

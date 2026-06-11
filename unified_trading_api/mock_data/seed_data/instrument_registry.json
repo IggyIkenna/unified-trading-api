@@ -1,0 +1,28 @@
+[
+  {
+    "canonical": "BTC-USDT",
+    "mappings": {
+      "binance": "BTCUSDT",
+      "deribit": "BTC-USDT",
+      "hyperliquid": "BTC"
+    },
+    "org_id": "odum-internal"
+  },
+  {
+    "canonical": "ETH-USDT",
+    "mappings": {
+      "binance": "ETHUSDT",
+      "deribit": "ETH-USDT",
+      "hyperliquid": "ETH"
+    },
+    "org_id": "odum-internal"
+  },
+  {
+    "canonical": "SOL-USDT",
+    "mappings": {
+      "binance": "SOLUSDT",
+      "hyperliquid": "SOL"
+    },
+    "org_id": "odum-internal"
+  }
+]

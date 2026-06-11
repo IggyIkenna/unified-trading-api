@@ -1,0 +1,52 @@
+[
+  {
+    "invoice_id": "inv-b4c5d6e7-7001",
+    "org_id": "acme",
+    "type": "management_fee",
+    "amount": 12500.0,
+    "currency": "USD",
+    "period": "2026-Q1",
+    "status": "paid",
+    "issued_at": "2026-04-01T00:00:00Z"
+  },
+  {
+    "invoice_id": "inv-b4c5d6e7-7002",
+    "org_id": "vertex",
+    "type": "management_fee",
+    "amount": 18750.0,
+    "currency": "USD",
+    "period": "2026-Q1",
+    "status": "pending",
+    "issued_at": "2026-04-01T00:00:00Z"
+  },
+  {
+    "invoice_id": "inv-b4c5d6e7-7003",
+    "org_id": "beta",
+    "type": "management_fee",
+    "amount": 6250.0,
+    "currency": "USD",
+    "period": "2026-Q1",
+    "status": "pending",
+    "issued_at": "2026-04-01T00:00:00Z"
+  },
+  {
+    "invoice_id": "inv-b4c5d6e7-7004",
+    "org_id": "acme",
+    "type": "management_fee",
+    "amount": 12500.0,
+    "currency": "USD",
+    "period": "2025-Q4",
+    "status": "paid",
+    "issued_at": "2026-01-01T00:00:00Z"
+  },
+  {
+    "invoice_id": "inv-b4c5d6e7-7005",
+    "org_id": "vertex",
+    "type": "management_fee",
+    "amount": 18750.0,
+    "currency": "USD",
+    "period": "2025-Q4",
+    "status": "paid",
+    "issued_at": "2026-01-01T00:00:00Z"
+  }
+]

@@ -1,0 +1,42 @@
+[
+  {
+    "venue_id": "binance",
+    "name": "Binance",
+    "type": "cefi",
+    "status": "active",
+    "latency_ms": 45,
+    "org_id": "odum-internal"
+  },
+  {
+    "venue_id": "deribit",
+    "name": "Deribit",
+    "type": "cefi",
+    "status": "active",
+    "latency_ms": 62,
+    "org_id": "odum-internal"
+  },
+  {
+    "venue_id": "hyperliquid",
+    "name": "Hyperliquid",
+    "type": "defi",
+    "status": "active",
+    "latency_ms": 120,
+    "org_id": "odum-internal"
+  },
+  {
+    "venue_id": "uniswap_v3",
+    "name": "Uniswap V3",
+    "type": "defi",
+    "status": "active",
+    "latency_ms": 2500,
+    "org_id": "odum-internal"
+  },
+  {
+    "venue_id": "aave_v3",
+    "name": "Aave V3",
+    "type": "defi",
+    "status": "active",
+    "latency_ms": 3000,
+    "org_id": "odum-internal"
+  }
+]

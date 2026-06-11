@@ -1,0 +1,26 @@
+[
+  {
+    "trade_id": "t-001",
+    "price": 67250.5,
+    "quantity": 0.15,
+    "side": "buy",
+    "timestamp": "2026-03-21T09:00:12Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "trade_id": "t-002",
+    "price": 67248.0,
+    "quantity": 0.3,
+    "side": "sell",
+    "timestamp": "2026-03-21T09:00:14Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "trade_id": "t-003",
+    "price": 67252.0,
+    "quantity": 0.05,
+    "side": "buy",
+    "timestamp": "2026-03-21T09:00:18Z",
+    "org_id": "odum-internal"
+  }
+]

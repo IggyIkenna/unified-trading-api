@@ -1,0 +1,152 @@
+[
+  {
+    "id": "news-001",
+    "title": "BTC breaks $67K resistance level",
+    "source": "CoinDesk",
+    "timestamp": "2026-03-22T08:00:00Z",
+    "category": "crypto",
+    "relevance_score": 0.92,
+    "linked_instruments": ["BTC-USDT"],
+    "org_id": "odum-internal"
+  },
+  {
+    "id": "news-002",
+    "title": "SEC approves spot ETH ETF applications",
+    "source": "Bloomberg",
+    "timestamp": "2026-03-22T06:30:00Z",
+    "category": "regulatory",
+    "relevance_score": 0.95,
+    "linked_instruments": ["ETH-USDT"],
+    "org_id": "odum-internal"
+  },
+  {
+    "id": "news-003",
+    "title": "Fed signals rate pause through Q2 2026",
+    "source": "Reuters",
+    "timestamp": "2026-03-22T05:00:00Z",
+    "category": "macro",
+    "relevance_score": 0.88,
+    "linked_instruments": ["ES", "ZB", "ZN"],
+    "org_id": "odum-internal"
+  },
+  {
+    "id": "news-004",
+    "title": "Uniswap V4 launch drives DeFi TVL surge",
+    "source": "The Block",
+    "timestamp": "2026-03-21T22:00:00Z",
+    "category": "crypto",
+    "relevance_score": 0.82,
+    "linked_instruments": ["USDT-ETH"],
+    "org_id": "odum-internal"
+  },
+  {
+    "id": "news-005",
+    "title": "Aave V3 yields spike to 8% on ETH markets",
+    "source": "DeFi Pulse",
+    "timestamp": "2026-03-21T20:00:00Z",
+    "category": "crypto",
+    "relevance_score": 0.78,
+    "linked_instruments": ["aWETH"],
+    "org_id": "odum-internal"
+  },
+  {
+    "id": "news-006",
+    "title": "SOL ecosystem gains momentum with Firedancer",
+    "source": "CoinDesk",
+    "timestamp": "2026-03-21T18:00:00Z",
+    "category": "crypto",
+    "relevance_score": 0.75,
+    "linked_instruments": ["SOL-USDT"],
+    "org_id": "odum-internal"
+  },
+  {
+    "id": "news-007",
+    "title": "AAPL earnings beat estimates, stock gaps up",
+    "source": "Bloomberg",
+    "timestamp": "2026-03-21T16:00:00Z",
+    "category": "market",
+    "relevance_score": 0.85,
+    "linked_instruments": ["AAPL"],
+    "org_id": "odum-internal"
+  },
+  {
+    "id": "news-008",
+    "title": "Hyperliquid surpasses $100B daily volume",
+    "source": "The Block",
+    "timestamp": "2026-03-21T14:00:00Z",
+    "category": "crypto",
+    "relevance_score": 0.72,
+    "linked_instruments": ["ETH"],
+    "org_id": "odum-internal"
+  },
+  {
+    "id": "news-009",
+    "title": "Deribit launches weekly BTC options with tighter spreads",
+    "source": "CoinDesk",
+    "timestamp": "2026-03-21T12:00:00Z",
+    "category": "market",
+    "relevance_score": 0.68,
+    "linked_instruments": ["BTC-USDC"],
+    "org_id": "odum-internal"
+  },
+  {
+    "id": "news-010",
+    "title": "EU proposes MiCA Phase 2 stablecoin regulations",
+    "source": "Reuters",
+    "timestamp": "2026-03-21T10:00:00Z",
+    "category": "regulatory",
+    "relevance_score": 0.9,
+    "linked_instruments": ["USDT-ETH", "aUSDC"],
+    "org_id": "odum-internal"
+  },
+  {
+    "id": "news-011",
+    "title": "NBA playoff odds shift after Celtics injury report",
+    "source": "ESPN",
+    "timestamp": "2026-03-21T08:00:00Z",
+    "category": "sports",
+    "relevance_score": 0.65,
+    "linked_instruments": ["NBA-LAL-BOS"],
+    "org_id": "odum-internal"
+  },
+  {
+    "id": "news-012",
+    "title": "Gold ETF GLD sees record inflows amid uncertainty",
+    "source": "Bloomberg",
+    "timestamp": "2026-03-22T07:00:00Z",
+    "category": "market",
+    "relevance_score": 0.8,
+    "linked_instruments": ["GLD"],
+    "org_id": "odum-internal"
+  },
+  {
+    "id": "news-013",
+    "title": "VIX drops below 15 as market volatility subsides",
+    "source": "CBOE",
+    "timestamp": "2026-03-22T09:00:00Z",
+    "category": "market",
+    "relevance_score": 0.73,
+    "linked_instruments": ["VIX"],
+    "org_id": "odum-internal"
+  },
+  {
+    "id": "news-014",
+    "title": "Polymarket prediction markets see election trading surge",
+    "source": "The Block",
+    "timestamp": "2026-03-21T19:00:00Z",
+    "category": "crypto",
+    "relevance_score": 0.6,
+    "linked_instruments": ["NBA-DAL-MEM-SPREAD-5.5"],
+    "org_id": "odum-internal"
+  },
+  {
+    "id": "news-015",
+    "title": "Ethereum gas fees drop to 12-month low",
+    "source": "Etherscan",
+    "timestamp": "2026-03-22T10:00:00Z",
+    "category": "crypto",
+    "relevance_score": 0.7,
+    "linked_instruments": ["ETH-USDT", "aWETH", "stETH"],
+    "org_id": "odum-internal"
+  }
+]

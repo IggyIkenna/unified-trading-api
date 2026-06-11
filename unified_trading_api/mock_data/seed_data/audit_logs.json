@@ -1,0 +1,26 @@
+[
+  {
+    "log_id": "log-f1a2b3c4-7001",
+    "service": "execution-service",
+    "level": "INFO",
+    "message": "Order ord-a1b2c3d4-1001 filled at 67250.50",
+    "timestamp": "2026-03-21T08:12:34Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "log_id": "log-f1a2b3c4-7002",
+    "service": "risk-and-exposure-service",
+    "level": "WARN",
+    "message": "Position notional approaching 80% of limit on hyperliquid",
+    "timestamp": "2026-03-21T09:16:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "log_id": "log-f1a2b3c4-7003",
+    "service": "execution-service",
+    "level": "INFO",
+    "message": "Order ord-a1b2c3d4-1005 filled at 67398.65",
+    "timestamp": "2026-03-21T09:30:01Z",
+    "org_id": "acme"
+  }
+]

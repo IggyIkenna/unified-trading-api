@@ -1,0 +1,149 @@
+[
+  {
+    "service": "execution-service",
+    "status": "healthy",
+    "uptime_pct": 99.98,
+    "last_check": "2026-03-21T09:30:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "service": "strategy-service",
+    "status": "healthy",
+    "uptime_pct": 99.95,
+    "last_check": "2026-03-21T09:30:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "service": "risk-and-exposure-service",
+    "status": "healthy",
+    "uptime_pct": 99.99,
+    "last_check": "2026-03-21T09:30:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "service": "market-tick-data-service",
+    "status": "degraded",
+    "uptime_pct": 98.5,
+    "last_check": "2026-03-21T09:30:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "service": "market-data-processing-service",
+    "status": "healthy",
+    "uptime_pct": 99.92,
+    "last_check": "2026-03-21T09:30:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "service": "features-volatility-service",
+    "status": "healthy",
+    "uptime_pct": 99.9,
+    "last_check": "2026-03-21T09:30:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "service": "features-onchain-service",
+    "status": "healthy",
+    "uptime_pct": 99.85,
+    "last_check": "2026-03-21T09:30:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "service": "features-cross-instrument-service",
+    "status": "healthy",
+    "uptime_pct": 99.88,
+    "last_check": "2026-03-21T09:30:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "service": "features-multi-timeframe-service",
+    "status": "healthy",
+    "uptime_pct": 99.91,
+    "last_check": "2026-03-21T09:30:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "service": "features-commodity-service",
+    "status": "healthy",
+    "uptime_pct": 99.93,
+    "last_check": "2026-03-21T09:30:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "service": "features-delta-one-service",
+    "status": "healthy",
+    "uptime_pct": 99.87,
+    "last_check": "2026-03-21T09:30:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "service": "features-calendar-service",
+    "status": "healthy",
+    "uptime_pct": 99.94,
+    "last_check": "2026-03-21T09:30:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "service": "features-sports-service",
+    "status": "healthy",
+    "uptime_pct": 99.8,
+    "last_check": "2026-03-21T09:30:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "service": "ml-training-service",
+    "status": "healthy",
+    "uptime_pct": 99.7,
+    "last_check": "2026-03-21T09:30:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "service": "ml-inference-service",
+    "status": "healthy",
+    "uptime_pct": 99.96,
+    "last_check": "2026-03-21T09:30:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "service": "alerting-service",
+    "status": "healthy",
+    "uptime_pct": 99.97,
+    "last_check": "2026-03-21T09:30:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "service": "position-balance-monitor-service",
+    "status": "healthy",
+    "uptime_pct": 99.95,
+    "last_check": "2026-03-21T09:30:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "service": "pnl-attribution-service",
+    "status": "healthy",
+    "uptime_pct": 99.92,
+    "last_check": "2026-03-21T09:30:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "service": "batch-live-reconciliation-service",
+    "status": "degraded",
+    "uptime_pct": 97.8,
+    "last_check": "2026-03-21T09:30:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "service": "instruments-service",
+    "status": "healthy",
+    "uptime_pct": 99.99,
+    "last_check": "2026-03-21T09:30:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "service": "trading-agent-service",
+    "status": "healthy",
+    "uptime_pct": 99.88,
+    "last_check": "2026-03-21T09:30:00Z",
+    "org_id": "odum-internal"
+  }
+]

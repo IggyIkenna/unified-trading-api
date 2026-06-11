@@ -1,0 +1,44 @@
+[
+  {
+    "id": "defi-health-aave-eth",
+    "protocol": "aave_v3",
+    "chain": "ethereum",
+    "health_factor": 1.85,
+    "ltv_current": 0.54,
+    "ltv_max": 0.825,
+    "liquidation_threshold": 0.86,
+    "total_collateral_usd": 2450000.0,
+    "total_debt_usd": 1323000.0,
+    "distance_to_liquidation_pct": 37.0,
+    "status": "healthy",
+    "org_id": "odum-internal"
+  },
+  {
+    "id": "defi-health-aave-arb",
+    "protocol": "aave_v3",
+    "chain": "arbitrum",
+    "health_factor": 2.12,
+    "ltv_current": 0.47,
+    "ltv_max": 0.825,
+    "liquidation_threshold": 0.86,
+    "total_collateral_usd": 890000.0,
+    "total_debt_usd": 418300.0,
+    "distance_to_liquidation_pct": 45.3,
+    "status": "healthy",
+    "org_id": "odum-internal"
+  },
+  {
+    "id": "defi-health-compound-eth",
+    "protocol": "compound_v3",
+    "chain": "ethereum",
+    "health_factor": 1.42,
+    "ltv_current": 0.7,
+    "ltv_max": 0.83,
+    "liquidation_threshold": 0.85,
+    "total_collateral_usd": 1100000.0,
+    "total_debt_usd": 770000.0,
+    "distance_to_liquidation_pct": 17.6,
+    "status": "warning",
+    "org_id": "acme"
+  }
+]

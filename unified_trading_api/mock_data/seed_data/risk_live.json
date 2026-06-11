@@ -1,0 +1,47 @@
+[
+  {
+    "id": "risk-l-001",
+    "strategy_id": "strat-001",
+    "exposure_usd": 245000,
+    "max_exposure": 500000,
+    "utilization_pct": 49.0,
+    "var_99": 12500,
+    "org_id": "odum-internal"
+  },
+  {
+    "id": "risk-l-002",
+    "strategy_id": "strat-002",
+    "exposure_usd": 890000,
+    "max_exposure": 1000000,
+    "utilization_pct": 89.0,
+    "var_99": 45000,
+    "org_id": "acme"
+  },
+  {
+    "id": "risk-l-003",
+    "strategy_id": "strat-003",
+    "exposure_usd": 150000,
+    "max_exposure": 300000,
+    "utilization_pct": 50.0,
+    "var_99": 8000,
+    "org_id": "odum-internal"
+  },
+  {
+    "id": "risk-l-004",
+    "strategy_id": "strat-004",
+    "exposure_usd": 520000,
+    "max_exposure": 750000,
+    "utilization_pct": 69.3,
+    "var_99": 28000,
+    "org_id": "acme"
+  },
+  {
+    "id": "risk-l-005",
+    "strategy_id": "strat-005",
+    "exposure_usd": 310000,
+    "max_exposure": 600000,
+    "utilization_pct": 51.7,
+    "var_99": 18000,
+    "org_id": "vertex"
+  }
+]

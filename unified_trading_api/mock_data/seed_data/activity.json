@@ -1,0 +1,51 @@
+[
+  {
+    "event": "Order filled",
+    "detail": "BTC-USDT buy 0.15 @ 67250.50",
+    "service": "execution-service",
+    "timestamp": "2026-03-21T08:12:34Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "event": "Model deployed",
+    "detail": "mean-reversion-btc v3.1.0 to production",
+    "service": "ml-inference-service",
+    "timestamp": "2026-03-20T18:00:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "event": "Alert triggered",
+    "detail": "Position limit 80% on SOL-USD-PERP",
+    "service": "risk-and-exposure-service",
+    "timestamp": "2026-03-21T09:16:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "event": "Build failed",
+    "detail": "strategy-service v0.3.9 build failed",
+    "service": "deployment-service",
+    "timestamp": "2026-03-21T08:01:28Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "event": "DeFi swap",
+    "detail": "WETH-USDC swap 3.0 on Uniswap V3",
+    "service": "execution-service",
+    "timestamp": "2026-03-21T11:00:15Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "event": "Aave supply",
+    "detail": "Supplied 5 WETH to Aave V3",
+    "service": "execution-service",
+    "timestamp": "2026-03-21T11:15:12Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "event": "Order filled",
+    "detail": "BTC-USDT sell 0.10 @ 67398.65",
+    "service": "execution-service",
+    "timestamp": "2026-03-21T09:30:01Z",
+    "org_id": "acme"
+  }
+]

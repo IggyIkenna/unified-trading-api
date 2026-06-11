@@ -130,6 +130,50 @@ class TestAlertSeverityDistribution:
         assert "low" in severities or "LOW" in severities
 
 
+class TestSeedDataLoaderIntegrity:
+    """seed_data/*.json loader migration guard (registry.py pattern, 2026-06-11).
+
+    Seeding from the JSON data files must produce a non-empty,
+    org-integrity-valid store — reuses validate_consistency as the oracle.
+    """
+
+    def test_every_literal_domain_seeds_non_empty(self, store: _InMemoryStore) -> None:
+        from unified_trading_api.mock_data.seed import _LITERAL_DOMAINS
+
+        for domain in _LITERAL_DOMAINS:
+            records = store.list(domain)
+            assert len(records) > 0, f"literal domain '{domain}' seeded empty from seed_data/"
+            for i, record in enumerate(records):
+                assert "id" in record, f"record {i} in '{domain}' missing id after _ensure_id"
+
+    def test_stamped_domains_carry_asset_group(self, store: _InMemoryStore) -> None:
+        for domain in (
+            "orders",
+            "fills",
+            "positions",
+            "positions_batch",
+            "positions_live",
+            "orders_live",
+            "orders_batch",
+        ):
+            records = store.list(domain)
+            assert len(records) > 0, f"stamped domain '{domain}' seeded empty"
+            for record in records:
+                assert "asset_group" in record, f"'{domain}' record missing stamped asset_group"
+
+    def test_validate_consistency_clean(self, store: _InMemoryStore) -> None:
+        from unified_trading_api.mock_data.seed import validate_consistency
+
+        errors = validate_consistency(store)
+        assert errors == [], f"seeded store failed consistency validation: {errors}"
+
+    def test_store_is_substantial(self, store: _InMemoryStore) -> None:
+        domains = store._data
+        assert len(domains) >= 90, f"expected >=90 seeded collections, got {len(domains)}"
+        total = sum(len(v) for v in domains.values())
+        assert total >= 1000, f"expected >=1000 seeded records, got {total}"
+
+
 class TestPersonaSSOT:
     """Persona definitions are correct."""
 

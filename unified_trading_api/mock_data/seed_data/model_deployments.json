@@ -1,0 +1,38 @@
+[
+  {
+    "deployment_id": "dep-e4f5a6b7-0001",
+    "model_version": "mv-d3e4f5a6-9001",
+    "endpoint": "mean-reversion-btc-prod",
+    "replicas": 2,
+    "status": "serving",
+    "latency_p99_ms": 28,
+    "org_id": "odum-internal"
+  },
+  {
+    "deployment_id": "dep-e4f5a6b7-0002",
+    "model_version": "mv-d3e4f5a6-9003",
+    "endpoint": "momentum-multi-asset-prod",
+    "replicas": 2,
+    "status": "serving",
+    "latency_p99_ms": 35,
+    "org_id": "odum-internal"
+  },
+  {
+    "deployment_id": "dep-e4f5a6b7-0003",
+    "model_version": "mv-d3e4f5a6-9004",
+    "endpoint": "vol-surface-eth-prod",
+    "replicas": 1,
+    "status": "serving",
+    "latency_p99_ms": 42,
+    "org_id": "odum-internal"
+  },
+  {
+    "deployment_id": "dep-e4f5a6b7-0004",
+    "model_version": "mv-d3e4f5a6-9005",
+    "endpoint": "funding-rate-arb-prod",
+    "replicas": 1,
+    "status": "serving",
+    "latency_p99_ms": 22,
+    "org_id": "odum-internal"
+  }
+]

@@ -1,0 +1,26 @@
+[
+  {
+    "document_id": "doc-c4d5e6f7-0001",
+    "filename": "daily-risk-report-2026-03-20.pdf",
+    "category": "risk",
+    "size_bytes": 245000,
+    "uploaded_at": "2026-03-20T23:59:30Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "document_id": "doc-c4d5e6f7-0002",
+    "filename": "trade-blotter-2026-03-20.csv",
+    "category": "execution",
+    "size_bytes": 82000,
+    "uploaded_at": "2026-03-20T23:58:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "document_id": "doc-c4d5e6f7-0003",
+    "filename": "alpha-capital-q1-report.pdf",
+    "category": "reporting",
+    "size_bytes": 512000,
+    "uploaded_at": "2026-03-21T06:00:00Z",
+    "org_id": "acme"
+  }
+]

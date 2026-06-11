@@ -1,0 +1,50 @@
+[
+  {
+    "subscription_id": "sub-b9c0d1e2-5001",
+    "organization_id": "odum-internal",
+    "plan": "enterprise",
+    "status": "active",
+    "started_at": "2025-12-01T00:00:00Z",
+    "renews_at": "2026-12-01T00:00:00Z",
+    "features": [
+      "execution",
+      "analytics",
+      "ml",
+      "risk",
+      "defi",
+      "sports",
+      "prediction"
+    ],
+    "org_id": "odum-internal"
+  },
+  {
+    "subscription_id": "sub-b9c0d1e2-5002",
+    "organization_id": "acme",
+    "plan": "premium",
+    "status": "active",
+    "started_at": "2026-01-15T00:00:00Z",
+    "renews_at": "2027-01-15T00:00:00Z",
+    "features": ["execution", "analytics", "ml", "risk"],
+    "org_id": "acme"
+  },
+  {
+    "subscription_id": "sub-b9c0d1e2-5003",
+    "organization_id": "vertex",
+    "plan": "premium",
+    "status": "active",
+    "started_at": "2026-02-01T00:00:00Z",
+    "renews_at": "2027-02-01T00:00:00Z",
+    "features": ["execution", "analytics", "risk"],
+    "org_id": "vertex"
+  },
+  {
+    "subscription_id": "sub-b9c0d1e2-5004",
+    "organization_id": "beta",
+    "plan": "basic",
+    "status": "active",
+    "started_at": "2026-03-01T00:00:00Z",
+    "renews_at": "2027-03-01T00:00:00Z",
+    "features": ["analytics"],
+    "org_id": "beta"
+  }
+]

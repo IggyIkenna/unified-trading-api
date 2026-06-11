@@ -13,20 +13,22 @@ MIN_COVERAGE=77
 RUN_INTEGRATION=false
 PYTEST_WORKERS=${PYTEST_WORKERS:-2}
 LOCAL_DEPS=()
-# seed.py (5043L) and seed_all_domains() (4834L) are generated mock data — exempt from size checks
-FUNCTION_SIZE_EXTRA_EXCLUDES=("! -path ./unified_trading_api/mock_data/seed.py" "! -path ./unified_trading_api/mock_data/seed_strategies.py")
-# seed.py has many .get("key", "") patterns for mock data dict access — intentional
-EMPTY_STR_EXCLUDE_GLOBS=("!**/mock_data/seed.py" "!**/mock_data/seed_*.py" "!**/chat.py")
-EMPTY_DICT_LIST_EXCLUDE_GLOBS=("!**/mock_data/seed.py" "!**/mock_data/seed_*.py")
+# Codex violation budget pinned 2026-06-11 per plans/active/codex_violations_ratchet_to_five_2026_06_10.md
+# (Phase-0 pin + Phase-1 seed.py split: 5,169L -> seed_data/*.json + thin loader; gate green at 0).
+CODEX_MAX_VIOLATIONS=0
+# seed_strategies.py generator functions exceed the function-size cap — registry-style mock data
+FUNCTION_SIZE_EXTRA_EXCLUDES=("! -path ./unified_trading_api/mock_data/seed_strategies.py")
 # main.py has conditional imports inside lifespan()/create_app() (mock vs real mode);
-# seed.py/seed_phase8.py defer heavy imports to reduce startup time;
+# seed_phase8.py defers heavy imports to reduce startup time;
 # auth.py defers jwt import to avoid import cycle
-IMPORT_INSIDE_EXCLUDE_GLOBS=("!**/main.py" "!**/seed.py" "!**/seed_phase8.py" "!**/auth.py" "!**/chat.py" "!**/routes/reporting.py" "!**/routes/execution.py" "!**/mock_data/seed_calendar.py")
+IMPORT_INSIDE_EXCLUDE_GLOBS=("!**/main.py" "!**/seed_phase8.py" "!**/auth.py" "!**/chat.py" "!**/routes/reporting.py" "!**/routes/execution.py" "!**/mock_data/seed_calendar.py")
 # Manifest alignment: unified_api_contracts import is used for type references
 MANIFEST_ALIGNMENT_SKIP=true
-# Empty string/dict/list: route handlers parse optional JSON fields with safe defaults
-EMPTY_STR_EXCLUDE_GLOBS=("!**/mock_data/seed.py" "!**/mock_data/seed_*.py" "!**/chat.py" "!**/routes/*.py" "!**/services/*.py")
-EMPTY_DICT_LIST_EXCLUDE_GLOBS=("!**/mock_data/seed.py" "!**/mock_data/seed_*.py" "!**/routes/*.py")
+# Empty string/dict/list: route handlers parse optional JSON fields with safe defaults;
+# sibling seed_*.py generators keep .get("key", "") mock-access patterns — intentional
+# (seed.py itself is now a thin loader and passes these checks for real — 2026-06-11 split)
+EMPTY_STR_EXCLUDE_GLOBS=("!**/mock_data/seed_*.py" "!**/chat.py" "!**/routes/*.py" "!**/services/*.py")
+EMPTY_DICT_LIST_EXCLUDE_GLOBS=("!**/mock_data/seed_*.py" "!**/routes/*.py")
 PIP_AUDIT_EXTRA_ARGS="--ignore-vuln PYSEC-2024-277 --ignore-vuln PYSEC-2025-183"
 WORKSPACE_ROOT="$(cd "$(git rev-parse --show-toplevel)/.." && pwd)"
 source "${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/base-service.sh"
