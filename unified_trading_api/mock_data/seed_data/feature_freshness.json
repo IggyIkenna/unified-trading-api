@@ -1,0 +1,37 @@
+[
+  {
+    "pipeline": "technical-features",
+    "last_computed": "2026-03-21T09:28:00Z",
+    "staleness_s": 120,
+    "status": "fresh",
+    "org_id": "odum-internal"
+  },
+  {
+    "pipeline": "onchain-features",
+    "last_computed": "2026-03-21T09:15:00Z",
+    "staleness_s": 900,
+    "status": "fresh",
+    "org_id": "odum-internal"
+  },
+  {
+    "pipeline": "sports-features",
+    "last_computed": "2026-03-21T08:00:00Z",
+    "staleness_s": 5400,
+    "status": "stale",
+    "org_id": "odum-internal"
+  },
+  {
+    "pipeline": "volatility-features",
+    "last_computed": "2026-03-21T09:25:00Z",
+    "staleness_s": 300,
+    "status": "fresh",
+    "org_id": "odum-internal"
+  },
+  {
+    "pipeline": "cross-instrument-features",
+    "last_computed": "2026-03-21T09:20:00Z",
+    "staleness_s": 600,
+    "status": "fresh",
+    "org_id": "odum-internal"
+  }
+]

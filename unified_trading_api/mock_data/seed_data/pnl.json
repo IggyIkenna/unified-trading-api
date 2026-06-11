@@ -1,0 +1,66 @@
+[
+  {
+    "venue": "binance",
+    "realized_pnl": 1245.8,
+    "unrealized_pnl": 525.35,
+    "fees": 42.3,
+    "date": "2026-03-21",
+    "org_id": "odum-internal"
+  },
+  {
+    "venue": "hyperliquid",
+    "realized_pnl": 560.0,
+    "unrealized_pnl": 430.0,
+    "fees": 8.4,
+    "date": "2026-03-21",
+    "org_id": "odum-internal"
+  },
+  {
+    "venue": "deribit",
+    "realized_pnl": -320.5,
+    "unrealized_pnl": 265.0,
+    "fees": 15.6,
+    "date": "2026-03-21",
+    "org_id": "odum-internal"
+  },
+  {
+    "venue": "uniswap_v3",
+    "realized_pnl": 82.0,
+    "unrealized_pnl": 21.02,
+    "fees": 13.95,
+    "date": "2026-03-21",
+    "org_id": "odum-internal"
+  },
+  {
+    "venue": "aave_v3",
+    "realized_pnl": 45.0,
+    "unrealized_pnl": 7.5,
+    "fees": 15.66,
+    "date": "2026-03-21",
+    "org_id": "odum-internal"
+  },
+  {
+    "venue": "binance",
+    "realized_pnl": 320.0,
+    "unrealized_pnl": 50.1,
+    "fees": 12.01,
+    "date": "2026-03-21",
+    "org_id": "acme"
+  },
+  {
+    "venue": "binance",
+    "realized_pnl": 110.0,
+    "unrealized_pnl": 150.0,
+    "fees": 4.32,
+    "date": "2026-03-21",
+    "org_id": "vertex"
+  },
+  {
+    "venue": "binance",
+    "realized_pnl": -18.5,
+    "unrealized_pnl": 20.0,
+    "fees": 0.39,
+    "date": "2026-03-21",
+    "org_id": "beta"
+  }
+]

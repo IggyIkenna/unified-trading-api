@@ -1,0 +1,26 @@
+[
+  {
+    "schedule_id": "fee-c5d6e7f8-8001",
+    "name": "Basic",
+    "management_fee_pct": 0.5,
+    "performance_fee_pct": 0.0,
+    "min_aum": 0,
+    "org_id": "beta"
+  },
+  {
+    "schedule_id": "fee-c5d6e7f8-8002",
+    "name": "Premium",
+    "management_fee_pct": 1.0,
+    "performance_fee_pct": 10.0,
+    "min_aum": 5000000,
+    "org_id": "acme"
+  },
+  {
+    "schedule_id": "fee-c5d6e7f8-8003",
+    "name": "Full Service",
+    "management_fee_pct": 1.5,
+    "performance_fee_pct": 15.0,
+    "min_aum": 10000000,
+    "org_id": "vertex"
+  }
+]

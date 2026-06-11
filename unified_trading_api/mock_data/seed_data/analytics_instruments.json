@@ -1,0 +1,37 @@
+[
+  {
+    "instrument": "BTC-USDT",
+    "asset_group": "crypto",
+    "venue": "binance",
+    "volume_24h": 1250000.0,
+    "org_id": "odum-internal"
+  },
+  {
+    "instrument": "ETH-USDT",
+    "asset_group": "crypto",
+    "venue": "binance",
+    "volume_24h": 780000.0,
+    "org_id": "odum-internal"
+  },
+  {
+    "instrument": "SOL-USD-PERP",
+    "asset_group": "crypto",
+    "venue": "hyperliquid",
+    "volume_24h": 420000.0,
+    "org_id": "odum-internal"
+  },
+  {
+    "instrument": "BTC-28MAR26-70000-C",
+    "asset_group": "option",
+    "venue": "deribit",
+    "volume_24h": 85000.0,
+    "org_id": "odum-internal"
+  },
+  {
+    "instrument": "WETH-USDC",
+    "asset_group": "defi",
+    "venue": "uniswap_v3",
+    "volume_24h": 320000.0,
+    "org_id": "odum-internal"
+  }
+]

@@ -1,0 +1,35 @@
+[
+  {
+    "alert_id": "alrt-b-001",
+    "severity": "critical",
+    "status": "resolved",
+    "acknowledged": true,
+    "message": "End-of-day BTC exposure breach (resolved)",
+    "strategy_id": "strat-002",
+    "org_id": "odum-internal",
+    "created_at": "2026-03-21T16:00:00Z",
+    "resolved_at": "2026-03-21T16:30:00Z"
+  },
+  {
+    "alert_id": "alrt-b-002",
+    "severity": "high",
+    "status": "resolved",
+    "acknowledged": true,
+    "message": "Margin call (resolved)",
+    "strategy_id": "strat-002",
+    "org_id": "acme",
+    "created_at": "2026-03-21T14:00:00Z",
+    "resolved_at": "2026-03-21T15:00:00Z"
+  },
+  {
+    "alert_id": "alrt-b-003",
+    "severity": "medium",
+    "status": "resolved",
+    "acknowledged": true,
+    "message": "Latency spike (resolved)",
+    "strategy_id": "strat-004",
+    "org_id": "odum-internal",
+    "created_at": "2026-03-21T12:00:00Z",
+    "resolved_at": "2026-03-21T12:15:00Z"
+  }
+]

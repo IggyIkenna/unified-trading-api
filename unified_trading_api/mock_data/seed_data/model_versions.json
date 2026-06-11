@@ -1,0 +1,98 @@
+[
+  {
+    "version_id": "mv-d3e4f5a6-9001",
+    "family": "mf-mean-reversion-btc",
+    "version": "v3.1.0",
+    "stage": "production",
+    "metrics": {
+      "sharpe": 1.82,
+      "accuracy": 0.62
+    },
+    "created_at": "2026-03-18T12:00:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "version_id": "mv-d3e4f5a6-9002",
+    "family": "mf-nfl-outcome",
+    "version": "v5.0.0",
+    "stage": "staging",
+    "metrics": {
+      "sharpe": 0.95,
+      "accuracy": 0.73
+    },
+    "created_at": "2026-03-20T16:00:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "version_id": "mv-d3e4f5a6-9003",
+    "family": "mf-momentum-multi-asset",
+    "version": "v4.0.0",
+    "stage": "production",
+    "metrics": {
+      "sharpe": 1.85,
+      "accuracy": 0.59
+    },
+    "created_at": "2026-03-19T10:00:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "version_id": "mv-d3e4f5a6-9004",
+    "family": "mf-vol-surface-eth",
+    "version": "v2.0.0",
+    "stage": "production",
+    "metrics": {
+      "sharpe": 1.42,
+      "accuracy": 0.65
+    },
+    "created_at": "2026-03-17T14:00:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "version_id": "mv-d3e4f5a6-9005",
+    "family": "mf-funding-rate-arb",
+    "version": "v2.1.0",
+    "stage": "production",
+    "metrics": {
+      "sharpe": 2.1,
+      "accuracy": 0.58
+    },
+    "created_at": "2026-03-16T12:00:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "version_id": "mv-d3e4f5a6-9006",
+    "family": "mf-polymarket-sentiment",
+    "version": "v1.0.0",
+    "stage": "staging",
+    "metrics": {
+      "sharpe": 0.88,
+      "accuracy": 0.68
+    },
+    "created_at": "2026-03-21T08:00:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "version_id": "mv-d3e4f5a6-9007",
+    "family": "mf-stat-arb-pairs",
+    "version": "v3.0.0",
+    "stage": "production",
+    "metrics": {
+      "sharpe": 1.45,
+      "accuracy": 0.61
+    },
+    "created_at": "2026-03-15T16:00:00Z",
+    "org_id": "vertex"
+  },
+  {
+    "version_id": "mv-d3e4f5a6-9008",
+    "family": "mf-aave-yield-optimizer",
+    "version": "v2.0.0",
+    "stage": "deprecated",
+    "metrics": {
+      "sharpe": 1.05,
+      "accuracy": 0.55
+    },
+    "created_at": "2026-03-14T12:00:00Z",
+    "org_id": "odum-internal"
+  }
+]

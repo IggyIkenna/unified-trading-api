@@ -1,0 +1,50 @@
+[
+  {
+    "backtest_id": "bt-c9d0e1f2-3001",
+    "strategy": "mean-reversion-btc",
+    "period": "2026-01-01/2026-03-01",
+    "sharpe": 1.82,
+    "max_drawdown": -0.045,
+    "total_return": 0.127,
+    "trades": 342,
+    "status": "completed",
+    "created_at": "2026-03-20T14:00:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "backtest_id": "bt-c9d0e1f2-3002",
+    "strategy": "momentum-multi-asset",
+    "period": "2026-02-01/2026-03-15",
+    "sharpe": 1.14,
+    "max_drawdown": -0.078,
+    "total_return": 0.064,
+    "trades": 189,
+    "status": "completed",
+    "created_at": "2026-03-20T16:30:00Z",
+    "org_id": "acme"
+  },
+  {
+    "backtest_id": "bt-c9d0e1f2-3003",
+    "strategy": "funding-rate-arb",
+    "period": "2026-01-15/2026-03-15",
+    "sharpe": 2.1,
+    "max_drawdown": -0.022,
+    "total_return": 0.094,
+    "trades": 560,
+    "status": "completed",
+    "created_at": "2026-03-21T08:00:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "backtest_id": "bt-c9d0e1f2-3004",
+    "strategy": "nfl-outcome",
+    "period": "2025-09-01/2026-02-01",
+    "sharpe": 0.95,
+    "max_drawdown": -0.11,
+    "total_return": 0.052,
+    "trades": 128,
+    "status": "completed",
+    "created_at": "2026-03-19T10:00:00Z",
+    "org_id": "odum-internal"
+  }
+]

@@ -1,0 +1,38 @@
+[
+  {
+    "id": "gross",
+    "name": "Gross Exposure",
+    "description": "Sum of absolute position values",
+    "aggregation": "sum_abs"
+  },
+  {
+    "id": "net",
+    "name": "Net Exposure",
+    "description": "Long exposure minus short exposure",
+    "aggregation": "sum_signed"
+  },
+  {
+    "id": "delta",
+    "name": "Delta Exposure",
+    "description": "Portfolio delta in base currency",
+    "aggregation": "sum_signed"
+  },
+  {
+    "id": "vega",
+    "name": "Vega Exposure",
+    "description": "Portfolio vega — sensitivity to implied vol",
+    "aggregation": "sum_signed"
+  },
+  {
+    "id": "gamma",
+    "name": "Gamma Exposure",
+    "description": "Portfolio gamma — convexity of delta",
+    "aggregation": "sum_signed"
+  },
+  {
+    "id": "concentration",
+    "name": "Concentration",
+    "description": "Largest single-name as pct of gross",
+    "aggregation": "max_pct"
+  }
+]

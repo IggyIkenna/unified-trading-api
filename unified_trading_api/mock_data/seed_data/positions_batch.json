@@ -1,0 +1,44 @@
+[
+  {
+    "position_id": "pos-d2e3f4a5-4001",
+    "instrument": "BTC-USDT",
+    "venue": "binance",
+    "side": "long",
+    "quantity": 0.5,
+    "entry_price": 66800.0,
+    "current_price": 67200.0,
+    "unrealized_pnl": 200.0,
+    "margin_used": 11133.33,
+    "org_id": "odum-internal",
+    "strategy_id": "strat-002",
+    "snapshot_at": "2026-03-21T00:00:00Z"
+  },
+  {
+    "position_id": "pos-d2e3f4a5-4010",
+    "instrument": "SOL-USD-PERP",
+    "venue": "hyperliquid",
+    "side": "long",
+    "quantity": 100.0,
+    "entry_price": 143.5,
+    "current_price": 144.8,
+    "unrealized_pnl": 130.0,
+    "margin_used": 2870.0,
+    "org_id": "odum-internal",
+    "strategy_id": "strat-009",
+    "snapshot_at": "2026-03-21T00:00:00Z"
+  },
+  {
+    "position_id": "pos-d2e3f4a5-4007",
+    "instrument": "ETH-USDT",
+    "venue": "deribit",
+    "side": "short",
+    "quantity": 5.0,
+    "entry_price": 3520.0,
+    "current_price": 3490.0,
+    "unrealized_pnl": 150.0,
+    "margin_used": 8800.0,
+    "org_id": "odum-internal",
+    "strategy_id": "strat-003",
+    "snapshot_at": "2026-03-21T00:00:00Z"
+  }
+]

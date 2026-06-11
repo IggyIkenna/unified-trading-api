@@ -1,0 +1,20 @@
+[
+  {
+    "deployment_id": "dpl-d5e6f7a8-1001",
+    "service": "execution-service",
+    "version": "0.4.12",
+    "status": "active",
+    "deployed_at": "2026-03-20T10:00:00Z",
+    "deployed_by": "ci-pipeline",
+    "org_id": "odum-internal"
+  },
+  {
+    "deployment_id": "dpl-d5e6f7a8-1002",
+    "service": "market-tick-data-service",
+    "version": "0.5.1",
+    "status": "active",
+    "deployed_at": "2026-03-19T14:00:00Z",
+    "deployed_by": "ci-pipeline",
+    "org_id": "odum-internal"
+  }
+]

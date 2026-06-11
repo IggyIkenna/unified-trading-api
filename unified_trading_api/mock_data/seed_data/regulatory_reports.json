@@ -1,0 +1,74 @@
+[
+  {
+    "id": "reg-001",
+    "report_id": "reg-001",
+    "report_type": "MIFID_II_BEST_EXECUTION",
+    "jurisdiction": "EU",
+    "status": "submitted",
+    "filing_date": "2026-03-15",
+    "next_due_date": "2026-04-15",
+    "instruments_covered": ["BTC-USDT", "ETH-USDT"],
+    "summary": "Q1 2026 best execution report",
+    "org_id": "odum-internal"
+  },
+  {
+    "id": "reg-002",
+    "report_id": "reg-002",
+    "report_type": "FCA_TRANSACTION",
+    "jurisdiction": "UK",
+    "status": "submitted",
+    "filing_date": "2026-03-14",
+    "next_due_date": "2026-04-14",
+    "instruments_covered": ["AAPL", "QQQ", "ES-FRONT"],
+    "summary": "March 2026 transaction report",
+    "org_id": "odum-internal"
+  },
+  {
+    "id": "reg-003",
+    "report_id": "reg-003",
+    "report_type": "EMIR_DERIVATIVE",
+    "jurisdiction": "EU",
+    "status": "pending",
+    "filing_date": "",
+    "next_due_date": "2026-03-31",
+    "instruments_covered": ["BTC-USDT-PERP", "ETH-USDT-PERP"],
+    "summary": "EMIR derivative reporting for perpetual swaps",
+    "org_id": "odum-internal"
+  },
+  {
+    "id": "reg-004",
+    "report_id": "reg-004",
+    "report_type": "MIFID_II_BEST_EXECUTION",
+    "jurisdiction": "EU",
+    "status": "overdue",
+    "filing_date": "",
+    "next_due_date": "2026-03-01",
+    "instruments_covered": ["BTC-USDT"],
+    "summary": "February execution report — OVERDUE",
+    "org_id": "acme"
+  },
+  {
+    "id": "reg-005",
+    "report_id": "reg-005",
+    "report_type": "FCA_TRANSACTION",
+    "jurisdiction": "UK",
+    "status": "submitted",
+    "filing_date": "2026-03-10",
+    "next_due_date": "2026-04-10",
+    "instruments_covered": ["GLD", "ES-FRONT"],
+    "summary": "Client transaction report for Vertex Partners",
+    "org_id": "vertex"
+  },
+  {
+    "id": "reg-006",
+    "report_id": "reg-006",
+    "report_type": "EMIR_DERIVATIVE",
+    "jurisdiction": "EU",
+    "status": "submitted",
+    "filing_date": "2026-03-01",
+    "next_due_date": "2026-04-01",
+    "instruments_covered": ["BTC-USD-PERP"],
+    "summary": "Deribit perpetuals EMIR report",
+    "org_id": "odum-internal"
+  }
+]

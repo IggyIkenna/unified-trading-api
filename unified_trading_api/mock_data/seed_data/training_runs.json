@@ -1,0 +1,52 @@
+[
+  {
+    "run_id": "run-c2d3e4f5-8001",
+    "experiment_id": "exp-b1c2d3e4-7001",
+    "epoch": 50,
+    "train_loss": 0.0041,
+    "val_loss": 0.0032,
+    "duration_s": 1842,
+    "status": "completed",
+    "org_id": "odum-internal"
+  },
+  {
+    "run_id": "run-c2d3e4f5-8002",
+    "experiment_id": "exp-b1c2d3e4-7002",
+    "epoch": 30,
+    "train_loss": 0.42,
+    "val_loss": 0.45,
+    "duration_s": 620,
+    "status": "running",
+    "org_id": "odum-internal"
+  },
+  {
+    "run_id": "run-c2d3e4f5-8003",
+    "experiment_id": "exp-b1c2d3e4-7003",
+    "epoch": 100,
+    "train_loss": 0.0028,
+    "val_loss": 0.0035,
+    "duration_s": 3200,
+    "status": "completed",
+    "org_id": "odum-internal"
+  },
+  {
+    "run_id": "run-c2d3e4f5-8004",
+    "experiment_id": "exp-b1c2d3e4-7006",
+    "epoch": 15,
+    "train_loss": 0.38,
+    "val_loss": 0.41,
+    "duration_s": 450,
+    "status": "running",
+    "org_id": "odum-internal"
+  },
+  {
+    "run_id": "run-c2d3e4f5-8005",
+    "experiment_id": "exp-b1c2d3e4-7009",
+    "epoch": 20,
+    "train_loss": 0.006,
+    "val_loss": 0.0082,
+    "duration_s": 980,
+    "status": "failed",
+    "org_id": "odum-internal"
+  }
+]

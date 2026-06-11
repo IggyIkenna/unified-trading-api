@@ -1,0 +1,38 @@
+[
+  {
+    "venue": "binance",
+    "instrument": "BTC-USDT",
+    "max_position_notional": 500000.0,
+    "max_order_size": 2.0,
+    "max_leverage": 5.0,
+    "current_utilization": 0.34,
+    "org_id": "odum-internal"
+  },
+  {
+    "venue": "hyperliquid",
+    "instrument": "SOL-USD-PERP",
+    "max_position_notional": 100000.0,
+    "max_order_size": 500.0,
+    "max_leverage": 10.0,
+    "current_utilization": 0.73,
+    "org_id": "odum-internal"
+  },
+  {
+    "venue": "deribit",
+    "instrument": "BTC-28MAR26-70000-C",
+    "max_position_notional": 200000.0,
+    "max_order_size": 20.0,
+    "max_leverage": 3.0,
+    "current_utilization": 0.18,
+    "org_id": "odum-internal"
+  },
+  {
+    "venue": "aave_v3",
+    "instrument": "WETH-SUPPLY",
+    "max_position_notional": 300000.0,
+    "max_order_size": 50.0,
+    "max_leverage": 1.0,
+    "current_utilization": 0.06,
+    "org_id": "odum-internal"
+  }
+]

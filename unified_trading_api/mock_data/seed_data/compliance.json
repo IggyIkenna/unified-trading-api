@@ -1,0 +1,26 @@
+[
+  {
+    "check_id": "cmp-e0f1a2b3-6001",
+    "rule": "position_limit",
+    "status": "pass",
+    "detail": "All positions within configured limits",
+    "checked_at": "2026-03-21T08:00:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "check_id": "cmp-e0f1a2b3-6002",
+    "rule": "wash_trade_detection",
+    "status": "pass",
+    "detail": "No wash trades detected in last 24h",
+    "checked_at": "2026-03-21T08:00:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "check_id": "cmp-e0f1a2b3-6003",
+    "rule": "concentration_limit",
+    "status": "warn",
+    "detail": "SOL-USD-PERP approaching 30% portfolio concentration",
+    "checked_at": "2026-03-21T08:00:00Z",
+    "org_id": "odum-internal"
+  }
+]

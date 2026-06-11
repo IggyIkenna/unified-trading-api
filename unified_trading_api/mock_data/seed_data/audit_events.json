@@ -1,0 +1,38 @@
+[
+  {
+    "event_id": "evt-d9e0f1a2-5001",
+    "event_type": "ORDER_PLACED",
+    "service": "execution-service",
+    "user": "api-key-alpha",
+    "detail": "Limit buy 0.15 BTC-USDT @ 67250.50",
+    "timestamp": "2026-03-21T08:12:33Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "event_id": "evt-d9e0f1a2-5002",
+    "event_type": "CONFIG_CHANGED",
+    "service": "config-service",
+    "user": "admin",
+    "detail": "Updated risk limit for binance:BTC-USDT",
+    "timestamp": "2026-03-21T07:45:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "event_id": "evt-d9e0f1a2-5003",
+    "event_type": "MODEL_DEPLOYED",
+    "service": "ml-inference-service",
+    "user": "ml-pipeline",
+    "detail": "Deployed mean-reversion-btc v3.1.0 to production",
+    "timestamp": "2026-03-20T18:00:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "event_id": "evt-d9e0f1a2-5004",
+    "event_type": "ORDER_PLACED",
+    "service": "execution-service",
+    "user": "api-key-acme",
+    "detail": "Limit sell 0.10 BTC-USDT @ 67400.00",
+    "timestamp": "2026-03-21T09:30:00Z",
+    "org_id": "acme"
+  }
+]

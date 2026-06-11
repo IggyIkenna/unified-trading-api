@@ -1,0 +1,11 @@
+[
+  {
+    "environment": "staging",
+    "cloud_provider": "gcp",
+    "region": "asia-northeast1",
+    "mock_mode": true,
+    "max_order_rate": 100,
+    "default_leverage": 3.0,
+    "org_id": "odum-internal"
+  }
+]

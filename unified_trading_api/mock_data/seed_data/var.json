@@ -1,0 +1,16 @@
+[
+  {
+    "portfolio": "global",
+    "var_1d_99": 12500.0,
+    "var_1d_95": 8200.0,
+    "component_count": 20,
+    "org_id": "odum-internal"
+  },
+  {
+    "portfolio": "acme",
+    "var_1d_99": 3200.0,
+    "var_1d_95": 2100.0,
+    "component_count": 4,
+    "org_id": "acme"
+  }
+]

@@ -1,0 +1,73 @@
+[
+  {
+    "alert_id": "alrt-l-001",
+    "severity": "critical",
+    "status": "active",
+    "acknowledged": false,
+    "message": "BTC exposure exceeds 80% of limit",
+    "strategy_id": "strat-002",
+    "org_id": "odum-internal",
+    "created_at": "2026-03-22T08:15:00Z"
+  },
+  {
+    "alert_id": "alrt-l-002",
+    "severity": "high",
+    "status": "active",
+    "acknowledged": false,
+    "message": "Latency spike on Binance venue adapter",
+    "strategy_id": "strat-004",
+    "org_id": "odum-internal",
+    "created_at": "2026-03-22T08:30:00Z"
+  },
+  {
+    "alert_id": "alrt-l-003",
+    "severity": "medium",
+    "status": "active",
+    "acknowledged": false,
+    "message": "Drawdown warning on DEFI_ETH_BASIS strategy",
+    "strategy_id": "strat-001",
+    "org_id": "odum-internal",
+    "created_at": "2026-03-22T09:00:00Z"
+  },
+  {
+    "alert_id": "alrt-l-004",
+    "severity": "high",
+    "status": "active",
+    "acknowledged": false,
+    "message": "Margin call approaching for ACME positions",
+    "strategy_id": "strat-002",
+    "org_id": "acme",
+    "created_at": "2026-03-22T09:15:00Z"
+  },
+  {
+    "alert_id": "alrt-l-005",
+    "severity": "low",
+    "status": "active",
+    "acknowledged": false,
+    "message": "Feature pipeline delayed by 5 minutes",
+    "strategy_id": "strat-006",
+    "org_id": "odum-internal",
+    "created_at": "2026-03-22T09:30:00Z"
+  },
+  {
+    "alert_id": "alrt-l-006",
+    "severity": "critical",
+    "status": "active",
+    "acknowledged": false,
+    "message": "Kill switch triggered for SPORTS_NFL_ARB",
+    "strategy_id": "strat-008",
+    "org_id": "odum-internal",
+    "created_at": "2026-03-22T09:45:00Z"
+  },
+  {
+    "alert_id": "alrt-l-007",
+    "severity": "medium",
+    "status": "acknowledged",
+    "acknowledged": true,
+    "acknowledged_by": "admin",
+    "message": "Stale price detected for DOGE-USDT",
+    "strategy_id": "strat-006",
+    "org_id": "odum-internal",
+    "created_at": "2026-03-22T10:00:00Z"
+  }
+]

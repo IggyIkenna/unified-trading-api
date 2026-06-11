@@ -1,0 +1,51 @@
+[
+  {
+    "member_id": "usr-a8b9c0d1-4001",
+    "organization_id": "odum-internal",
+    "email": "admin@odum.internal",
+    "role": "admin",
+    "status": "active"
+  },
+  {
+    "member_id": "usr-a8b9c0d1-4002",
+    "organization_id": "odum-internal",
+    "email": "trader@odum.internal",
+    "role": "trader",
+    "status": "active"
+  },
+  {
+    "member_id": "usr-a8b9c0d1-4003",
+    "organization_id": "odum-internal",
+    "email": "quant@odum.internal",
+    "role": "trader",
+    "status": "active"
+  },
+  {
+    "member_id": "usr-a8b9c0d1-4004",
+    "organization_id": "acme",
+    "email": "pm@alphacapital.com",
+    "role": "client",
+    "status": "active"
+  },
+  {
+    "member_id": "usr-a8b9c0d1-4005",
+    "organization_id": "acme",
+    "email": "analyst@alphacapital.com",
+    "role": "viewer",
+    "status": "active"
+  },
+  {
+    "member_id": "usr-a8b9c0d1-4006",
+    "organization_id": "vertex",
+    "email": "cio@vertex.com",
+    "role": "client",
+    "status": "active"
+  },
+  {
+    "member_id": "usr-a8b9c0d1-4007",
+    "organization_id": "beta",
+    "email": "analyst@betafund.com",
+    "role": "client",
+    "status": "active"
+  }
+]

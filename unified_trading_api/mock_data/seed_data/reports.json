@@ -1,0 +1,29 @@
+[
+  {
+    "report_id": "rpt-a6b7c8d9-2001",
+    "report_type": "daily_pnl",
+    "title": "Daily PnL Report - 2026-03-20",
+    "format": "pdf",
+    "status": "generated",
+    "created_at": "2026-03-20T23:59:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "report_id": "rpt-a6b7c8d9-2002",
+    "report_type": "risk_summary",
+    "title": "Weekly Risk Summary - W12 2026",
+    "format": "xlsx",
+    "status": "generated",
+    "created_at": "2026-03-21T06:00:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "report_id": "rpt-a6b7c8d9-2003",
+    "report_type": "daily_pnl",
+    "title": "Daily PnL Report - 2026-03-20",
+    "format": "pdf",
+    "status": "generated",
+    "created_at": "2026-03-20T23:59:00Z",
+    "org_id": "acme"
+  }
+]

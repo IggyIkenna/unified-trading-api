@@ -1,0 +1,24 @@
+[
+  {
+    "period": "30d",
+    "total_return": 0.087,
+    "sharpe_ratio": 1.65,
+    "sortino_ratio": 2.1,
+    "max_drawdown": -0.045,
+    "win_rate": 0.58,
+    "profit_factor": 1.72,
+    "total_trades": 531,
+    "org_id": "odum-internal"
+  },
+  {
+    "period": "30d",
+    "total_return": 0.042,
+    "sharpe_ratio": 1.12,
+    "sortino_ratio": 1.45,
+    "max_drawdown": -0.032,
+    "win_rate": 0.54,
+    "profit_factor": 1.38,
+    "total_trades": 145,
+    "org_id": "acme"
+  }
+]

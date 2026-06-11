@@ -1,0 +1,42 @@
+[
+  {
+    "recon_id": "rcn-c8d9e0f1-4001",
+    "date": "2026-03-20",
+    "venue": "binance",
+    "matched": 342,
+    "unmatched": 2,
+    "breaks": 0,
+    "status": "pass",
+    "org_id": "odum-internal"
+  },
+  {
+    "recon_id": "rcn-c8d9e0f1-4002",
+    "date": "2026-03-20",
+    "venue": "hyperliquid",
+    "matched": 189,
+    "unmatched": 0,
+    "breaks": 0,
+    "status": "pass",
+    "org_id": "odum-internal"
+  },
+  {
+    "recon_id": "rcn-c8d9e0f1-4003",
+    "date": "2026-03-20",
+    "venue": "deribit",
+    "matched": 95,
+    "unmatched": 1,
+    "breaks": 0,
+    "status": "pass",
+    "org_id": "odum-internal"
+  },
+  {
+    "recon_id": "rcn-c8d9e0f1-4004",
+    "date": "2026-03-20",
+    "venue": "uniswap_v3",
+    "matched": 28,
+    "unmatched": 0,
+    "breaks": 1,
+    "status": "warn",
+    "org_id": "odum-internal"
+  }
+]

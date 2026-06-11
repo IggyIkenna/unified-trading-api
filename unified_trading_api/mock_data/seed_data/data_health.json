@@ -1,0 +1,37 @@
+[
+  {
+    "source": "binance-ws",
+    "status": "healthy",
+    "last_message_at": "2026-03-21T09:29:58Z",
+    "gap_count_24h": 0,
+    "org_id": "odum-internal"
+  },
+  {
+    "source": "deribit-ws",
+    "status": "healthy",
+    "last_message_at": "2026-03-21T09:29:55Z",
+    "gap_count_24h": 1,
+    "org_id": "odum-internal"
+  },
+  {
+    "source": "hyperliquid-rest",
+    "status": "degraded",
+    "last_message_at": "2026-03-21T09:25:00Z",
+    "gap_count_24h": 4,
+    "org_id": "odum-internal"
+  },
+  {
+    "source": "uniswap-v3-events",
+    "status": "healthy",
+    "last_message_at": "2026-03-21T09:29:50Z",
+    "gap_count_24h": 0,
+    "org_id": "odum-internal"
+  },
+  {
+    "source": "aave-v3-events",
+    "status": "healthy",
+    "last_message_at": "2026-03-21T09:28:00Z",
+    "gap_count_24h": 2,
+    "org_id": "odum-internal"
+  }
+]

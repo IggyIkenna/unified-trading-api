@@ -1,0 +1,20 @@
+[
+  {
+    "instrument": "BTC-28MAR26-70000-C",
+    "delta": 0.45,
+    "gamma": 0.0012,
+    "theta": -28.5,
+    "vega": 142.0,
+    "rho": 5.2,
+    "org_id": "odum-internal"
+  },
+  {
+    "instrument": "ETH-28MAR26-4000-C",
+    "delta": 0.32,
+    "gamma": 0.0025,
+    "theta": -15.2,
+    "vega": 88.0,
+    "rho": 2.8,
+    "org_id": "acme"
+  }
+]

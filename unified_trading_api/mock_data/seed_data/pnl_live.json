@@ -1,0 +1,29 @@
+[
+  {
+    "venue": "binance",
+    "realized_pnl": 1245.8,
+    "unrealized_pnl": 525.35,
+    "fees": 42.3,
+    "date": "2026-03-21",
+    "org_id": "odum-internal",
+    "snapshot_at": "2026-03-21T09:30:00Z"
+  },
+  {
+    "venue": "hyperliquid",
+    "realized_pnl": 560.0,
+    "unrealized_pnl": 430.0,
+    "fees": 8.4,
+    "date": "2026-03-21",
+    "org_id": "odum-internal",
+    "snapshot_at": "2026-03-21T09:30:00Z"
+  },
+  {
+    "venue": "deribit",
+    "realized_pnl": -320.5,
+    "unrealized_pnl": 265.0,
+    "fees": 15.6,
+    "date": "2026-03-21",
+    "org_id": "odum-internal",
+    "snapshot_at": "2026-03-21T09:30:00Z"
+  }
+]

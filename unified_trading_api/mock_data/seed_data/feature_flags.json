@@ -1,0 +1,32 @@
+[
+  {
+    "flag": "defi_execution",
+    "enabled": true,
+    "description": "Enable DeFi execution pipeline",
+    "org_id": "odum-internal"
+  },
+  {
+    "flag": "sports_trading",
+    "enabled": true,
+    "description": "Enable sports trading domain",
+    "org_id": "odum-internal"
+  },
+  {
+    "flag": "flash_loans",
+    "enabled": false,
+    "description": "Enable flash loan execution",
+    "org_id": "odum-internal"
+  },
+  {
+    "flag": "experimental_algos",
+    "enabled": false,
+    "description": "Enable experimental execution algos",
+    "org_id": "odum-internal"
+  },
+  {
+    "flag": "prediction_markets",
+    "enabled": true,
+    "description": "Enable prediction market trading",
+    "org_id": "odum-internal"
+  }
+]

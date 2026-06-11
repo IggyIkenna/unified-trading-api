@@ -1,0 +1,119 @@
+[
+  {
+    "id": "vol-btc",
+    "underlying": "BTC",
+    "atm_iv": 0.62,
+    "skew_25d": -0.05,
+    "butterfly_25d": 0.03,
+    "slices": [
+      {
+        "expiry": "2026-03-28",
+        "smile": [
+          {
+            "strike": 60000,
+            "iv": 0.7
+          },
+          {
+            "strike": 65000,
+            "iv": 0.62
+          },
+          {
+            "strike": 67000,
+            "iv": 0.6
+          },
+          {
+            "strike": 70000,
+            "iv": 0.62
+          },
+          {
+            "strike": 75000,
+            "iv": 0.68
+          }
+        ]
+      },
+      {
+        "expiry": "2026-04-25",
+        "smile": [
+          {
+            "strike": 60000,
+            "iv": 0.65
+          },
+          {
+            "strike": 65000,
+            "iv": 0.58
+          },
+          {
+            "strike": 67000,
+            "iv": 0.56
+          },
+          {
+            "strike": 70000,
+            "iv": 0.58
+          },
+          {
+            "strike": 75000,
+            "iv": 0.63
+          }
+        ]
+      }
+    ],
+    "term_structure": [
+      {
+        "expiry": "2026-03-28",
+        "atm_iv": 0.6
+      },
+      {
+        "expiry": "2026-04-25",
+        "atm_iv": 0.56
+      },
+      {
+        "expiry": "2026-06-27",
+        "atm_iv": 0.52
+      }
+    ]
+  },
+  {
+    "id": "vol-eth",
+    "underlying": "ETH",
+    "atm_iv": 0.65,
+    "skew_25d": -0.04,
+    "butterfly_25d": 0.025,
+    "slices": [
+      {
+        "expiry": "2026-03-28",
+        "smile": [
+          {
+            "strike": 3000,
+            "iv": 0.72
+          },
+          {
+            "strike": 3300,
+            "iv": 0.66
+          },
+          {
+            "strike": 3500,
+            "iv": 0.63
+          },
+          {
+            "strike": 3700,
+            "iv": 0.66
+          },
+          {
+            "strike": 4000,
+            "iv": 0.72
+          }
+        ]
+      }
+    ],
+    "term_structure": [
+      {
+        "expiry": "2026-03-28",
+        "atm_iv": 0.63
+      },
+      {
+        "expiry": "2026-04-25",
+        "atm_iv": 0.59
+      }
+    ]
+  }
+]

@@ -1,0 +1,23 @@
+[
+  {
+    "scenario": "btc_crash_20pct",
+    "portfolio_impact": -17800.0,
+    "worst_instrument": "BTC-USDT",
+    "run_at": "2026-03-21T06:00:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "scenario": "vol_spike_2x",
+    "portfolio_impact": 3200.0,
+    "worst_instrument": "ETH-USDT",
+    "run_at": "2026-03-21T06:00:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "scenario": "defi_protocol_exploit",
+    "portfolio_impact": -8500.0,
+    "worst_instrument": "WETH-SUPPLY",
+    "run_at": "2026-03-21T06:00:00Z",
+    "org_id": "odum-internal"
+  }
+]

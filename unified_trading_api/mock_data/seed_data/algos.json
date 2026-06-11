@@ -1,0 +1,30 @@
+[
+  {
+    "algo_id": "twap-v2",
+    "name": "TWAP",
+    "description": "Time-weighted average price",
+    "status": "active",
+    "org_id": "odum-internal"
+  },
+  {
+    "algo_id": "vwap-v1",
+    "name": "VWAP",
+    "description": "Volume-weighted average price",
+    "status": "active",
+    "org_id": "odum-internal"
+  },
+  {
+    "algo_id": "iceberg-v1",
+    "name": "Iceberg",
+    "description": "Hidden size execution",
+    "status": "active",
+    "org_id": "odum-internal"
+  },
+  {
+    "algo_id": "sniper-v1",
+    "name": "Sniper",
+    "description": "Best-bid/ask opportunistic",
+    "status": "beta",
+    "org_id": "odum-internal"
+  }
+]

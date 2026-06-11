@@ -1,0 +1,58 @@
+[
+  {
+    "service": "execution-service",
+    "version": "0.4.12",
+    "replicas": 2,
+    "status": "running",
+    "region": "asia-northeast1",
+    "org_id": "odum-internal"
+  },
+  {
+    "service": "strategy-service",
+    "version": "0.3.8",
+    "replicas": 1,
+    "status": "running",
+    "region": "asia-northeast1",
+    "org_id": "odum-internal"
+  },
+  {
+    "service": "risk-and-exposure-service",
+    "version": "0.2.5",
+    "replicas": 1,
+    "status": "running",
+    "region": "asia-northeast1",
+    "org_id": "odum-internal"
+  },
+  {
+    "service": "market-tick-data-service",
+    "version": "0.5.1",
+    "replicas": 3,
+    "status": "running",
+    "region": "asia-northeast1",
+    "org_id": "odum-internal"
+  },
+  {
+    "service": "alerting-service",
+    "version": "0.3.2",
+    "replicas": 1,
+    "status": "running",
+    "region": "asia-northeast1",
+    "org_id": "odum-internal"
+  },
+  {
+    "service": "ml-inference-service",
+    "version": "0.2.1",
+    "replicas": 2,
+    "status": "running",
+    "region": "asia-northeast1",
+    "org_id": "odum-internal"
+  },
+  {
+    "service": "ml-training-service",
+    "version": "0.1.8",
+    "replicas": 1,
+    "status": "running",
+    "region": "asia-northeast1",
+    "org_id": "odum-internal"
+  }
+]

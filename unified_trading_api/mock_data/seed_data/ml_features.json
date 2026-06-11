@@ -1,0 +1,142 @@
+[
+  {
+    "feature_id": "feat-rsi-14",
+    "name": "rsi_14",
+    "category": "technical",
+    "dtype": "float64",
+    "org_id": "odum-internal"
+  },
+  {
+    "feature_id": "feat-rsi-28",
+    "name": "rsi_28",
+    "category": "technical",
+    "dtype": "float64",
+    "org_id": "odum-internal"
+  },
+  {
+    "feature_id": "feat-vol-24h",
+    "name": "volatility_24h",
+    "category": "statistical",
+    "dtype": "float64",
+    "org_id": "odum-internal"
+  },
+  {
+    "feature_id": "feat-vol-7d",
+    "name": "volatility_7d",
+    "category": "statistical",
+    "dtype": "float64",
+    "org_id": "odum-internal"
+  },
+  {
+    "feature_id": "feat-ob-imbal",
+    "name": "orderbook_imbalance",
+    "category": "microstructure",
+    "dtype": "float64",
+    "org_id": "odum-internal"
+  },
+  {
+    "feature_id": "feat-ob-depth",
+    "name": "orderbook_depth_10",
+    "category": "microstructure",
+    "dtype": "float64",
+    "org_id": "odum-internal"
+  },
+  {
+    "feature_id": "feat-funding",
+    "name": "funding_rate",
+    "category": "defi",
+    "dtype": "float64",
+    "org_id": "odum-internal"
+  },
+  {
+    "feature_id": "feat-gas-price",
+    "name": "gas_price_gwei",
+    "category": "defi",
+    "dtype": "float64",
+    "org_id": "odum-internal"
+  },
+  {
+    "feature_id": "feat-tvl",
+    "name": "total_value_locked",
+    "category": "defi",
+    "dtype": "float64",
+    "org_id": "odum-internal"
+  },
+  {
+    "feature_id": "feat-macd",
+    "name": "macd_signal",
+    "category": "technical",
+    "dtype": "float64",
+    "org_id": "odum-internal"
+  },
+  {
+    "feature_id": "feat-bb-width",
+    "name": "bollinger_bandwidth",
+    "category": "technical",
+    "dtype": "float64",
+    "org_id": "odum-internal"
+  },
+  {
+    "feature_id": "feat-atr-14",
+    "name": "atr_14",
+    "category": "technical",
+    "dtype": "float64",
+    "org_id": "odum-internal"
+  },
+  {
+    "feature_id": "feat-vwap-dev",
+    "name": "vwap_deviation",
+    "category": "microstructure",
+    "dtype": "float64",
+    "org_id": "odum-internal"
+  },
+  {
+    "feature_id": "feat-spread",
+    "name": "bid_ask_spread",
+    "category": "microstructure",
+    "dtype": "float64",
+    "org_id": "odum-internal"
+  },
+  {
+    "feature_id": "feat-corr-btc",
+    "name": "correlation_btc_30d",
+    "category": "cross_instrument",
+    "dtype": "float64",
+    "org_id": "odum-internal"
+  },
+  {
+    "feature_id": "feat-skew",
+    "name": "return_skewness_7d",
+    "category": "statistical",
+    "dtype": "float64",
+    "org_id": "odum-internal"
+  },
+  {
+    "feature_id": "feat-kurt",
+    "name": "return_kurtosis_7d",
+    "category": "statistical",
+    "dtype": "float64",
+    "org_id": "odum-internal"
+  },
+  {
+    "feature_id": "feat-elo",
+    "name": "team_elo_rating",
+    "category": "sports",
+    "dtype": "float64",
+    "org_id": "odum-internal"
+  },
+  {
+    "feature_id": "feat-injury",
+    "name": "injury_impact_score",
+    "category": "sports",
+    "dtype": "float64",
+    "org_id": "odum-internal"
+  },
+  {
+    "feature_id": "feat-sentiment",
+    "name": "market_sentiment_score",
+    "category": "alternative",
+    "dtype": "float64",
+    "org_id": "odum-internal"
+  }
+]

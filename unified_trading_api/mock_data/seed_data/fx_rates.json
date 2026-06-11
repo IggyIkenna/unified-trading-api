@@ -1,0 +1,37 @@
+[
+  {
+    "id": "BTC/USD",
+    "pair": "BTC/USD",
+    "rate": 67000.0
+  },
+  {
+    "id": "ETH/USD",
+    "pair": "ETH/USD",
+    "rate": 3500.0
+  },
+  {
+    "id": "SOL/USD",
+    "pair": "SOL/USD",
+    "rate": 145.0
+  },
+  {
+    "id": "USDT/USD",
+    "pair": "USDT/USD",
+    "rate": 1.0001
+  },
+  {
+    "id": "EUR/USD",
+    "pair": "EUR/USD",
+    "rate": 1.08
+  },
+  {
+    "id": "GBP/USD",
+    "pair": "GBP/USD",
+    "rate": 1.27
+  },
+  {
+    "id": "JPY/USD",
+    "pair": "JPY/USD",
+    "rate": 0.0067
+  }
+]

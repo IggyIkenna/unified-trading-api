@@ -1,0 +1,122 @@
+[
+  {
+    "experiment_id": "exp-b1c2d3e4-7001",
+    "family": "mf-mean-reversion-btc",
+    "name": "btc-1h-lstm-v3",
+    "status": "completed",
+    "best_metric": 0.0032,
+    "metric_name": "mse",
+    "created_at": "2026-03-19T10:00:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "experiment_id": "exp-b1c2d3e4-7002",
+    "family": "mf-nfl-outcome",
+    "name": "epl-match-xgb-v5",
+    "status": "running",
+    "best_metric": 0.71,
+    "metric_name": "accuracy",
+    "created_at": "2026-03-20T14:00:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "experiment_id": "exp-b1c2d3e4-7003",
+    "family": "mf-momentum-multi-asset",
+    "name": "multi-asset-transformer-v4",
+    "status": "completed",
+    "best_metric": 1.85,
+    "metric_name": "sharpe",
+    "created_at": "2026-03-18T08:00:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "experiment_id": "exp-b1c2d3e4-7004",
+    "family": "mf-vol-surface-eth",
+    "name": "eth-vol-surface-garch-v2",
+    "status": "completed",
+    "best_metric": 0.0018,
+    "metric_name": "mse",
+    "created_at": "2026-03-17T12:00:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "experiment_id": "exp-b1c2d3e4-7005",
+    "family": "mf-funding-rate-arb",
+    "name": "funding-lstm-v2",
+    "status": "completed",
+    "best_metric": 2.1,
+    "metric_name": "sharpe",
+    "created_at": "2026-03-16T09:00:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "experiment_id": "exp-b1c2d3e4-7006",
+    "family": "mf-polymarket-sentiment",
+    "name": "poly-sent-bert-v1",
+    "status": "running",
+    "best_metric": 0.68,
+    "metric_name": "accuracy",
+    "created_at": "2026-03-21T06:00:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "experiment_id": "exp-b1c2d3e4-7007",
+    "family": "mf-stat-arb-pairs",
+    "name": "pairs-coint-v3",
+    "status": "completed",
+    "best_metric": 1.45,
+    "metric_name": "sharpe",
+    "created_at": "2026-03-15T14:00:00Z",
+    "org_id": "vertex"
+  },
+  {
+    "experiment_id": "exp-b1c2d3e4-7008",
+    "family": "mf-aave-yield-optimizer",
+    "name": "aave-yield-xgb-v2",
+    "status": "completed",
+    "best_metric": 0.042,
+    "metric_name": "apy_improvement",
+    "created_at": "2026-03-14T10:00:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "experiment_id": "exp-b1c2d3e4-7009",
+    "family": "mf-mean-reversion-btc",
+    "name": "btc-4h-attention-v3",
+    "status": "failed",
+    "best_metric": 0.0055,
+    "metric_name": "mse",
+    "created_at": "2026-03-20T08:00:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "experiment_id": "exp-b1c2d3e4-7010",
+    "family": "mf-nfl-outcome",
+    "name": "nfl-ensemble-v5",
+    "status": "completed",
+    "best_metric": 0.73,
+    "metric_name": "accuracy",
+    "created_at": "2026-03-13T16:00:00Z",
+    "org_id": "odum-internal"
+  },
+  {
+    "experiment_id": "exp-b1c2d3e4-7011",
+    "family": "mf-momentum-multi-asset",
+    "name": "multi-asset-cnn-v3",
+    "status": "completed",
+    "best_metric": 1.62,
+    "metric_name": "sharpe",
+    "created_at": "2026-03-12T11:00:00Z",
+    "org_id": "acme"
+  },
+  {
+    "experiment_id": "exp-b1c2d3e4-7012",
+    "family": "mf-stat-arb-pairs",
+    "name": "pairs-kalman-v2",
+    "status": "completed",
+    "best_metric": 1.28,
+    "metric_name": "sharpe",
+    "created_at": "2026-03-11T08:00:00Z",
+    "org_id": "vertex"
+  }
+]
