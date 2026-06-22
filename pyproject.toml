@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "unified-trading-api"
-version = "0.2.8"
+version = "0.2.9"
 description = "Consolidated FastAPI serving all domain data for the Unified Trading System UIs"
 requires-python = ">=3.13,<3.14"
 license = {text = "MIT"}
@@ -129,6 +129,12 @@ markers = [
 [tool.coverage.run]
 source = ["unified_trading_api"]
 branch = true
+# pytest-cov + xdist: workers are separate processes; without parallel-combine the terminal
+# fail-under reads PARTIAL (controller-only) data and spuriously fails (2026-06-22: mtds saw
+# terminal 46.4% while coverage.xml correctly combined to 83.95%). parallel-combine fixes the gate.
+parallel = true
+concurrency = ["thread", "multiprocessing"]
+sigterm = true
 omit = [
     "unified_trading_api/__main__.py",
     "unified_trading_api/main.py",
