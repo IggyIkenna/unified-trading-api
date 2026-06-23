@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: deployment_and_user_management_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Export OpenAPI spec from the unified-trading-api FastAPI application.
 
 Imports the app directly (no server startup required) and extracts
