@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: deployment_and_user_management_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Verify persona alignment between auth-api and unified-trading-api.
 
 Checks that org IDs, persona names, emails, roles, and entitlements match
