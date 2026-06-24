@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "unified-trading-api"
-version = "0.2.11"
+version = "0.2.12"
 description = "Consolidated FastAPI serving all domain data for the Unified Trading System UIs"
 requires-python = ">=3.13,<3.14"
 license = {text = "MIT"}
