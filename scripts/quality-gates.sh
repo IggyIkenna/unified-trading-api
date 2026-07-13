@@ -32,7 +32,12 @@ MANIFEST_ALIGNMENT_SKIP=true
 # (seed.py itself is now a thin loader and passes these checks for real — 2026-06-11 split)
 EMPTY_STR_EXCLUDE_GLOBS=("!**/mock_data/seed_*.py" "!**/chat.py" "!**/routes/*.py" "!**/services/*.py")
 EMPTY_DICT_LIST_EXCLUDE_GLOBS=("!**/mock_data/seed_*.py" "!**/routes/*.py")
-PIP_AUDIT_EXTRA_ARGS="--ignore-vuln PYSEC-2024-277 --ignore-vuln PYSEC-2025-183"
+# 2026-07-13: click/cryptography/idna/pydantic-settings bumped to fixed versions (see uv.lock).
+# starlette is capped at <1.3.0 by unified-trading-library's pyproject pin (cross-repo — UTL is an
+# editable path dep for every consumer), so PYSEC-2026-249/248 (fixed 1.3.1/1.3.0) can't be cleared
+# here; tracked in plans/active/issues/unified_trading_api_pip_audit_stale_ignore_list_2026_07_13.md.
+# PYSEC-2024-277/PYSEC-2025-183 no longer appear in a bare pip-audit run — stale, dropped.
+PIP_AUDIT_EXTRA_ARGS="--ignore-vuln PYSEC-2026-249 --ignore-vuln PYSEC-2026-248"
 WORKSPACE_ROOT="$(cd "$(git rev-parse --show-toplevel)/.." && pwd)"
 source "${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/base-service.sh"
 

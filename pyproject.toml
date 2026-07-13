@@ -11,8 +11,10 @@ requires-python = ">=3.13,<3.14"
 license = {text = "MIT"}
 
 dependencies = [
-    # Pinned to safe versions (CVE-2026-{34073,39892,44431,44432,28684})
-    "cryptography>=46.0.7,<47.0.0",
+    # Pinned to safe versions (CVE-2026-{34073,39892,44431,44432,28684}); bumped past 47.x
+    # for GHSA-537c-gmf6-5ccf (fixed in 48.0.1) — see plans/active/issues/
+    # unified_trading_api_pip_audit_stale_ignore_list_2026_07_13.md
+    "cryptography>=48.0.1,<49.0.0",
     "urllib3>=2.7.0,<3.0.0",
     "python-dotenv>=1.2.2,<2.0.0",
     # Lazy-imported in routes/chat.py; pinned for CVE-2026-{34450,34452}
@@ -47,7 +49,7 @@ dependencies = [
     "pip>=26.1.2",  # PYSEC-2026-196 (pip transitive via pip-audit/pip-api; fix=26.1.2)
     "bandit>=1.7.0,<2.0.0",
     "pyjwt>=2.13.0,<3.0.0",
-    "cryptography<47.0.0,>=46.0.7",
+    "cryptography>=48.0.1,<49.0.0",
     "pygments>=2.20.0,<3.0.0",
     "requests>=2.33.0,<3.0.0",
     "aiohttp>=3.14.1,<4.0.0",
