@@ -35,7 +35,7 @@ EMPTY_DICT_LIST_EXCLUDE_GLOBS=("!**/mock_data/seed_*.py" "!**/routes/*.py")
 # 2026-07-13: pip-audit RED found 5 new CVEs unrelated to any in-flight work (click, cryptography,
 # idna, pydantic-settings, starlette) — ignored as an interim unblock; real fix (version bumps) is
 # tracked in plans/active/issues/unified_trading_api_pip_audit_stale_ignore_list_2026_07_13.md.
-PIP_AUDIT_EXTRA_ARGS="--ignore-vuln PYSEC-2024-277 --ignore-vuln PYSEC-2025-183 --ignore-vuln PYSEC-2026-2132 --ignore-vuln GHSA-537c-gmf6-5ccf --ignore-vuln PYSEC-2026-215 --ignore-vuln GHSA-4xgf-cpjx-pc3j --ignore-vuln PYSEC-2026-249 --ignore-vuln PYSEC-2026-248"
+PIP_AUDIT_EXTRA_ARGS="--ignore-vuln PYSEC-2024-277 --ignore-vuln PYSEC-2025-183"
 WORKSPACE_ROOT="$(cd "$(git rev-parse --show-toplevel)/.." && pwd)"
 source "${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/base-service.sh"
 
