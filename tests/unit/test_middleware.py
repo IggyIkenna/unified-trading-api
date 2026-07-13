@@ -2,14 +2,37 @@
 
 from __future__ import annotations
 
+import importlib
+from collections.abc import Iterator
 from unittest.mock import patch
 
+import pytest
 from fastapi import Depends, FastAPI, Request
 from fastapi.testclient import TestClient
 
 # ---------------------------------------------------------------------------
 # Auth middleware: verify_api_key + get_current_user
 # ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def real_utl_auth_env(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    """Force UTL create_api_auth off its DISABLE_AUTH/mock-mode short-circuit.
+
+    QG exports CLOUD_MOCK_MODE=true process-wide, and verify_api_key's X-API-Key
+    comparison now delegates to UTL's create_api_auth, which would otherwise take
+    that env-driven mock-admin shortcut instead of exercising the real key check.
+    ``_get_auth_config`` also ``@lru_cache``s that read, so a bare env override
+    needs a cache clear to take effect.
+    """
+    utl_api_auth = importlib.import_module("unified_trading_library.cloud_interface.api_auth")
+    monkeypatch.setenv("DISABLE_AUTH", "false")
+    monkeypatch.setenv("CLOUD_MOCK_MODE", "false")
+    utl_api_auth._get_auth_config.cache_clear()
+    try:
+        yield
+    finally:
+        utl_api_auth._get_auth_config.cache_clear()
 
 
 class TestVerifyApiKey:
@@ -45,6 +68,7 @@ class TestVerifyApiKey:
         resp = client.get("/alerts/summary")
         assert resp.status_code == 401
 
+    @pytest.mark.usefixtures("real_utl_auth_env")
     def test_invalid_api_key_returns_401(self) -> None:
         """When auth is enabled and wrong key sent, expect 401."""
         from unified_trading_library import setup_events
@@ -69,13 +93,20 @@ class TestVerifyApiKey:
         resp = client.get("/alerts/summary", headers={"X-API-Key": "wrong-key"})
         assert resp.status_code == 401
 
-    def test_valid_api_key_succeeds(self) -> None:
-        """When auth is enabled and correct key sent, expect success."""
+    @pytest.mark.usefixtures("real_utl_auth_env")
+    def test_valid_api_key_succeeds(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """When auth is enabled and correct key sent, expect success.
+
+        The real key check now delegates to UTL's ``create_api_auth``, which
+        instantiates a fresh ``UnifiedCloudConfig`` per request — so the key
+        must be set via the env var, not by mutating the local ``_auth_cfg``
+        singleton (which UTL's fresh instance never reads).
+        """
         from tests.unit.conftest import InMemoryService
         from unified_trading_api.main import create_app
-        from unified_trading_api.middleware import auth
 
         real_key = "test-valid-key-12345"
+        monkeypatch.setenv("API_KEY", real_key)
 
         app = create_app()
         svc = InMemoryService()
@@ -85,14 +116,9 @@ class TestVerifyApiKey:
         app.state.start_time = 0.0
         app.state.service = svc
 
-        original_key = auth._auth_cfg.api_key
-        auth._auth_cfg.api_key = real_key  # type: ignore[attr-defined]
-        try:
-            client = TestClient(app, raise_server_exceptions=False)
-            resp = client.get("/alerts/summary", headers={"X-API-Key": real_key})
-            assert resp.status_code == 200
-        finally:
-            auth._auth_cfg.api_key = original_key  # type: ignore[attr-defined]
+        client = TestClient(app, raise_server_exceptions=False)
+        resp = client.get("/alerts/summary", headers={"X-API-Key": real_key})
+        assert resp.status_code == 200
 
 
 class TestGetCurrentUser:
