@@ -11,7 +11,7 @@ from typing import cast
 
 from fastapi import Depends, HTTPException, Request, Security
 from fastapi.security import APIKeyHeader
-from unified_trading_library import UnifiedCloudConfig, log_event
+from unified_trading_library import UnifiedCloudConfig, create_api_auth, log_event
 
 from unified_trading_api.services.app_state import (  # noqa: qg-deep-import — self-package
     get_disable_auth,
@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 _auth_cfg = UnifiedCloudConfig()
 _api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+_utl_api_auth = create_api_auth("unified-trading-api")
 
 # Production guard
 _disable_auth_raw: bool = _auth_cfg.disable_auth
@@ -49,6 +50,12 @@ async def verify_api_key(
 ) -> str:
     """Verify API key from X-API-Key header.
 
+    The key comparison itself delegates to UTL's ``create_api_auth`` (the
+    shared legacy X-API-Key path, validates against
+    ``UnifiedCloudConfig().api_key``); the app.state DISABLE_AUTH override
+    (set in lifespan, toggled directly by tests) and this service's
+    AUTH_FAILURE event emission are gateway-specific and preserved as-is.
+
     Returns the validated key. Raises 401 if invalid.
     """
     # Allow override from app.state (set in lifespan)
@@ -64,14 +71,15 @@ async def verify_api_key(
         )
         raise HTTPException(status_code=401, detail="Missing X-API-Key header")
 
-    expected_key = _auth_cfg.api_key
-    if not expected_key or api_key != expected_key:
+    try:
+        await _utl_api_auth(request=request, authorization=None, x_service_token=None, x_api_key=api_key)
+    except HTTPException:
         log_event(
             "AUTH_FAILURE",
             severity="WARNING",
             details={"auth_type": "api_key", "reason": "invalid_key"},
         )
-        raise HTTPException(status_code=401, detail="Invalid API key")
+        raise
 
     logger.info("Authentication successful: auth_type=api_key")
     return api_key

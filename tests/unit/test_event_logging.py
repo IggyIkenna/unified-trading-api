@@ -7,11 +7,33 @@ that standard Python logging is used throughout the codebase.
 
 from __future__ import annotations
 
+import importlib
+from collections.abc import Iterator
 from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
+
+
+@pytest.fixture
+def real_utl_auth_env(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    """Force UTL create_api_auth off its DISABLE_AUTH/mock-mode short-circuit.
+
+    QG exports CLOUD_MOCK_MODE=true process-wide, and verify_api_key's X-API-Key
+    comparison now delegates to UTL's create_api_auth, which would otherwise take
+    that env-driven mock-admin shortcut instead of exercising the real key check.
+    ``_get_auth_config`` also ``@lru_cache``s that read, so a bare env override
+    needs a cache clear to take effect.
+    """
+    utl_api_auth = importlib.import_module("unified_trading_library.cloud_interface.api_auth")
+    monkeypatch.setenv("DISABLE_AUTH", "false")
+    monkeypatch.setenv("CLOUD_MOCK_MODE", "false")
+    utl_api_auth._get_auth_config.cache_clear()
+    try:
+        yield
+    finally:
+        utl_api_auth._get_auth_config.cache_clear()
 
 
 def _make_stub_service() -> MagicMock:
@@ -67,21 +89,27 @@ class TestAuthEventLogging:
             # The details dict should include reason
             assert call_details.get("reason") == "missing_key"
 
-    def test_invalid_api_key_emits_auth_failure(self, auth_enabled_client: TestClient) -> None:
-        """Requests with wrong X-API-Key should emit AUTH_FAILURE event."""
+    @pytest.mark.usefixtures("real_utl_auth_env")
+    def test_invalid_api_key_emits_auth_failure(
+        self, auth_enabled_client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Requests with wrong X-API-Key should emit AUTH_FAILURE event.
+
+        The key comparison now delegates to UTL's create_api_auth, which reads
+        a fresh UnifiedCloudConfig per request — so the expected key is set via
+        the env var, not by patching the local _auth_cfg singleton (which the
+        delegated call never reads).
+        """
+        monkeypatch.setenv("API_KEY", "correct-key")
         with patch("unified_trading_api.middleware.auth.log_event") as mock_log_event:
-            with patch("unified_trading_api.middleware.auth._auth_cfg") as mock_cfg:
-                mock_cfg.api_key = "correct-key"
-                mock_cfg.disable_auth = False
+            response = auth_enabled_client.get(
+                "/config/system",
+                headers={"X-API-Key": "wrong-key"},
+            )
+            assert response.status_code == 401
 
-                response = auth_enabled_client.get(
-                    "/config/system",
-                    headers={"X-API-Key": "wrong-key"},
-                )
-                assert response.status_code == 401
-
-                calls = [c for c in mock_log_event.call_args_list if c.args[0] == "AUTH_FAILURE"]
-                assert len(calls) >= 1
+            calls = [c for c in mock_log_event.call_args_list if c.args[0] == "AUTH_FAILURE"]
+            assert len(calls) >= 1
 
     def test_auth_disabled_skips_key_validation(self, mock_app_client: TestClient) -> None:
         """When auth is disabled, verify_api_key returns 'dev-mode' without events."""
