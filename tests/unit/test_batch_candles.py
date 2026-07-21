@@ -53,18 +53,41 @@ class TestTimeframeMap:
         assert _TIMEFRAME_MAP["1D"] == "24h"
 
 
-class TestBlobPath:
-    def test_path_layout_matches_processing_service_doc(self) -> None:
-        path = BatchCandleReader._blob_path(
+class TestBlobPathCandidates:
+    """MDPS candle canonical migration (2026-07-20+): the reader must DUAL-READ — probe the
+    canonical (instrument_type=) shape first, then fall back to the legacy (no instrument_type=)
+    shape, since both coexist in GCS during the migration window."""
+
+    def test_dual_read_candidates_canonical_first_then_legacy(self) -> None:
+        candidates = BatchCandleReader._blob_path_candidates(
             venue="NASDAQ",
             symbol="AAPL",
             timeframe_partition="5m",
             data_type="ohlcv_1m",
             target_date=date(2026, 1, 15),
+            instrument_type="equity",
         )
-        assert path == (
-            "processed_candles/by_date/day=2026-01-15/timeframe=5m/data_type=ohlcv_1m/venue=NASDAQ/AAPL.parquet"
+        # Canonical (with instrument_type=) FIRST, legacy (without) fallback SECOND.
+        assert candidates == [
+            "processed_candles/by_date/day=2026-01-15/timeframe=5m/data_type=ohlcv_1m"
+            "/instrument_type=equity/venue=NASDAQ/AAPL.parquet",
+            "processed_candles/by_date/day=2026-01-15/timeframe=5m/data_type=ohlcv_1m/venue=NASDAQ/AAPL.parquet",
+        ]
+
+    def test_no_instrument_type_yields_legacy_only(self) -> None:
+        # When instrument_type isn't available, only the legacy (pre-migration) shape is probed —
+        # matches the exact path the reader used before the migration.
+        candidates = BatchCandleReader._blob_path_candidates(
+            venue="NASDAQ",
+            symbol="AAPL",
+            timeframe_partition="5m",
+            data_type="ohlcv_1m",
+            target_date=date(2026, 1, 15),
+            instrument_type=None,
         )
+        assert candidates == [
+            "processed_candles/by_date/day=2026-01-15/timeframe=5m/data_type=ohlcv_1m/venue=NASDAQ/AAPL.parquet",
+        ]
 
 
 class TestGetCandles:
@@ -120,6 +143,53 @@ class TestGetCandles:
         assert bars[1]["high"] == 180.90
         # Returns Unix-second timestamps for chart consumption
         assert bars[1]["time"] == int(ts0.timestamp()) + 300
+
+    def test_legacy_shard_still_loads_when_only_non_migrated_object_exists(self) -> None:
+        # Migration in progress: the canonical (instrument_type=) object 404s, only the legacy
+        # (no instrument_type=) object exists. get_candles must still return the bars — this is
+        # the exact "no data on migrated objects" regression the dual-read fixes.
+        ts0 = pd.Timestamp("2026-01-15T13:30:00Z")
+        legacy_df = pd.DataFrame(
+            {
+                "timestamp": [ts0],
+                "open": [180.00],
+                "high": [180.80],
+                "low": [179.80],
+                "close": [180.50],
+                "volume": [10000.0],
+                "instrument_id": ["NASDAQ:EQUITY:AAPL-USD"],
+                "symbol": ["AAPL"],
+                "venue": ["NASDAQ"],
+            }
+        )
+        legacy_path = (
+            "processed_candles/by_date/day=2026-01-15/timeframe=5m/data_type=ohlcv_1m/venue=NASDAQ/AAPL.parquet"
+        )
+
+        def _download_bytes(*, bucket: str, blob_path: str) -> bytes:
+            del bucket
+            if blob_path == legacy_path:
+                return _make_parquet_bytes(legacy_df)
+            raise FileNotFoundError(f"404 No such object: {blob_path}")
+
+        mock_storage = MagicMock()
+        mock_storage.download_bytes.side_effect = _download_bytes
+        with patch(
+            "unified_trading_api.services.batch_candles.get_storage_client",
+            return_value=mock_storage,
+        ):
+            reader = BatchCandleReader(project_id="p")
+        bars = reader.get_candles(
+            venue="NASDAQ",
+            symbol="AAPL",
+            timeframe="5m",
+            limit=100,
+            as_of=date(2026, 1, 15),
+        )
+        assert len(bars) == 1
+        assert bars[0]["close"] == 180.50
+        # Both candidates were probed — canonical first, then the legacy hit.
+        assert mock_storage.download_bytes.call_count == 2
 
     def test_missing_shard_returns_empty(self) -> None:
         # The user-facing contract: no shard → empty list, NOT a 500 or fallback.
