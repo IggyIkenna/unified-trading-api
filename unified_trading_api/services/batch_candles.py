@@ -10,6 +10,12 @@ Path layout (matches market-data-processing-service docs/GCS_PATHS.md):
   prefix: processed_candles/by_date/day=YYYY-MM-DD/timeframe={tf}
                             /data_type={dtype}/venue={VENUE}/{symbol}.parquet
 
+MDPS candle canonical migration (2026-07-20+, operator-ruled OPTION A): the LOCKED shape adds an
+`instrument_type={it}/` segment (after data_type=, before venue=). Both shapes coexist during the
+migration window, so reads DUAL-READ via `unified_trading_library.candle_read_prefixes()` — the
+canonical (with instrument_type=) prefix is probed first, falling back to the legacy (without)
+prefix. `data_type` stays the SOURCE type in both variants (no aggregated-key mapping here).
+
 Schema (set by market-data-processing-service):
   timestamp (ts), open, high, low, close, volume, trade_count,
   buy_trade_count, sell_trade_count, buy_volume, sell_volume,
@@ -30,6 +36,7 @@ import pandas as pd
 import pyarrow.parquet as pq
 from unified_trading_library import (  # pyright: ignore[reportPrivateImportUsage]
     build_bucket,
+    candle_read_prefixes,
     get_storage_client,
 )
 
@@ -105,18 +112,32 @@ class BatchCandleReader:
         self._storage = get_storage_client(project_id=project_id)
 
     @staticmethod
-    def _blob_path(
+    def _blob_path_candidates(
         venue: str,
         symbol: str,
         timeframe_partition: str,
         data_type: str,
         target_date: date,
-    ) -> str:
-        return (
-            f"processed_candles/by_date/day={target_date.isoformat()}"
-            f"/timeframe={timeframe_partition}/data_type={data_type}"
-            f"/venue={venue}/{symbol}.parquet"
+        instrument_type: str | None,
+    ) -> list[str]:
+        """Return candle object paths to probe, canonical (instrument_type=) first.
+
+        Delegates prefix construction to ``candle_read_prefixes()`` so the migration's
+        with/without-``instrument_type=`` shapes are never hand-duplicated here. ``data_type``
+        is passed as both the aggregated and source key (kept as the SOURCE type — this call
+        site has no aggregated-key mapping); ``pipeline_mode`` is omitted (not tracked at this
+        call site, matching the pre-migration flat path).
+        """
+        prefixes = candle_read_prefixes(
+            date=target_date.isoformat(),
+            timeframe=timeframe_partition,
+            data_type_aggregated=data_type,
+            data_type_source=data_type,
+            instrument_type=instrument_type,
+            venue=venue,
+            pipeline_mode=None,
         )
+        return [f"{prefix}{symbol}.parquet" for prefix in prefixes]
 
     def _read_df(self, bucket: str, blob_path: str) -> pd.DataFrame | None:
         try:
@@ -125,6 +146,14 @@ class BatchCandleReader:
         except Exception as exc:
             logger.debug("Blob read miss %s/%s: %s", bucket, blob_path, exc)
             return None
+
+    def _read_first_available(self, bucket: str, blob_paths: list[str]) -> pd.DataFrame | None:
+        """Try each candidate path in order (canonical first); return the first hit."""
+        for blob_path in blob_paths:
+            df = self._read_df(bucket, blob_path)
+            if df is not None:
+                return df
+        return None
 
     @staticmethod
     def _frame_to_records(df: pd.DataFrame) -> list[dict[str, object]]:
@@ -178,12 +207,16 @@ class BatchCandleReader:
         symbol: str,
         timeframe_partition: str,
         data_type: str,
+        instrument_type: str | None,
     ) -> list[pd.DataFrame]:
-        """Read one parquet per day, in parallel for multi-day windows. Drops empty/missing days."""
+        """Read one parquet per day, in parallel for multi-day windows. Drops empty/missing days.
+
+        Each day dual-reads: canonical (instrument_type=) candidate first, legacy fallback second.
+        """
 
         def _fetch(d: date) -> pd.DataFrame | None:
-            blob = self._blob_path(venue, symbol, timeframe_partition, data_type, d)
-            return self._read_df(bucket, blob)
+            candidates = self._blob_path_candidates(venue, symbol, timeframe_partition, data_type, d, instrument_type)
+            return self._read_first_available(bucket, candidates)
 
         frames: list[pd.DataFrame] = []
         if len(dates) == 1:
@@ -243,6 +276,7 @@ class BatchCandleReader:
             symbol=symbol,
             timeframe_partition=timeframe_partition,
             data_type=sym_config["data_type"],
+            instrument_type=sym_config.get("instrument_type"),
         )
         if not frames:
             return []
