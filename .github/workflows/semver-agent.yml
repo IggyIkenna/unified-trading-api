@@ -38,10 +38,17 @@ name: Semver Agent
 #   GH_PAT  — cross-repo dispatch and issue creation
 
 on:
+  # DELIBERATELY staging-only — do NOT add `main` here. `quality-gates-v2` runs on
+  # `push: [main]`, so a `main` entry would make a single push to main fire this workflow
+  # TWICE (once via push, once via workflow_run). The second run would `git describe` the
+  # tag the FIRST run just minted, treat it as the new baseline, and bump AGAIN — a version
+  # doubling on every promotion, which is the 2026-06-10 runaway class re-created by
+  # construction. On `main` the v2 gate has already run (it is the required check on the
+  # promote PR), so the `push: [main]` path below needs no workflow_run gating.
   workflow_run:
     workflows: ["quality-gates-v2"]
     types: [completed]
-    branches: [main, staging]
+    branches: [staging]
   # The LDR-trunk decoupling (2026-06-10) dropped push:[staging] quality-gates-v2
   # — v2 now runs on the LDR→staging PR (base=staging), NOT on the staging branch
   # itself — so the workflow_run trigger above stopped firing and the staging→main
@@ -101,6 +108,16 @@ env:
 permissions:
   contents: write
   issues: write
+
+# Serialise version minting per repo+branch. Two concurrent runs would each `git describe`
+# the same baseline, compute the same next version, and race to mint it — or worse, one
+# would observe the other's fresh tag and bump a second time. `cancel-in-progress: false`
+# because a bump must COMPLETE (mint + dispatch the baseline record); cancelling one
+# mid-flight leaves a tag with no recorded baseline, which is precisely the "baseline never
+# recorded" state the bump-rate circuit breaker exists to catch.
+concurrency:
+  group: semver-agent-${{ github.repository }}-${{ github.event.workflow_run.head_branch || github.ref_name }}
+  cancel-in-progress: false
 
 jobs:
   semver:
