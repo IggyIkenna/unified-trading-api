@@ -89,6 +89,57 @@ class TestBlobPathCandidates:
             "processed_candles/by_date/day=2026-01-15/timeframe=5m/data_type=ohlcv_1m/venue=NASDAQ/AAPL.parquet",
         ]
 
+    def test_cme_future_uses_underlying_chain_bundle_tail(self) -> None:
+        # TradFi FUTURE at CME/ICE is captured MDPS-side as a per-underlying chain bundle, never a
+        # flat per-symbol parquet (candle_delta_one_chain_bundle_data_type_detection_silent_miss_
+        # 2026_07_27.md) — the curated `symbol` (e.g. "ES") IS the underlying root already.
+        candidates = BatchCandleReader._blob_path_candidates(
+            venue="CME",
+            symbol="ES",
+            timeframe_partition="1m",
+            data_type="ohlcv_1m",
+            target_date=date(2026, 7, 22),
+            instrument_type="future",
+        )
+        assert candidates == [
+            "processed_candles/by_date/day=2026-07-22/timeframe=1m/data_type=ohlcv_1m"
+            "/instrument_type=future/venue=CME/underlying=ES/ticks.parquet",
+            "processed_candles/by_date/day=2026-07-22/timeframe=1m/data_type=ohlcv_1m/venue=CME/underlying=ES/ticks.parquet",
+        ]
+
+    def test_bybit_future_is_not_chain_bundle_stays_flat(self) -> None:
+        # FUTURE bundling is venue-aware (F2): BYBIT captures per-contract, unlike CME/ICE/DERIBIT/
+        # OKX — a bare `future` there must stay the flat `{symbol}.parquet` tail.
+        candidates = BatchCandleReader._blob_path_candidates(
+            venue="BYBIT",
+            symbol="BTCUSDT-FUT",
+            timeframe_partition="1m",
+            data_type="ohlcv_1m",
+            target_date=date(2026, 7, 22),
+            instrument_type="future",
+        )
+        assert candidates == [
+            "processed_candles/by_date/day=2026-07-22/timeframe=1m/data_type=ohlcv_1m"
+            "/instrument_type=future/venue=BYBIT/BTCUSDT-FUT.parquet",
+            "processed_candles/by_date/day=2026-07-22/timeframe=1m/data_type=ohlcv_1m/venue=BYBIT/BTCUSDT-FUT.parquet",
+        ]
+
+    def test_option_is_chain_bundle_everywhere(self) -> None:
+        # option/combo bundle universally (venue-agnostic), unlike the venue-gated FUTURE overlay.
+        candidates = BatchCandleReader._blob_path_candidates(
+            venue="DERIBIT",
+            symbol="BTC",
+            timeframe_partition="1h",
+            data_type="trades",
+            target_date=date(2026, 7, 22),
+            instrument_type="option",
+        )
+        assert candidates == [
+            "processed_candles/by_date/day=2026-07-22/timeframe=1h/data_type=trades"
+            "/instrument_type=option/venue=DERIBIT/underlying=BTC/ticks.parquet",
+            "processed_candles/by_date/day=2026-07-22/timeframe=1h/data_type=trades/venue=DERIBIT/underlying=BTC/ticks.parquet",
+        ]
+
 
 class TestGetCandles:
     def test_unknown_symbol_returns_empty(self) -> None:
