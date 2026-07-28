@@ -34,6 +34,7 @@ from datetime import UTC, date, datetime, timedelta
 
 import pandas as pd
 import pyarrow.parquet as pq
+from unified_api_contracts import GRAIN_BUNDLE_BY_UNDERLYING, grain_for_instrument_type
 from unified_trading_library import (  # pyright: ignore[reportPrivateImportUsage]
     build_bucket,
     candle_read_prefixes,
@@ -127,6 +128,15 @@ class BatchCandleReader:
         is passed as both the aggregated and source key (kept as the SOURCE type — this call
         site has no aggregated-key mapping); ``pipeline_mode`` is omitted (not tracked at this
         call site, matching the pre-migration flat path).
+
+        Tail: a chain-bundle instrument (per UAC's ``grain_for_instrument_type`` capture-grain
+        SSOT — e.g. TradFi FUTURE at CME/ICE) is captured MDPS-side as a per-underlying bundle,
+        never a flat per-symbol parquet, so its tail is ``underlying={symbol}/ticks.parquet``
+        (the curated symbol IS already the underlying root, e.g. CME "ES") instead of
+        ``{symbol}.parquet``. Was previously always-flat regardless of instrument_type — the
+        same silent-miss bug class as
+        candle_delta_one_chain_bundle_data_type_detection_silent_miss_2026_07_27.md's
+        delta_one ``DataLoader`` finding, applied here to this dual-reader.
         """
         prefixes = candle_read_prefixes(
             date=target_date.isoformat(),
@@ -137,7 +147,13 @@ class BatchCandleReader:
             venue=venue,
             pipeline_mode=None,
         )
-        return [f"{prefix}{symbol}.parquet" for prefix in prefixes]
+        is_chain_bundle = (
+            instrument_type is not None
+            and grain_for_instrument_type(_venue_to_category(venue), instrument_type, venue=venue)
+            == GRAIN_BUNDLE_BY_UNDERLYING
+        )
+        tail = f"underlying={symbol}/ticks.parquet" if is_chain_bundle else f"{symbol}.parquet"
+        return [f"{prefix}{tail}" for prefix in prefixes]
 
     def _read_df(self, bucket: str, blob_path: str) -> pd.DataFrame | None:
         try:
