@@ -31,7 +31,7 @@ dependencies = [
     # WebSocket
     "websockets>=14.0,<15.0.0",
     # Internal libraries
-    "unified-trading-library>=0.64.0,<1.0.0",
+    "unified-trading-library>=0.65.0,<1.0.0",
     "unified-api-contracts>=0.80.0,<1.0.0",
     # Test / QG
     "pytest>=9.0.3,<10.0.0",
