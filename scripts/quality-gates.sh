@@ -32,10 +32,6 @@ MANIFEST_ALIGNMENT_SKIP=true
 # (seed.py itself is now a thin loader and passes these checks for real — 2026-06-11 split)
 EMPTY_STR_EXCLUDE_GLOBS=("!**/mock_data/seed_*.py" "!**/chat.py" "!**/routes/*.py" "!**/services/*.py")
 EMPTY_DICT_LIST_EXCLUDE_GLOBS=("!**/mock_data/seed_*.py" "!**/routes/*.py")
-# 2026-07-13: pip-audit RED found 5 new CVEs unrelated to any in-flight work (click, cryptography,
-# idna, pydantic-settings, starlette) — ignored as an interim unblock; real fix (version bumps) is
-# tracked in plans/active/issues/unified_trading_api_pip_audit_stale_ignore_list_2026_07_13.md.
-PIP_AUDIT_EXTRA_ARGS="--ignore-vuln PYSEC-2024-277 --ignore-vuln PYSEC-2025-183"
 WORKSPACE_ROOT="$(cd "$(git rev-parse --show-toplevel)/.." && pwd)"
 source "${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/base-service.sh"
 
