@@ -14,6 +14,11 @@ from pathlib import Path
 import httpx
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import FileResponse, JSONResponse
+from pydantic import BaseModel
+from unified_api_contracts.internal import (  # noqa: qg-deep-import
+    ReconciliationAction,
+    ReconciliationResolution,
+)
 
 from unified_trading_api.middleware.auth import (  # noqa: qg-deep-import — self-package
     verify_api_key,  # noqa: qg-deep-import — self-package
@@ -37,6 +42,13 @@ _CLIENT_REPORTING_URL = os.environ.get(  # config-bootstrap:
     "LIVE_SERVICE_REPORTING_URL",
     "http://127.0.0.1:8014",
 ).rstrip("/")
+
+# batch-live-reconciliation-service base URL (no trailing slash). No registered
+# local-dev port exists for BLRS yet (unlike client-reporting-api's 8014) — env
+# var only, no hardcoded default; unset == treated as unconfigured (mock-mode
+# fallback), matching strategy_performance.py's LIVE_SERVICE_STRATEGY_URL
+# pattern rather than inventing an unregistered port number.
+_BLRS_SERVICE_URL_ENV = "LIVE_SERVICE_BLRS_URL"
 
 
 @health_router.get("/health")
@@ -144,6 +156,104 @@ async def get_reconciliation(
     service = get_service(request)
     records = service.list("reconciliation", filters={"date": date})
     return paginated_response(records, page, page_size)
+
+
+async def _blrs_proxy(
+    request: Request,
+    method: str,
+    path: str,
+    *,
+    params: dict[str, str] | None = None,
+    json_body: dict[str, object] | None = None,
+) -> httpx.Response | None:
+    """Proxy a request to BLRS's ``/t1-recon/*`` break-resolution API.
+
+    Returns None when in mock mode, no BLRS URL is configured, or the round
+    trip itself fails (network/connection error) — callers fall back to
+    MockStateStore in all three cases. A completed HTTP round-trip (any
+    status code, including a 4xx/5xx from BLRS) always returns the Response
+    so the caller can forward BLRS's real status code to the UI rather than
+    masking it as mock-mode.
+    """
+    mock_mode: bool = getattr(request.app.state, "mock_mode", True)  # pyright: ignore[reportAny]
+    base_url = os.environ.get(_BLRS_SERVICE_URL_ENV)  # config-bootstrap:
+    if mock_mode or not base_url:
+        return None
+    try:
+        async with httpx.AsyncClient(base_url=base_url.rstrip("/"), timeout=10.0) as client:
+            return await client.request(method, f"/t1-recon{path}", params=params, json=json_body)
+    except (httpx.HTTPError, OSError):
+        logger.exception("Failed to proxy %s %s to batch-live-reconciliation-service", method, path)
+        return None
+
+
+@router.get("/reconciliation/breaks")
+async def get_reconciliation_breaks(request: Request) -> object:
+    """List reconciliation breaks — proxies BLRS's ``GET /t1-recon/breaks``.
+
+    Forwards the raw query string as-is. BLRS's own filter surface is
+    venue/break_type/status; extra params the UI's ``use-reports.ts`` hook
+    sends (category/date_from/date_to) are accepted-and-ignored on both
+    sides — FastAPI silently drops undeclared query params rather than
+    erroring, so no field-name mapping is invented here.
+    Mock mode: served from MockStateStore (empty until a fixture is seeded).
+    """
+    params = dict(request.query_params)
+    resp = await _blrs_proxy(request, "GET", "/breaks", params=params)
+    if resp is not None:
+        return JSONResponse(resp.json(), status_code=resp.status_code)  # pyright: ignore[reportAny]
+    service = get_service(request)
+    filters: dict[str, str | int | float | bool | None] = dict(params)
+    return service.list("reconciliation_breaks", filters=filters)
+
+
+@router.post("/reconciliation/resolve")
+async def resolve_reconciliation_break(
+    request: Request,
+    resolution: ReconciliationResolution,
+) -> object:
+    """Resolve a reconciliation break — proxies BLRS's ``POST /t1-recon/resolve``.
+
+    Mock mode: acknowledges the resolution without a live BLRS to validate
+    the break against (no seeded ``reconciliation_breaks`` mock fixture yet).
+    """
+    resp = await _blrs_proxy(request, "POST", "/resolve", json_body=resolution.model_dump(mode="json"))
+    if resp is not None:
+        return JSONResponse(resp.json(), status_code=resp.status_code)  # pyright: ignore[reportAny]
+    return single_response(
+        {
+            "break_id": resolution.break_id,
+            "action": resolution.action.value,
+            "status": "resolved" if resolution.action != ReconciliationAction.INVESTIGATE else "investigating",
+            "message": "Break resolved (mock mode)",
+        }
+    )
+
+
+class BookCorrectionRequest(BaseModel):  # CORRECT-LOCAL — mirrors BLRS's own local request shape
+    """Request to generate a correction booking from a reconciliation break."""
+
+    break_id: str
+
+
+@router.post("/reconciliation/book-correction")
+async def book_reconciliation_correction(
+    request: Request,
+    body: BookCorrectionRequest,
+) -> object:
+    """Generate a pre-filled correction booking — proxies BLRS's
+    ``POST /t1-recon/book-correction``.
+
+    Mock mode: no seeded break to derive real booking parameters from —
+    returns an honest NOT_FOUND rather than fabricating them.
+    """
+    resp = await _blrs_proxy(request, "POST", "/book-correction", json_body={"break_id": body.break_id})
+    if resp is not None:
+        return JSONResponse(resp.json(), status_code=resp.status_code)  # pyright: ignore[reportAny]
+    return JSONResponse(
+        {"error": {"code": "NOT_FOUND", "message": f"Break {body.break_id} not found"}},
+        status_code=404,
+    )
 
 
 @router.get("/regulatory")
