@@ -15,6 +15,17 @@ SOURCE_DIR="unified_trading_api"
 MIN_COVERAGE=77
 RUN_INTEGRATION=false
 PYTEST_WORKERS=${PYTEST_WORKERS:-2}
+# Wall-clock pytest timeout raised further, repo-local (shared base-service.sh default
+# of 150s — itself already raised once from 60s — has repeatedly proven insufficient for
+# this repo's route tests under severe self-hosted-runner host contention: 4 consecutive
+# quality-gates-v2 failures on 2026-08-02, each via `Failed: Timeout (>150.0s)` on a
+# DIFFERENT random subset of tests (9-10 of 441) that pass in well under 1s locally in
+# isolation — the signature of scheduler descheduling under an oversubscribed shared
+# host, not a real hang. This mirrors the sanctioned fix philosophy already applied at
+# the shared-library level: raising a wall-clock deadline to absorb scheduling variance
+# does not weaken any check's assertion. SSOT:
+# plans/active/issues/pytest_timeout_60s_flaky_under_contention_2026_07_29.md
+PYTEST_TIMEOUT=${PYTEST_TIMEOUT:-300}
 LOCAL_DEPS=()
 # Codex violation budget pinned 2026-06-11 per plans/active/codex_violations_ratchet_to_five_2026_06_10.md
 # (Phase-0 pin + Phase-1 seed.py split: 5,169L -> seed_data/*.json + thin loader; gate green at 0).
