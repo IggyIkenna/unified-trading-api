@@ -1084,6 +1084,22 @@ wheels = [
 ]
 
 [[package]]
+name = "google-cloud-monitoring"
+version = "2.31.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "google-api-core", extra = ["grpc"] },
+    { name = "google-auth" },
+    { name = "grpcio" },
+    { name = "proto-plus" },
+    { name = "protobuf" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/84/9d/9522e169db3887e7f354bb9aa544a6e26c435ce19337e32432598db18c6f/google_cloud_monitoring-2.31.0.tar.gz", hash = "sha256:b4c9d3528c8643d4eb4b9d688cbb3c5914bc5f69b314ff7c5e1b47bdc073a9ae", size = 404747, upload-time = "2026-06-03T15:28:24.938Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/55/30/aa6635296da9c1c14d2e64f64e1cacd4f4debf8ab7e646c0559545f0f70d/google_cloud_monitoring-2.31.0-py3-none-any.whl", hash = "sha256:64f3d56ead48f0a0674f650cb2828c47b936582a02a27c55f2836681a86281c3", size = 391010, upload-time = "2026-06-03T15:27:39.536Z" },
+]
+
+[[package]]
 name = "google-cloud-pubsub"
 version = "2.36.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1898,11 +1914,11 @@ wheels = [
 
 [[package]]
 name = "pip"
-version = "26.1.2"
+version = "26.2.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/01/91/47e7d486260f618783899587af63ccf7980fb60245c3e63dd4571c6b57ad/pip-26.1.2.tar.gz", hash = "sha256:f49cd134c61cf2fd75e0ce2676db03e4054504a5a4986d00f8299ae632dc4605", size = 1840799, upload-time = "2026-05-31T17:33:58.56Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ae/15/4500e320e6b101ec3b719ae85b697d9940b6cda672bc555bd6016fc60c6f/pip-26.2.1.tar.gz", hash = "sha256:f6ad667e89a1fe78046c8f13232b247200f5258d7828f3f7883d660878e0813f", size = 1848877, upload-time = "2026-08-04T22:51:14.148Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/5d/95/6b5cb3461ea5673ba0995989746db58eb18b91b54dbf331e72f569540946/pip-26.1.2-py3-none-any.whl", hash = "sha256:382ff9f685ee3bc25864f820aa50505825f10f5458ffff07e30a6d96e5715cab", size = 1813144, upload-time = "2026-05-31T17:33:56.772Z" },
+    { url = "https://files.pythonhosted.org/packages/f3/6e/1736e5b4ae2b778ef2f81c47d797de9f891d4d8acb047a24ca37a60294dd/pip-26.2.1-py3-none-any.whl", hash = "sha256:71138adf1f4ca900cdb7d289c21b7494329f2332b6d85f0e1c42108c0384ed3e", size = 1816632, upload-time = "2026-08-04T22:51:12.472Z" },
 ]
 
 [[package]]
@@ -3018,10 +3034,13 @@ requires-dist = [
     { name = "bandit", specifier = ">=1.7.0,<2.0.0" },
     { name = "basedpyright", specifier = "==1.38.2" },
     { name = "ccxt", specifier = ">=4.5.24,<5.0.0" },
+    { name = "ccxt", marker = "extra == 'schema-validation'", specifier = ">=4.5.24,<5.0.0" },
     { name = "databento", specifier = ">=0.32.0,<1.0.0" },
+    { name = "databento", marker = "extra == 'schema-validation'", specifier = ">=0.32.0,<1.0.0" },
     { name = "httpx", specifier = ">=0.28.1,<1.0.0" },
     { name = "hypothesis", specifier = ">=6.0.0,<7.0.0" },
     { name = "ib-insync", specifier = ">=0.9.86,<1.0.0" },
+    { name = "ib-insync", marker = "extra == 'schema-validation'", specifier = ">=0.9.86,<1.0.0" },
     { name = "numpy", specifier = ">=2.3.0,<2.4.0" },
     { name = "pandas", specifier = ">=2.3.0,<3.0.0" },
     { name = "pandas-stubs", specifier = ">=2.2.0,<3.0.0" },
@@ -3033,6 +3052,7 @@ requires-dist = [
     { name = "prek", marker = "sys_platform == 'linux'", url = "https://github.com/IggyIkenna/prek/releases/download/v0.4.12/prek-0.4.12-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl" },
     { name = "pyarrow", specifier = ">=23.0.1,<24.0.0" },
     { name = "pydantic", specifier = ">=2.12.5,<3.0.0" },
+    { name = "pydantic", marker = "extra == 'schema-validation'", specifier = ">=2.12.5,<3.0.0" },
     { name = "pytest", specifier = ">=9.0.3,<10.0.0" },
     { name = "pytest-asyncio", specifier = ">=0.25.0,<2.0.0" },
     { name = "pytest-cov", specifier = ">=7.0.0,<8.0.0" },
@@ -3042,11 +3062,14 @@ requires-dist = [
     { name = "pytest-xdist", specifier = ">=3.6.0,<4.0.0" },
     { name = "pyyaml", specifier = ">=6.0.1,<7.0.0" },
     { name = "requests", specifier = ">=2.33.0,<3.0.0" },
+    { name = "requests", marker = "extra == 'schema-validation'", specifier = ">=2.32.5,<3.0.0" },
     { name = "ruff", specifier = "==0.15.0" },
     { name = "tardis-client", specifier = ">=1.3.7,<2.0.0" },
+    { name = "tardis-client", marker = "extra == 'schema-validation'", specifier = ">=1.3.7,<2.0.0" },
     { name = "vcrpy", specifier = ">=8.2.1,<9.0.0" },
     { name = "vulture", specifier = ">=2.0,<3.0.0" },
 ]
+provides-extras = ["schema-validation"]
 
 [[package]]
 name = "unified-trading-api"
@@ -3086,7 +3109,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "aiohttp", specifier = ">=3.14.1,<4.0.0" },
+    { name = "aiohttp", specifier = ">=3.14.3,<4.0.0" },
     { name = "anthropic", specifier = ">=0.87.0,<1.0.0" },
     { name = "bandit", specifier = ">=1.7.0,<2.0.0" },
     { name = "basedpyright", specifier = "==1.38.2" },
@@ -3095,7 +3118,7 @@ requires-dist = [
     { name = "google-auth", specifier = ">=2.40.0,<3.0.0" },
     { name = "gunicorn", specifier = ">=22.0.0,<23.0.0" },
     { name = "httpx", specifier = ">=0.28.1,<1.0.0" },
-    { name = "pip", specifier = ">=26.1.2" },
+    { name = "pip", specifier = ">=26.2" },
     { name = "pip-audit", specifier = ">=2.7.0,<3.0.0" },
     { name = "prometheus-client", specifier = ">=0.20.0,<1.0.0" },
     { name = "pydantic", specifier = ">=2.12.5,<3.0.0" },
@@ -3141,6 +3164,7 @@ dependencies = [
     { name = "google-cloud-compute" },
     { name = "google-cloud-firestore" },
     { name = "google-cloud-logging" },
+    { name = "google-cloud-monitoring" },
     { name = "google-cloud-pubsub" },
     { name = "google-cloud-run" },
     { name = "google-cloud-scheduler" },
@@ -3210,6 +3234,7 @@ requires-dist = [
     { name = "google-cloud-compute", specifier = ">=1.45.0,<2.0.0" },
     { name = "google-cloud-firestore", specifier = ">=2.0.0,<3.0.0" },
     { name = "google-cloud-logging", specifier = ">=3.12.0,<4.0.0" },
+    { name = "google-cloud-monitoring", specifier = ">=2.21.0,<3.0.0" },
     { name = "google-cloud-pubsub", specifier = ">=2.28.0,<3.0.0" },
     { name = "google-cloud-run", specifier = ">=0.15.0,<1.0.0" },
     { name = "google-cloud-scheduler", specifier = ">=2.20.0,<3.0.0" },
